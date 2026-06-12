@@ -25,7 +25,7 @@ vi.mock('#src/services/user.ts', async (importActual) => {
 
 describe('tpk-form', function () {
   // eslint-disable-next-line no-empty-pattern
-  renderingTest.scoped({ app: ({}, use) => use(TestApp) });
+  renderingTest.override({ app: ({}, use) => use(TestApp) });
 
   renderingTest(
     'Should call user service when form is valid',

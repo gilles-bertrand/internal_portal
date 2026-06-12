@@ -5,7 +5,7 @@ import type CurrentUserService from '#src/services/current-user.ts';
 
 describe('Service | CurrentUser | Unit', () => {
   // eslint-disable-next-line no-empty-pattern
-  test.scoped({ app: ({}, use) => use(TestApp) });
+  test.override({ app: ({}, use) => use(TestApp) });
 
   test('currentUser getter throws error when no user is set', async ({
     context,

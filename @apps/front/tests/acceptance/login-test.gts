@@ -31,7 +31,7 @@ vi.mock('@embroider/config-meta-loader', () => {
 
 describe('Home', () => {
   // eslint-disable-next-line no-empty-pattern
-  applicationTest.scoped({ app: ({}, use) => use(App) });
+  applicationTest.override({ app: ({}, use) => use(App) });
 
   applicationTest('can visit the home screen', async () => {
     await visit('/login');

@@ -21,7 +21,7 @@ vi.mock('ember-simple-auth/services/session', async (importActual) => {
 
 describe('login-form', function () {
   // eslint-disable-next-line no-empty-pattern
-  renderingTest.scoped({ app: ({}, use) => use(TestApp) });
+  renderingTest.override({ app: ({}, use) => use(TestApp) });
 
   renderingTest(
     'Should call session.authenticate when form is valid',

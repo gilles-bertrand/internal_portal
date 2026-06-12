@@ -6,7 +6,7 @@ import { stubRouter } from '../utils';
 
 describe('Service | HandleSave | Unit', () => {
   // eslint-disable-next-line no-empty-pattern
-  test.scoped({ app: ({}, use) => use(TestApp) });
+  test.override({ app: ({}, use) => use(TestApp) });
 
   test('calls saveAction and shows success flash message', async ({
     context,

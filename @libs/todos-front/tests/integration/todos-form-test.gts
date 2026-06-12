@@ -22,7 +22,7 @@ vi.mock('#src/services/todo.ts', async (importActual) => {
 
 describe('tpk-form', function () {
   // eslint-disable-next-line no-empty-pattern
-  renderingTest.scoped({ app: ({}, use) => use(TestApp) });
+  renderingTest.override({ app: ({}, use) => use(TestApp) });
 
   renderingTest(
     'Should call todo service when form is valid',

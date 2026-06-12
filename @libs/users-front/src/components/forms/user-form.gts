@@ -49,7 +49,7 @@ export default class UsersForm extends Component<UserFormSignature> {
     await this.handleSave.handleSave({
       saveAction: () => this.user.save(data),
       changeset: c,
-      successMessage: 'users.forms.user.messages.createSuccess',
+      successMessage: 'users.forms.user.messages.saveSuccess',
       transitionOnSuccess: 'dashboard.users',
     });
   };

@@ -13,6 +13,8 @@ overrides:
   "@babel/core": "7.29.7"
   "fastify": "5.8.5"
   "zod": "4.4.3"
+  "ember-power-select": "9.0.0"
+  "ember-basic-dropdown": "9.0.0"
 
 allowBuilds:
   '@swc/core': true
@@ -97,7 +99,7 @@ catalog:
   daisyui: ~5.5.23
   date-fns: ~4.4.0
   decorator-transforms: ~2.3.2
-  ember-basic-dropdown: ^8.11.1
+  ember-basic-dropdown: ^9.0.0
   ember-cli: ~6.12.0
   ember-cli-babel: ^8.3.1
   ember-cli-deprecation-workflow: ^4.0.1
@@ -168,4 +170,3 @@ catalog:
 
 patchedDependencies:
   ember-power-select-with-create: patches/ember-power-select-with-create.patch
-  ember-basic-dropdown: patches/ember-basic-dropdown.patch

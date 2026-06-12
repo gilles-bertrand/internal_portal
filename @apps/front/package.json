@@ -121,7 +121,7 @@
     "tracked-built-ins": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "~8.61.0",
-    "vite": "8.0.16",
+    "vite": "catalog:",
     "vitest": "catalog:",
     "zod": "catalog:"
   },

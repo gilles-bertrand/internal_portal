@@ -33,12 +33,12 @@
     "@libs/repo-utils": "workspace:*",
     "@ngneat/falso": "catalog:",
     "@swc/core": "catalog:",
-    "@testcontainers/postgresql": "^11.14.0",
+    "@testcontainers/postgresql": "^12.0.1",
     "@types/jsonwebtoken": "catalog:",
     "@types/node": "^25.9.3",
     "@vitest/coverage-v8": "catalog:",
     "@vitest/ui": "catalog:",
-    "concurrently": "~9.2.1",
+    "concurrently": "~10.0.3",
     "jsonwebtoken": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
@@ -46,7 +46,7 @@
     "tsdown": "catalog:",
     "type-fest": "catalog:",
     "vite": "8.0.16",
-    "vite-node": "^5.3.0",
+    "vite-node": "catalog:",
     "vite-tsconfig-paths": "catalog:"
   },
   "volta": {

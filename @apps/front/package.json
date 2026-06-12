@@ -80,7 +80,7 @@
     "@warp-drive/legacy": "catalog:",
     "@warp-drive/utilities": "catalog:",
     "babel-plugin-ember-template-compilation": "^4.0.0",
-    "concurrently": "^9.2.1",
+    "concurrently": "^10.0.3",
     "daisyui": "catalog:",
     "decorator-transforms": "catalog:",
     "ember-auto-import": "~2.13.1",

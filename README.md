@@ -1,4 +1,4 @@
-# Ember Boilerplate v2
+# Internal Portal
 
 Monorepo with an Ember frontend and a Fastify backend, managed with pnpm workspaces and Turborepo.
 

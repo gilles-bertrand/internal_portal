@@ -1,0 +1,8 @@
+node_modules
+.turbo
+.env
+dist
+coverage
+playwright-report
+.DS_Store
+.pnpm-store

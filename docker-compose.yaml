@@ -14,3 +14,7 @@ services:
       retries: 10
     networks:
       - internal-portal-network
+
+networks:
+  internal-portal-network:
+    driver: bridge

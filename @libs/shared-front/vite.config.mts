@@ -4,9 +4,6 @@ import { extensions, ember } from '@embroider/vite';
 import { babel } from '@rollup/plugin-babel';
 
 export default defineConfig({
-  optimizeDeps: {
-    include: ['@embroider/config-meta-loader'],
-  },
   plugins: [
     ember(),
     babel({

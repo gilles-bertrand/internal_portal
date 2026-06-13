@@ -1,4 +1,5 @@
 import setupDeprecationWorkflow from 'ember-cli-deprecation-workflow';
+import { registerWarnHandler } from '@ember/debug';
 
 /**
  * Docs: https://github.com/ember-cli/ember-cli-deprecation-workflow
@@ -17,9 +18,19 @@ setupDeprecationWorkflow({
      *
      * And copy the handlers here
      */
-    /* Émis par @triptyk/ember-ui (tpk-actions-menu) qui lie un style
-     * `anchor-name:--anchor-{{index}}` dynamiquement. La valeur est un index
-     * numérique sûr ; on ne lie aucun style dynamique dans notre propre code. */
-    { handler: 'silence', matchId: 'binding-style-attributes' },
   ],
+});
+
+/**
+ * @triptyk/ember-ui (tpk-actions-menu, tpk-table-generic-prefab) lie des styles
+ * `anchor-name`/`position-anchor` dynamiquement pour le CSS anchor positioning.
+ * Ember émet le warning `ember-htmlbars.style-xss-warning` (canal warn, distinct
+ * des deprecations) pour toute liaison de style. Les valeurs sont des identifiants
+ * `--anchor-{{index}}` sûrs et notre propre code ne lie aucun style dynamique.
+ */
+registerWarnHandler((message, options, next) => {
+  if (options?.id === 'ember-htmlbars.style-xss-warning') {
+    return;
+  }
+  next(message, options);
 });

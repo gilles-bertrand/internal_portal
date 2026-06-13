@@ -19,6 +19,7 @@ import { JSONAPICache } from '@warp-drive/json-api';
 import UserSchema from '#src/schemas/users.ts';
 import '@warp-drive/ember/install';
 import FlashMessageService from 'ember-cli-flash/services/flash-messages';
+import CookiesService from 'ember-cookies/services/cookies';
 
 class Router extends EmberRouter {
   location = 'none';
@@ -41,6 +42,7 @@ export class TestApp extends Application {
     './session-stores/application': { default: AdaptiveStore },
     './services/session': { default: SessionService },
     './services/flash-message': { default: FlashMessageService },
+    './services/cookies': { default: CookiesService },
     ...moduleRegistry(),
     ...inputValidationRegistry(),
     ...compatModules,

@@ -64,6 +64,7 @@
     "ember-cli-page-object": "catalog:",
     "ember-immer-changeset": "catalog:",
     "ember-intl": "catalog:",
+    "ember-cookies": "catalog:",
     "ember-simple-auth": "catalog:",
     "ember-strict-application-resolver": "catalog:",
     "msw": "2.14.6",

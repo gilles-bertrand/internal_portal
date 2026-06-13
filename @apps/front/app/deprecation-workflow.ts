@@ -10,7 +10,6 @@ setupDeprecationWorkflow({
   */
   throwOnUnhandled: false,
   workflow: [
-    /* ... handlers ... */
     /* to generate this list, run your app for a while (or run the test suite),
      * and then run in the browser console:
      *
@@ -18,7 +17,9 @@ setupDeprecationWorkflow({
      *
      * And copy the handlers here
      */
-    /* example: */
-    /* { handler: 'silence', matchId: 'template-action' }, */
+    /* Émis par @triptyk/ember-ui (tpk-actions-menu) qui lie un style
+     * `anchor-name:--anchor-{{index}}` dynamiquement. La valeur est un index
+     * numérique sûr ; on ne lie aucun style dynamique dans notre propre code. */
+    { handler: 'silence', matchId: 'binding-style-attributes' },
   ],
 });

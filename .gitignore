@@ -1,6 +1,9 @@
 node_modules
 .turbo
 .env
+# secrets e2e backend : seul le .enc est versionné, le clair est ignoré
+@apps/backend/.env.e2e
+!@apps/backend/.env.e2e.enc
 dist
 coverage
 playwright-report

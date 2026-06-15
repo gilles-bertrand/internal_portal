@@ -8,6 +8,11 @@ jobs:
   test:
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    env:
+      # Clé privée age pour SOPS (secret GitHub). OBLIGATOIRE : les secrets e2e
+      # ne sont plus versionnés en clair, ils sont déchiffrés depuis
+      # @apps/backend/.env.e2e.enc à l'étape ci-dessous. Voir tuto/2_sops.md.
+      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
     services:
       postgres:
         image: postgres:18
@@ -25,6 +30,15 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: wyvox/action-setup-pnpm@v3
+    # Déchiffre les secrets e2e (lus par `pnpm e2e:setup` / `start:e2e` en
+    # --mode=e2e). Requiert le secret SOPS_AGE_KEY ; échoue volontairement si
+    # absent, car le .env.e2e en clair n'est plus versionné. Voir tuto/2_sops.md.
+    - name: Decrypt e2e secrets (SOPS)
+      run: |
+        SOPS_VERSION=v3.13.1
+        curl -fsSL "https://github.com/getsops/sops/releases/download/${SOPS_VERSION}/sops-${SOPS_VERSION}.linux.amd64" -o /usr/local/bin/sops
+        chmod +x /usr/local/bin/sops
+        sops decrypt --input-type dotenv --output-type dotenv @apps/backend/.env.e2e.enc > @apps/backend/.env.e2e
     - name: Build
       run: pnpm turbo build
     - name: Setup database

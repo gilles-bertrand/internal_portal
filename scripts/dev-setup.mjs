@@ -14,6 +14,36 @@ const run = (cmd) => {
 // 1. Dépendances (idempotent)
 run('pnpm i');
 
+// Déchiffrement SOPS sûr : on écrit dans un fichier temporaire et on ne
+// remplace la cible qu'en cas de succès. Évite de vider un .env existant si
+// le déchiffrement échoue (la redirection `>` tronque sinon avant l'erreur).
+const decryptEnv = (enc, dest, { fatal }) => {
+  if (!existsSync(enc)) {
+    console.log(`\n⚠ ${enc} introuvable — déchiffrement SOPS ignoré.`);
+    return;
+  }
+  const tmp = `${dest}.sops-tmp`;
+  try {
+    run(`sops decrypt --input-type dotenv --output-type dotenv ${enc} > ${tmp} && mv ${tmp} ${dest}`);
+  } catch {
+    run(`rm -f ${tmp}`);
+    const msg =
+      `Échec du déchiffrement SOPS de ${enc}. Vérifie que \`sops\` est installé` +
+      ' et que ta clé age est accessible. Voir tuto/2_sops.md.';
+    if (fatal) {
+      console.error(`\n✗ ${msg}`);
+      process.exit(1);
+    }
+    console.warn(`\n⚠ ${msg} (les tests e2e échoueront)`);
+  }
+};
+
+// 1.5 Secrets backend dev (source de vérité = .env.enc chiffré, versionné).
+decryptEnv('@apps/backend/.env.enc', '@apps/backend/.env', { fatal: true });
+
+// 1.6 Secrets e2e — best-effort : `pnpm dev` n'en a pas besoin.
+decryptEnv('@apps/backend/.env.e2e.enc', '@apps/backend/.env.e2e', { fatal: false });
+
 // 2. Base de données (idempotent)
 run('docker compose up -d');
 

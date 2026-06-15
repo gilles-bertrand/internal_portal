@@ -41,33 +41,59 @@ export class LoginRoute implements Route {
       async (request, reply) => {
         const { email, password, deviceInfo } = request.body;
 
-        // Find user by email
         const user = await this.userRepository.findOne({ email });
 
-        if (!user) {
-          return reply.code(401).send(
+        const invalidCredentials = () =>
+          reply.code(401).send(
             makeJsonApiError(401, "Invalid Credentials", {
               code: "INVALID_CREDENTIALS",
               detail: "Invalid email or password",
             }),
           );
+
+        if (!user) {
+          return invalidCredentials();
         }
 
-        // Verify password
+        // Verrouillage anti-bruteforce
+        if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+          return reply.code(423).send(
+            makeJsonApiError(423, "Account Locked", {
+              code: "ACCOUNT_LOCKED",
+              detail: "Compte temporairement verrouillé — réessayez plus tard",
+            }),
+          );
+        }
+
         const isValidPassword = await verifyPassword(user.password, password);
 
         if (!isValidPassword) {
-          return reply.code(401).send(
-            makeJsonApiError(401, "Invalid Credentials", {
-              code: "INVALID_CREDENTIALS",
-              detail: "Invalid email or password",
-            }),
+          const MAX_ATTEMPTS = 5;
+          const LOCK_MINUTES = 15;
+          const attempts = (user.failedLoginAttempts ?? 0) + 1;
+          const lockedUntil =
+            attempts >= MAX_ATTEMPTS
+              ? new Date(Date.now() + LOCK_MINUTES * 60_000).toISOString()
+              : null;
+
+          await this.userRepository.nativeUpdate(
+            { id: user.id },
+            { failedLoginAttempts: attempts, lockedUntil },
+          );
+
+          return invalidCredentials();
+        }
+
+        // Réinitialiser le compteur après succès
+        if (user.failedLoginAttempts > 0 || user.lockedUntil) {
+          await this.userRepository.nativeUpdate(
+            { id: user.id },
+            { failedLoginAttempts: 0, lockedUntil: null },
           );
         }
 
-        // Generate tokens
         const tokens = generateTokens(
-          { userId: user.id, email: user.email },
+          { userId: user.id, email: user.email, role: user.role },
           this.jwtSecret,
           this.jwtRefreshSecret,
         );

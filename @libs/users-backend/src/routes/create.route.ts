@@ -25,7 +25,8 @@ export class CreateRoute implements Route {
                 email: email(),
                 firstName: string(),
                 lastName: string(),
-                password: string(),
+                password: string().min(12, "Le mot de passe doit contenir au moins 12 caractères"),
+                role: string().optional(),
               }),
             }),
           ),
@@ -45,6 +46,8 @@ export class CreateRoute implements Route {
           firstName: body.firstName,
           lastName: body.lastName,
           password,
+          role: body.role ?? "encoder",
+          passwordChangedAt: new Date().toISOString(),
         });
 
         await this.userRepository.getEntityManager().flush();

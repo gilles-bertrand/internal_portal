@@ -1,0 +1,46 @@
+table:
+  headers:
+    accessedAt: "Date d'accès"
+    dataSubjectRef: 'Personne concernée'
+    accessType: "Type d'accès"
+    purpose: 'Finalité'
+    isSpecialCategory: 'Données sensibles'
+  actions:
+    addRecord: 'Encoder un accès'
+
+forms:
+  accessRecord:
+    labels:
+      accessedAt: "Date/heure d'accès (ISO UTC)"
+      accessorRef: "Référence de l'accédant"
+      dataSubjectRef: 'Référence de la personne concernée'
+      dataCategories: 'Catégories de données (séparées par des virgules)'
+      accessType: "Type d'accès (consultation/modification/export/transmission)"
+      purpose: "Finalité de l'accès"
+      legalBasis: 'Base légale'
+      sourceSystem: 'Système source'
+      recipient: 'Destinataire (si transmission)'
+      isSpecialCategory: 'Données sensibles (art. 9 RGPD)'
+      justification: 'Justification'
+    actions:
+      submit: 'Enregistrer'
+      back: 'Retour au registre'
+    messages:
+      saveSuccess: 'Accès enregistré dans le registre.'
+    validation:
+      accessedAtRequired: "La date d'accès est requise."
+      accessorRefRequired: "La référence de l'accédant est requise."
+      dataSubjectRefRequired: 'La référence de la personne concernée est requise.'
+      dataCategoriesRequired: 'Au moins une catégorie de données est requise.'
+      accessTypeRequired: "Le type d'accès est requis."
+      accessTypeInvalid: "Type d'accès invalide."
+      purposeRequired: 'La finalité est requise.'
+      legalBasisRequired: 'La base légale est requise.'
+      sourceSystemRequired: 'Le système source est requis.'
+      justificationRequired: 'La justification est requise.'
+
+pages:
+  list:
+    title: 'Registre des accès'
+  create:
+    title: "Encoder un accès"

@@ -2,3 +2,4 @@ sidebar:
   dashboard: 'Dashboard'
   users: 'Utilisateurs'
   todos: 'Tâches'
+  accessRecords: 'Registre des accès'

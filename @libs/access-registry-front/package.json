@@ -1,0 +1,153 @@
+{
+  "name": "@libs/access-registry-front",
+  "version": "0.0.0",
+  "description": "The default blueprint for Embroider v2 addons.",
+  "keywords": [
+    "ember-addon"
+  ],
+  "repository": "",
+  "license": "MIT",
+  "author": "",
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "exports": {
+    ".": {
+      "types": "./declarations/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./addon-main.js": "./addon-main.cjs",
+    "./*.css": "./dist/*.css",
+    "./*": {
+      "types": "./declarations/*.d.ts",
+      "default": "./dist/*.js"
+    }
+  },
+  "files": [
+    "addon-main.cjs",
+    "declarations",
+    "translations",
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "build:watch": "rollup --watch -c",
+    "format": "prettier . --cache --write",
+    "lint": "concurrently \"pnpm:lint:*(!fix)\" --names \"lint:\" --prefixColors auto",
+    "lint:fix": "concurrently \"pnpm:lint:*:fix\" --names \"fix:\" --prefixColors auto && pnpm run format",
+    "lint:format": "prettier . --cache --check",
+    "lint:hbs": "ember-template-lint . --no-error-on-unmatched-pattern",
+    "lint:hbs:fix": "ember-template-lint . --fix --no-error-on-unmatched-pattern",
+    "lint:js": "eslint . --cache",
+    "lint:js:fix": "eslint . --fix",
+    "lint:types": "ember-tsc --noEmit",
+    "prepack": "rollup -c",
+    "start": "vite dev",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@embroider/addon-shim": "catalog:",
+    "@libs/shared-front": "workspace:^",
+    "@triptyk/ember-input": "catalog:",
+    "@triptyk/ember-input-validation": "catalog:",
+    "@triptyk/ember-ui": "catalog:",
+    "@warp-drive/core": "catalog:",
+    "@warp-drive/ember": "catalog:",
+    "@warp-drive/experiments": "catalog:",
+    "@warp-drive/json-api": "catalog:",
+    "@warp-drive/legacy": "catalog:",
+    "@warp-drive/utilities": "catalog:",
+    "decorator-transforms": "catalog:",
+    "ember-auto-import": "2.13.1",
+    "ember-cli-page-object": "catalog:",
+    "ember-immer-changeset": "catalog:",
+    "ember-intl": "catalog:",
+    "ember-simple-auth": "catalog:",
+    "ember-strict-application-resolver": "catalog:",
+    "msw": "2.14.6",
+    "openapi-msw": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@apps/backend": "workspace:^",
+    "@babel/core": "7.29.7",
+    "@babel/eslint-parser": "^7.29.7",
+    "@babel/plugin-transform-typescript": "^7.29.7",
+    "@babel/runtime": "^7.29.7",
+    "@ember/app-tsconfig": "~2.0.0",
+    "@ember/library-tsconfig": "catalog:",
+    "@ember/string": "catalog:",
+    "@ember/test-helpers": "^5.4.2",
+    "@ember/test-waiters": "catalog:",
+    "@embroider/addon-dev": "catalog:",
+    "@embroider/compat": "catalog:",
+    "@embroider/core": "catalog:",
+    "@embroider/macros": "catalog:",
+    "@embroider/vite": "catalog:",
+    "@eslint/js": "^10.0.1",
+    "@glimmer/component": "2.1.1",
+    "@glint/ember-tsc": "catalog:",
+    "@glint/environment-ember-loose": "catalog:",
+    "@glint/template": "1.7.7",
+    "@glint/tsserver-plugin": "catalog:",
+    "@libs/repo-utils": "workspace:^",
+    "@rollup/plugin-alias": "catalog:",
+    "@rollup/plugin-babel": "^7.1.0",
+    "@vitest/browser": "^4.1.8",
+    "@vitest/browser-playwright": "catalog:",
+    "@warp-drive/build-config": "catalog:",
+    "@warp-drive/core-types": "catalog:",
+    "babel-plugin-ember-template-compilation": "~4.0.0",
+    "concurrently": "^10.0.3",
+    "ember-basic-dropdown": "catalog:",
+    "ember-cli-flash": "catalog:",
+    "ember-concurrency": "catalog:",
+    "ember-load-initializers": "catalog:",
+    "ember-page-title": "catalog:",
+    "ember-resolver": "catalog:",
+    "ember-resources": "catalog:",
+    "ember-source": "catalog:",
+    "ember-template-lint": "^7.9.3",
+    "ember-truth-helpers": "catalog:",
+    "ember-vitest": "catalog:",
+    "eslint": "^10.4.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-ember": "^13.3.2",
+    "eslint-plugin-import": "catalog:",
+    "eslint-plugin-n": "^18.1.0",
+    "globals": "catalog:",
+    "playwright": "^1.60.0",
+    "prettier": "^3.8.4",
+    "prettier-plugin-ember-template-tag": "~2.1.6",
+    "rollup": "catalog:",
+    "rollup-plugin-copy": "catalog:",
+    "testem": "^3.20.1",
+    "typescript": "catalog:",
+    "typescript-eslint": "^8.61.0",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "webpack": "catalog:"
+  },
+  "volta": {
+    "extends": "../../package.json"
+  },
+  "ember": {
+    "edition": "octane"
+  },
+  "ember-addon": {
+    "version": 2,
+    "type": "addon",
+    "main": "addon-main.cjs",
+    "app-js": {
+      "./components/forms/access-record-form.js": "./dist/_app_/components/forms/access-record-form.js",
+      "./routes/dashboard/access-records/create.js": "./dist/_app_/routes/dashboard/access-records/create.js",
+      "./routes/dashboard/access-records/index.js": "./dist/_app_/routes/dashboard/access-records/index.js",
+      "./schemas/access-records.js": "./dist/_app_/schemas/access-records.js",
+      "./services/access-record.js": "./dist/_app_/services/access-record.js",
+      "./templates/dashboard/access-records/create.js": "./dist/_app_/templates/dashboard/access-records/create.js",
+      "./templates/dashboard/access-records/index.js": "./dist/_app_/templates/dashboard/access-records/index.js"
+    }
+  }
+}

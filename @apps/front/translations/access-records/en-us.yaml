@@ -1,0 +1,46 @@
+table:
+  headers:
+    accessedAt: 'Access date'
+    dataSubjectRef: 'Data subject'
+    accessType: 'Access type'
+    purpose: 'Purpose'
+    isSpecialCategory: 'Special category'
+  actions:
+    addRecord: 'Record an access'
+
+forms:
+  accessRecord:
+    labels:
+      accessedAt: 'Access date/time (ISO UTC)'
+      accessorRef: 'Accessor reference'
+      dataSubjectRef: 'Data subject reference'
+      dataCategories: 'Data categories (comma-separated)'
+      accessType: 'Access type (consultation/modification/export/transmission)'
+      purpose: 'Purpose of access'
+      legalBasis: 'Legal basis'
+      sourceSystem: 'Source system'
+      recipient: 'Recipient (if transmission)'
+      isSpecialCategory: 'Special category (GDPR art. 9)'
+      justification: 'Justification'
+    actions:
+      submit: 'Save'
+      back: 'Back to registry'
+    messages:
+      saveSuccess: 'Access recorded in the registry.'
+    validation:
+      accessedAtRequired: 'Access date is required.'
+      accessorRefRequired: 'Accessor reference is required.'
+      dataSubjectRefRequired: 'Data subject reference is required.'
+      dataCategoriesRequired: 'At least one data category is required.'
+      accessTypeRequired: 'Access type is required.'
+      accessTypeInvalid: 'Invalid access type.'
+      purposeRequired: 'Purpose is required.'
+      legalBasisRequired: 'Legal basis is required.'
+      sourceSystemRequired: 'Source system is required.'
+      justificationRequired: 'Justification is required.'
+
+pages:
+  list:
+    title: 'Access registry'
+  create:
+    title: 'Record an access'

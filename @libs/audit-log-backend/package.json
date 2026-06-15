@@ -9,7 +9,7 @@
   "main": "dist/index.mjs",
   "types": "dist/index.d.mts",
   "scripts": {
-    "test": "pnpm vitest run",
+    "test": "pnpm vitest run --passWithNoTests",
     "build": "tsdown",
     "build:watch": "tsdown --watch",
     "lint": "pnpm concurrently \"pnpm:lint:*(!fix)\" --names \"lint:\"",

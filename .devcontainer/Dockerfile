@@ -28,6 +28,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
        fi \
     && echo "node ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
+# SOPS + age : déchiffrement des secrets au `pnpm setup` (voir tuto/2_sops.md)
+RUN ARCH="$(dpkg --print-architecture)" \
+    && curl -fsSL "https://github.com/getsops/sops/releases/download/v3.13.1/sops-v3.13.1.linux.${ARCH}" -o /usr/local/bin/sops \
+    && chmod +x /usr/local/bin/sops \
+    && curl -fsSL "https://github.com/FiloSottile/age/releases/download/v1.2.1/age-v1.2.1-linux-${ARCH}.tar.gz" | tar -xz -C /tmp \
+    && mv /tmp/age/age /tmp/age/age-keygen /usr/local/bin/ \
+    && rm -rf /tmp/age
+
 RUN corepack enable \
     && corepack prepare pnpm@11.6.0 --activate
 

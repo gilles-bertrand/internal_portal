@@ -6,9 +6,10 @@ Monorepo with an Ember frontend and a Fastify backend, managed with pnpm workspa
 
 | Layer        | Technology                          |
 | ------------ | ----------------------------------- |
-| Frontend     | Ember 6 (Octane) + Embroider/Vite  |
+| Frontend     | Ember 7 (Octane) + Embroider/Vite  |
 | Backend      | Fastify 5 + vite-node              |
-| Database     | PostgreSQL 16 + MikroORM           |
+| Database     | PostgreSQL 18 + MikroORM           |
+| Secrets      | SOPS + age                          |
 | Styling      | Tailwind CSS 4 + DaisyUI 5         |
 | Testing      | Vitest, Playwright                  |
 | Language     | TypeScript                          |
@@ -19,8 +20,9 @@ Monorepo with an Ember frontend and a Fastify backend, managed with pnpm workspa
 ## Prerequisites
 
 - **Node 24** (managed via [Volta](https://volta.sh/) — `volta install node@24`)
-- **pnpm 10.28.1**
+- **pnpm 11.6.0** (via Corepack/Volta — pinned by `packageManager`)
 - **Docker** (for PostgreSQL)
+- **[sops](https://getsops.io/) + [age](https://github.com/FiloSottile/age)** (`brew install sops age`) — to decrypt the backend secrets. See [tuto/2_sops.md](./tuto/2_sops.md).
 
 ## Project Structure
 
@@ -48,37 +50,37 @@ Monorepo with an Ember frontend and a Fastify backend, managed with pnpm workspa
 pnpm install
 ```
 
-### 2. Start the database
+### 2. Get access to the secrets (SOPS)
+
+Backend secrets are stored **encrypted** in git (`@apps/backend/.env.enc`, `.env.e2e.enc`) and decrypted at setup with your personal [age](https://github.com/FiloSottile/age) key. Full guide: [tuto/2_sops.md](./tuto/2_sops.md).
+
+**As a new collaborator:**
 
 ```bash
-docker compose up -d
+# 1. Generate your age key
+age-keygen -o ~/.config/sops/age/keys.txt
+# macOS only — also place it where SOPS looks by default:
+mkdir -p ~/"Library/Application Support/sops/age"
+cp ~/.config/sops/age/keys.txt ~/"Library/Application Support/sops/age/keys.txt"
+
+# 2. Send your PUBLIC key to a maintainer:
+age-keygen -y ~/.config/sops/age/keys.txt
 ```
 
-This starts PostgreSQL 16 on `localhost:5432` (user: `backend_user`, password: `backend_user`, database: `database_dev`).
+**A maintainer** then adds your public key to `.sops.yaml`, runs `sops updatekeys -y --input-type dotenv` on both `.enc` files, and pushes. After they confirm, `git pull` — you can now decrypt.
 
-### 3. Set up and run the backend
-
-From `@apps/backend`:
-
-```bash
-pnpm schema:fresh   # Create tables and seed the database
-pnpm dev             # Start the dev server
-```
-
-### 4. Run the frontend
-
-From `@apps/front`:
-
-- **With mocked API (default):** `pnpm start`
-- **With the real backend:** `pnpm start:with-back` (proxies `/api` to `http://localhost:8000`)
-
-### 5. Or run everything from the root
+### 3. Run everything
 
 ```bash
 pnpm dev
 ```
 
-This starts the backend and the frontend concurrently.
+`pnpm dev` (via `predev`) decrypts the secrets, starts PostgreSQL 18 via Docker (`localhost:5432` — user `backend_user`, password `backend_user`, database `database_dev`), runs `schema:fresh`, then starts the backend and frontend concurrently. Use `pnpm setup` to run only the preparation step, or `pnpm fresh` to force a clean database reset.
+
+### Running an app individually
+
+- **Backend** — from `@apps/backend`: `pnpm dev`
+- **Frontend** — from `@apps/front`: `pnpm start` (mocked API, default) or `pnpm start:with-back` (proxies `/api` to `http://localhost:8000`)
 
 ## E2E Tests
 
@@ -110,4 +112,3 @@ Allowed commit types: `feat`, `fix`, `perf`, `refactor`, `style`, `test`, `build
 ## API Documentation
 
 When the backend is running, Swagger UI is available at [`/documentation`](http://localhost:8000/documentation).
-# internal_portal

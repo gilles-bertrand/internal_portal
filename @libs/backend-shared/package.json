@@ -33,6 +33,7 @@
     "oxlint": "catalog:",
     "tsdown": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "vite-tsconfig-paths": "catalog:"
   }
 }

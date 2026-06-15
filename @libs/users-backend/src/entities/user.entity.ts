@@ -1,5 +1,7 @@
 import { defineEntity, p, type InferEntity } from "@mikro-orm/core";
 
+export type UserRole = "encoder" | "dpo" | "auditor" | "tech_admin";
+
 export const UserEntity = defineEntity({
   name: "User",
   properties: {
@@ -8,6 +10,10 @@ export const UserEntity = defineEntity({
     firstName: p.string(),
     lastName: p.string(),
     password: p.string(),
+    role: p.string<UserRole>().default("encoder"),
+    failedLoginAttempts: p.integer().default(0),
+    lockedUntil: p.string().nullable(),
+    passwordChangedAt: p.string().nullable(),
   },
 });
 

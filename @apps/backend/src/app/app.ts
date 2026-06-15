@@ -21,6 +21,8 @@ import type { ApplicationContext } from "./application.context.js";
 import { logger } from "./logger.js";
 import { UserModule, AuthModule } from "@libs/users-backend";
 import { Module as TodoModule } from "@libs/todos-backend";
+import { Module as AccessRegistryModule } from "@libs/access-registry-backend";
+import { AuditAppendService } from "@libs/audit-log-backend";
 
 export type FastifyInstanceType = FastifyInstance<
   RawServerDefault,
@@ -155,6 +157,16 @@ export class App {
           jwtSecret: this.context.configuration.JWT_SECRET,
         },
       }),
+      accessRegistryModule: AccessRegistryModule.init(
+        {
+          em: this.context.orm.em.fork(),
+          configuration: {
+            jwtSecret: this.context.configuration.JWT_SECRET,
+            exportSigningKey: this.context.configuration.EXPORT_SIGNING_KEY,
+          },
+        },
+        new AuditAppendService(this.context.orm.em.fork()),
+      ),
     });
   }
 

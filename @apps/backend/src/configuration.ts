@@ -23,6 +23,7 @@ const schema = object({
   SMTP_SECURE: string().transform((v) => v === "true"),
   EMAIL_FROM_NAME: string().default("Registr Support"),
   EMAIL_FROM_ADDRESS: string().default("support@example.com"),
+  EXPORT_SIGNING_KEY: string(),
 });
 
 export type AppConfiguration = z.infer<typeof schema>;

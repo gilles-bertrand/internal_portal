@@ -1,6 +1,6 @@
 import type { FastifyInstanceTypeForModule } from "#src/init.js";
-import type { EntityManager } from "@mikro-orm/core";
-import { array, number, object, string } from "zod";
+import type { EntityManager } from "@mikro-orm/postgresql";
+import { array, number, object } from "zod";
 import { type Route } from "@libs/backend-shared";
 import { AccessRecordEntity } from "#src/entities/access-record.entity.js";
 import {
@@ -39,7 +39,8 @@ export class ListRoute implements Route {
         }
 
         if (q["filter[dataSubjectRef]"]) where["dataSubjectRef"] = q["filter[dataSubjectRef]"];
-        if (q["filter[encodedBy]"] && user.role !== "encoder") where["encodedBy"] = q["filter[encodedBy]"];
+        if (q["filter[encodedBy]"] && user.role !== "encoder")
+          where["encodedBy"] = q["filter[encodedBy]"];
         if (q["filter[accessType]"]) where["accessType"] = q["filter[accessType]"];
         if (q["filter[isSpecialCategory]"]) {
           where["isSpecialCategory"] = q["filter[isSpecialCategory]"] === "true";

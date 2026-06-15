@@ -35,9 +35,11 @@ export class LoginRoute implements Route {
               }),
             }),
             401: jsonApiErrorDocumentSchema,
+            423: jsonApiErrorDocumentSchema,
           },
         },
       },
+      // oxlint-disable-next-line complexity
       async (request, reply) => {
         const { email, password, deviceInfo } = request.body;
 

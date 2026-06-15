@@ -27,11 +27,51 @@ export async function setup() {
   const hashedPassword =
     "$argon2id$v=19$m=65536,t=3,p=4$ETHkx8pEQN6qQwlIR+vUTQ$+QC4JBKJCQUL1dyCHzRMBNjbk+QaJi3PV+HkPY00kcc";
 
-  await orm.em.getRepository(UserEntity).insert([
-    { id: "encoder-id", email: "encoder@test.com", firstName: "E", lastName: "N", password: hashedPassword, role: "encoder" },
-    { id: "dpo-id", email: "dpo@test.com", firstName: "D", lastName: "P", password: hashedPassword, role: "dpo" },
-    { id: "auditor-id", email: "auditor@test.com", firstName: "A", lastName: "U", password: hashedPassword, role: "auditor" },
-    { id: "admin-id", email: "admin@test.com", firstName: "A", lastName: "D", password: hashedPassword, role: "tech_admin" },
+  await (orm.em.getRepository(UserEntity).insert as unknown as (data: unknown) => Promise<void>)([
+    {
+      id: "encoder-id",
+      email: "encoder@test.com",
+      firstName: "E",
+      lastName: "N",
+      password: hashedPassword,
+      role: "encoder",
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+      passwordChangedAt: null,
+    },
+    {
+      id: "dpo-id",
+      email: "dpo@test.com",
+      firstName: "D",
+      lastName: "P",
+      password: hashedPassword,
+      role: "dpo",
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+      passwordChangedAt: null,
+    },
+    {
+      id: "auditor-id",
+      email: "auditor@test.com",
+      firstName: "A",
+      lastName: "U",
+      password: hashedPassword,
+      role: "auditor",
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+      passwordChangedAt: null,
+    },
+    {
+      id: "admin-id",
+      email: "admin@test.com",
+      firstName: "A",
+      lastName: "D",
+      password: hashedPassword,
+      role: "tech_admin",
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+      passwordChangedAt: null,
+    },
   ]);
 
   await orm.close();

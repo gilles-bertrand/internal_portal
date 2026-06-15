@@ -2,6 +2,7 @@ import type { FastifyInstanceTypeForModule } from "#src/init.js";
 import type { EntityRepository } from "@mikro-orm/core";
 import { object, string } from "zod";
 import {
+  jsonApiErrorDocumentSchema,
   makeJsonApiError,
   makeSingleJsonApiTopDocument,
   type Route,
@@ -27,6 +28,8 @@ export class GetRoute implements Route {
           params: object({ id: string() }),
           response: {
             200: makeSingleJsonApiTopDocument(SerializedAccessRecordSchema),
+            403: jsonApiErrorDocumentSchema,
+            404: jsonApiErrorDocumentSchema,
           },
         },
       },
@@ -36,15 +39,11 @@ export class GetRoute implements Route {
 
         const record = await this.repository.findOne({ id });
         if (!record) {
-          return reply
-            .code(404)
-            .send(makeJsonApiError(404, "Not Found", { code: "NOT_FOUND" }));
+          return reply.code(404).send(makeJsonApiError(404, "Not Found", { code: "NOT_FOUND" }));
         }
 
         if (user.role === "encoder" && record.encodedBy !== user.id) {
-          return reply
-            .code(403)
-            .send(makeJsonApiError(403, "Forbidden", { code: "FORBIDDEN" }));
+          return reply.code(403).send(makeJsonApiError(403, "Forbidden", { code: "FORBIDDEN" }));
         }
 
         await this.auditLogger.log({

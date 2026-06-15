@@ -46,7 +46,7 @@ export function jsonApiSerializeAccessRecord(
       purpose: record.purpose,
       legalBasis: record.legalBasis,
       sourceSystem: record.sourceSystem,
-      recipient: record.recipient,
+      recipient: record.recipient ?? null,
       justification: record.justification,
       retentionUntil: record.retentionUntil,
       seq: record.seq,

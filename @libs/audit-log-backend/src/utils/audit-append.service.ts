@@ -1,10 +1,6 @@
-import type { EntityManager } from "@mikro-orm/core";
+import type { EntityManager } from "@mikro-orm/postgresql";
 import { randomUUID } from "node:crypto";
-import {
-  canonicalSerialize,
-  computeRecordHash,
-  GENESIS_HASH,
-} from "@libs/backend-shared";
+import { canonicalSerialize, computeRecordHash, GENESIS_HASH } from "@libs/backend-shared";
 import { AuditEventEntity } from "#src/entities/audit-event.entity.js";
 import type { AuditLogInput } from "#src/types.js";
 

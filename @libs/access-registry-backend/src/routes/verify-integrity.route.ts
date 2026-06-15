@@ -1,7 +1,13 @@
 import type { FastifyInstanceTypeForModule } from "#src/init.js";
 import { boolean, number, object, string } from "zod";
-import { canonicalSerialize, makeJsonApiError, verifyChain, type Route } from "@libs/backend-shared";
-import type { EntityManager } from "@mikro-orm/core";
+import {
+  canonicalSerialize,
+  jsonApiErrorDocumentSchema,
+  makeJsonApiError,
+  verifyChain,
+  type Route,
+} from "@libs/backend-shared";
+import type { EntityManager } from "@mikro-orm/postgresql";
 import { AccessRecordEntity } from "#src/entities/access-record.entity.js";
 
 export class VerifyIntegrityRoute implements Route {
@@ -19,15 +25,14 @@ export class VerifyIntegrityRoute implements Route {
               brokenAt: number().optional(),
               reason: string().optional(),
             }),
+            403: jsonApiErrorDocumentSchema,
           },
         },
       },
       async (request, reply) => {
         const user = request.user!;
         if (user.role !== "auditor" && user.role !== "dpo") {
-          return reply.code(403).send(
-            makeJsonApiError(403, "Forbidden", { code: "FORBIDDEN" }),
-          );
+          return reply.code(403).send(makeJsonApiError(403, "Forbidden", { code: "FORBIDDEN" }));
         }
 
         const records = await this.em

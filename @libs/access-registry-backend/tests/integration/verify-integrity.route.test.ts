@@ -124,7 +124,7 @@ test("DELETE direct → exception trigger (append-only)", async () => {
   });
 
   const em = module.em;
-  await expect(
-    em.execute(`DELETE FROM access_record WHERE seq = 1`),
-  ).rejects.toThrow(/append-only/i);
+  await expect(em.execute(`DELETE FROM access_record WHERE seq = 1`)).rejects.toThrow(
+    /append-only/i,
+  );
 });

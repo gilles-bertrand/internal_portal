@@ -1,6 +1,7 @@
 import type { FastifyInstanceTypeForModule } from "#src/init.js";
 import { array, boolean, nullable, object, string } from "zod";
 import {
+  jsonApiErrorDocumentSchema,
   makeJsonApiError,
   makeSingleJsonApiTopDocument,
   type Route,
@@ -10,7 +11,7 @@ import {
   jsonApiSerializeSingleAccessRecordDocument,
   SerializedAccessRecordSchema,
 } from "#src/serializers/access-record.serializer.js";
-import type { EntityManager } from "@mikro-orm/core";
+import type { EntityManager } from "@mikro-orm/postgresql";
 import type { AuditLogger } from "#src/utils/audit-logger.type.js";
 
 export class CreateRoute implements Route {
@@ -35,8 +36,7 @@ export class CreateRoute implements Route {
                 dataCategories: array(string()).min(1),
                 isSpecialCategory: boolean(),
                 accessType: string().refine(
-                  (v) =>
-                    ["consultation", "modification", "export", "transmission"].includes(v),
+                  (v) => ["consultation", "modification", "export", "transmission"].includes(v),
                   { message: "accessType invalide" },
                 ),
                 purpose: string().min(1),
@@ -49,6 +49,8 @@ export class CreateRoute implements Route {
           ),
           response: {
             200: makeSingleJsonApiTopDocument(SerializedAccessRecordSchema),
+            400: jsonApiErrorDocumentSchema,
+            403: jsonApiErrorDocumentSchema,
           },
         },
       },
@@ -76,8 +78,18 @@ export class CreateRoute implements Route {
         }
 
         if (attrs.isSpecialCategory) {
-          const art9Bases = ["art9.2a", "art9.2b", "art9.2c", "art9.2d", "art9.2e",
-            "art9.2f", "art9.2g", "art9.2h", "art9.2i", "art9.2j"];
+          const art9Bases = [
+            "art9.2a",
+            "art9.2b",
+            "art9.2c",
+            "art9.2d",
+            "art9.2e",
+            "art9.2f",
+            "art9.2g",
+            "art9.2h",
+            "art9.2i",
+            "art9.2j",
+          ];
           if (!art9Bases.some((b) => attrs.legalBasis.startsWith(b) || attrs.legalBasis === b)) {
             return reply.code(400).send(
               makeJsonApiError(400, "Validation Error", {

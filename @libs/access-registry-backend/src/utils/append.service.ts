@@ -1,4 +1,4 @@
-import type { EntityManager } from "@mikro-orm/core";
+import type { EntityManager } from "@mikro-orm/postgresql";
 import { randomUUID } from "node:crypto";
 import {
   canonicalSerialize,
@@ -59,9 +59,7 @@ export class AppendService {
         ...input,
       };
 
-      const canonical = canonicalSerialize(
-        partialRecord as unknown as Record<string, unknown>,
-      );
+      const canonical = canonicalSerialize(partialRecord as unknown as Record<string, unknown>);
       const hash = computeRecordHash(prevHash, canonical);
 
       const record: AccessRecordEntityType = { ...partialRecord, hash };

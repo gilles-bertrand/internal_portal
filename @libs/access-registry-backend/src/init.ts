@@ -13,7 +13,12 @@ import { GetRoute } from "#src/routes/get.route.js";
 import { VerifyIntegrityRoute } from "#src/routes/verify-integrity.route.js";
 import { StatsRoute } from "#src/routes/stats.route.js";
 import { AccessRecordEntity } from "./entities/access-record.entity.js";
-import { handleJsonApiErrors, makeJsonApiError, type ModuleInterface, type Route } from "@libs/backend-shared";
+import {
+  handleJsonApiErrors,
+  makeJsonApiError,
+  type ModuleInterface,
+  type Route,
+} from "@libs/backend-shared";
 import { createJwtAuthMiddleware } from "@libs/users-backend";
 import type { AuditLogger } from "#src/utils/audit-logger.type.js";
 
@@ -53,14 +58,12 @@ export class Module implements ModuleInterface<FastifyInstanceTypeForModule> {
         // tech_admin est interdit sur tout le registre (séparation des rôles)
         f.addHook("preHandler", async (request, reply) => {
           if (request.user?.role === "tech_admin") {
-            return reply
-              .code(403)
-              .send(
-                makeJsonApiError(403, "Forbidden", {
-                  code: "FORBIDDEN",
-                  detail: "tech_admin n'a pas accès au contenu du registre",
-                }),
-              );
+            return reply.code(403).send(
+              makeJsonApiError(403, "Forbidden", {
+                code: "FORBIDDEN",
+                detail: "tech_admin n'a pas accès au contenu du registre",
+              }),
+            );
           }
         });
 
@@ -80,4 +83,3 @@ export class Module implements ModuleInterface<FastifyInstanceTypeForModule> {
     );
   }
 }
-

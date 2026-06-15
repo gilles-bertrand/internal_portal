@@ -14,6 +14,10 @@ describe("user.serializer", () => {
     firstName: "John",
     lastName: "Doe",
     password: "hashedpassword",
+    role: "encoder",
+    failedLoginAttempts: 0,
+    lockedUntil: null,
+    passwordChangedAt: null,
   };
 
   const mockUsers: UserEntityType[] = [
@@ -24,6 +28,10 @@ describe("user.serializer", () => {
       firstName: "Jane",
       lastName: "Smith",
       password: "hashedpassword2",
+      role: "encoder",
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+      passwordChangedAt: null,
     },
   ];
 

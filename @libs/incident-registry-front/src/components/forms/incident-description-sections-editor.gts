@@ -2,6 +2,8 @@ import Component from '@glimmer/component';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import TpkButton from '@triptyk/ember-input/components/prefabs/tpk-prefab-button';
+import TpkInput from '@triptyk/ember-input/components/tpk-input';
+import TpkTextarea from '@triptyk/ember-input/components/tpk-textarea';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { t } from 'ember-intl';
@@ -20,18 +22,18 @@ export default class IncidentDescriptionSectionsEditor extends Component<Args> {
   @tracked draft: DescriptionSectionDraft = { title: '', detail: '' };
 
   @action
-  updateTitle(event: Event) {
+  updateTitle(value: string | number | Date | null) {
     this.draft = {
       ...this.draft,
-      title: (event.target as HTMLInputElement).value,
+      title: String(value ?? ''),
     };
   }
 
   @action
-  updateDetail(event: Event) {
+  updateDetail(value: string) {
     this.draft = {
       ...this.draft,
-      detail: (event.target as HTMLTextAreaElement).value,
+      detail: value,
     };
   }
 
@@ -53,25 +55,27 @@ export default class IncidentDescriptionSectionsEditor extends Component<Args> {
   }
 
   <template>
-    {{! template-lint-disable require-input-label }}
     <fieldset class="fieldset border border-base-300 p-4">
       <legend class="fieldset-legend">{{t
           "incidents.form.sections.descriptionBlocks"
         }}</legend>
       <div class="grid grid-cols-12 gap-2 mb-3">
-        <input
-          type="text"
-          class="input input-bordered rounded-none col-span-12 md:col-span-4"
-          placeholder={{t "incidents.form.placeholders.sectionTitle"}}
-          value={{this.draft.title}}
-          {{on "input" this.updateTitle}}
-        />
-        <textarea
-          class="textarea textarea-bordered rounded-none col-span-12 md:col-span-6"
-          placeholder={{t "incidents.form.placeholders.sectionDetail"}}
-          value={{this.draft.detail}}
-          {{on "input" this.updateDetail}}
-        ></textarea>
+        <div class="col-span-12 md:col-span-4">
+          <TpkInput
+            @label=""
+            @value={{this.draft.title}}
+            @placeholder={{t "incidents.form.placeholders.sectionTitle"}}
+            @onChange={{this.updateTitle}}
+          />
+        </div>
+        <div class="col-span-12 md:col-span-6">
+          <TpkTextarea
+            @label=""
+            @value={{this.draft.detail}}
+            @placeholder={{t "incidents.form.placeholders.sectionDetail"}}
+            @onChange={{this.updateDetail}}
+          />
+        </div>
         <div class="col-span-12 md:col-span-2 flex items-end">
           <TpkButton
             @label={{t "incidents.form.actions.addLine"}}

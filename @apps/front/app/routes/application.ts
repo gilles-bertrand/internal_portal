@@ -31,7 +31,7 @@ export default class ApplicationRoute extends Route {
       const worker = setupWorker(
         ...allUsersHandlers,
         ...allTodosHandlers,
-        ...allAccessRecordsHandlers,
+        ...allAccessRecordsHandlers
       );
       this.worker = worker;
       await worker.start({

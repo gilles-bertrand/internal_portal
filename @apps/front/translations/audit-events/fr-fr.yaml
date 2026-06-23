@@ -1,0 +1,11 @@
+table:
+  headers:
+    occurredAt: 'Date'
+    action: 'Action'
+    targetType: 'Cible'
+    actor: 'Utilisateur'
+    outcome: 'Résultat'
+
+pages:
+  list:
+    title: 'Méta-journal'

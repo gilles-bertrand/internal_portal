@@ -5,12 +5,16 @@ import IntlService from 'ember-intl/services/intl';
 import compatModules from '@embroider/virtual/compat-modules';
 import PageTitleService from 'ember-page-title/services/page-title';
 import EmberRouter from '@ember/routing/router';
+import AdaptiveStore from 'ember-simple-auth/session-stores/adaptive';
+import SessionService from 'ember-simple-auth/services/session';
 import setupSession from 'ember-simple-auth/initializers/setup-session';
 import type Owner from '@ember/owner';
 import { useLegacyStore } from '@warp-drive/legacy';
 import { JSONAPICache } from '@warp-drive/json-api';
 import '@warp-drive/ember/install';
 import FlashMessageService from 'ember-cli-flash/services/flash-messages';
+import CurrentUserService from '@libs/users-front/services/current-user';
+import CookiesService from 'ember-cookies/services/cookies';
 import AccessRecordSchema from '#src/schemas/access-records.ts';
 
 class Router extends EmberRouter {
@@ -31,6 +35,10 @@ export class TestApp extends Application {
     './services/intl': { default: IntlService },
     './services/page-title': { default: PageTitleService },
     './services/flash-message': { default: FlashMessageService },
+    './session-stores/application': { default: AdaptiveStore },
+    './services/session': { default: SessionService },
+
+    './services/cookies': { default: CookiesService },
     ...moduleRegistry(),
     ...inputValidationRegistry(),
     ...compatModules,
@@ -47,7 +55,9 @@ export default class TestStore extends useLegacyStore({
 
 export function initializeTestApp(owner: Owner, locale: string) {
   owner.register('service:store', TestStore);
+  owner.register('session-stores:application', AdaptiveStore);
   owner.register('service:flash-messages', FlashMessageService);
+  owner.register('service:current-user', CurrentUserService);
   owner.register('config:environment', { flashMessageDefaults: {} });
   // eslint-disable-next-line ember/no-private-routing-service
   const router = owner.lookup('router:main') as Router;

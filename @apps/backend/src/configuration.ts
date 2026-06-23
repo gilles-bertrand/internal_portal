@@ -29,5 +29,22 @@ const schema = object({
 export type AppConfiguration = z.infer<typeof schema>;
 
 export function loadConfiguration() {
-  return schema.parse(process.env);
+  const result = schema.safeParse(process.env);
+
+  if (!result.success) {
+    const details = result.error.issues
+      .map((issue) => {
+        const name = issue.path.join(".");
+        const reason = process.env[name] === undefined ? "manquante" : issue.message;
+        return `  - ${name}: ${reason}`;
+      })
+      .join("\n");
+
+    throw new Error(
+      `Configuration d'environnement invalide. Vérifie ton fichier @apps/backend/.env ` +
+        `(source de vérité : .env.enc déchiffré via SOPS, voir scripts/dev-setup.mjs) :\n${details}`,
+    );
+  }
+
+  return result.data;
 }

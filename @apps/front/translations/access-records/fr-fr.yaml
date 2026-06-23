@@ -7,6 +7,12 @@ table:
     isSpecialCategory: 'Données sensibles'
   actions:
     addRecord: 'Encoder un accès'
+actions:
+  exportRegistry: 'Exporter le registre (PDF)'
+export:
+  error: "Échec de l'export. Réessayez."
+  success: 'Registre exporté avec succès.'
+  inProgress: 'Export en cours…'
 
 forms:
   accessRecord:
@@ -43,4 +49,4 @@ pages:
   list:
     title: 'Registre des accès'
   create:
-    title: "Encoder un accès"
+    title: 'Encoder un accès'

@@ -94,7 +94,9 @@ export default class AccessRecordForm extends Component<AccessRecordFormArgs> {
           class="col-span-12 md:col-span-6"
         />
         <F.TpkCheckboxPrefab
-          @label={{t "access-records.forms.accessRecord.labels.isSpecialCategory"}}
+          @label={{t
+            "access-records.forms.accessRecord.labels.isSpecialCategory"
+          }}
           @validationField="isSpecialCategory"
           class="col-span-12 md:col-span-6"
         />

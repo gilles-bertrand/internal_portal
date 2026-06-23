@@ -7,6 +7,12 @@ table:
     isSpecialCategory: 'Special category'
   actions:
     addRecord: 'Record an access'
+actions:
+  exportRegistry: 'Export registry (PDF)'
+export:
+  error: 'Export failed. Please try again.'
+  success: 'Registry exported successfully.'
+  inProgress: 'Exporting…'
 
 forms:
   accessRecord:

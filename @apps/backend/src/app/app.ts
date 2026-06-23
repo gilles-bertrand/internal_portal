@@ -1,3 +1,4 @@
+/* oxlint-disable max-lines -- enregistrement des modules + config swagger, scission non pertinente */
 import { default as fastifyPassport } from "@fastify/passport";
 import fastifySecureSession from "@fastify/secure-session";
 import {

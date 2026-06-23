@@ -50,6 +50,7 @@
   "dependencies": {
     "@embroider/addon-shim": "catalog:",
     "@libs/shared-front": "workspace:^",
+    "@libs/users-front": "workspace:^",
     "@triptyk/ember-input": "catalog:",
     "@triptyk/ember-input-validation": "catalog:",
     "@triptyk/ember-ui": "catalog:",
@@ -104,6 +105,7 @@
     "ember-basic-dropdown": "catalog:",
     "ember-cli-flash": "catalog:",
     "ember-concurrency": "catalog:",
+    "ember-cookies": "catalog:",
     "ember-load-initializers": "catalog:",
     "ember-page-title": "catalog:",
     "ember-resolver": "catalog:",
@@ -144,10 +146,17 @@
       "./components/forms/access-record-form.js": "./dist/_app_/components/forms/access-record-form.js",
       "./routes/dashboard/access-records/create.js": "./dist/_app_/routes/dashboard/access-records/create.js",
       "./routes/dashboard/access-records/index.js": "./dist/_app_/routes/dashboard/access-records/index.js",
+      "./routes/dashboard/audit-events/index.js": "./dist/_app_/routes/dashboard/audit-events/index.js",
       "./schemas/access-records.js": "./dist/_app_/schemas/access-records.js",
+      "./schemas/audit-events.js": "./dist/_app_/schemas/audit-events.js",
+      "./schemas/data-categories.js": "./dist/_app_/schemas/data-categories.js",
+      "./schemas/legal-bases.js": "./dist/_app_/schemas/legal-bases.js",
+      "./schemas/purposes.js": "./dist/_app_/schemas/purposes.js",
       "./services/access-record.js": "./dist/_app_/services/access-record.js",
+      "./services/registry-export.js": "./dist/_app_/services/registry-export.js",
       "./templates/dashboard/access-records/create.js": "./dist/_app_/templates/dashboard/access-records/create.js",
-      "./templates/dashboard/access-records/index.js": "./dist/_app_/templates/dashboard/access-records/index.js"
+      "./templates/dashboard/access-records/index.js": "./dist/_app_/templates/dashboard/access-records/index.js",
+      "./templates/dashboard/audit-events/index.js": "./dist/_app_/templates/dashboard/audit-events/index.js"
     }
   }
 }

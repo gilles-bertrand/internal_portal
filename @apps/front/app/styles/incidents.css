@@ -1,0 +1,16 @@
+/*
+ * Harmonisation des champs du formulaire incidents (même règles que access-records).
+ */
+[data-test-incident-form] .tpk-input-input,
+[data-test-incident-form] .tpk-textarea-input,
+[data-test-incident-form] .tpk-datepicker-input-input,
+[data-test-incident-form] .tpk-datepicker-input-input-container {
+  width: 100%;
+}
+
+[data-test-incident-form] .tpk-input-input,
+[data-test-incident-form] .tpk-textarea-input,
+[data-test-incident-form] .tpk-datepicker-input-input,
+[data-test-incident-form] .tpk-select-trigger {
+  border-radius: 0;
+}

@@ -1,0 +1,136 @@
+table:
+  headers:
+    reference: Référence
+    client: Client
+    application: Application
+    status: Statut
+    reportDate: Date rapport
+    art9: Art. 9
+filters:
+  status: Statut
+  art9: Données sensibles (art. 9)
+  all: Tous
+  yes: Oui
+  no: Non
+actions:
+  create: Nouvel incident
+  exportRegistry: Exporter le registre (PDF)
+  exportReport: Exporter le rapport (PDF)
+export:
+  error: Échec de l'export. Réessayez.
+  success: Registre exporté avec succès.
+  inProgress: Export en cours…
+pages:
+  list:
+    title: Registre d'incidents
+form:
+  title: Nouveau rapport d'incident
+  steps:
+    header: En-tête (§1–§2)
+    context: Contexte & dates
+    description: Description (§3)
+    impact: Impact (§4)
+    timeline: Chronologie (§5)
+    measures: Causes & mesures (§6–§7)
+    closing: Communication & conclusion (§8–§9)
+    signatures: Annexes & signatures (§10)
+  sections:
+    timeline: Chronologie des événements
+    descriptionBlocks: Blocs de description
+    correctiveActions: Actions correctives
+    accessLogs: Journaux d'accès (annexe)
+  actions:
+    previous: Étape précédente
+    next: Étape suivante
+    addLine: Ajouter
+    remove: Retirer
+  hints:
+    communicationPlan: Le plan de communication peut être ajouté ultérieurement dans le détail de l'incident.
+  clientCode: Code client
+  clientName: Nom client
+  applicationName: Application
+  applicationDetail: Détail application
+  reportedBy: Signaleur
+  reportDate: Date du rapport
+  version: Version
+  classification: Classification
+  status: Statut
+  environment: Environnement
+  recipientName: Destinataire
+  recipientOrg: Organisation destinataire
+  serviceName: Service
+  deployedVersion: Version déployée
+  incidentStartAt: Début incident
+  incidentEndAt: Fin incident
+  detectedAt: Détection
+  resolvedAt: Résolution
+  resolutionDurationMinutes: Durée résolution (minutes)
+  technicalLeadId: Responsable technique
+  legalContext: Cadre légal (§1)
+  specialCategoryData: Données art. 9
+  personalDataImpacted: Données personnelles impactées
+  apdNotificationRequired: Notification APD requise
+  impactSummary: Résumé impact (§4)
+  severityOperational: Gravité opérationnelle
+  severityCompliance: Gravité conformité
+  severityOverall: Gravité globale
+  affectedPersonsCount: Personnes concernées
+  affectedPatientsCount: Patients concernés
+  description: Description (§3)
+  immediateCause: Cause immédiate (§6)
+  contributingFactors: Facteurs contributifs
+  preventiveMeasures: Mesures préventives
+  conclusion: Conclusion (§9)
+  issuerSignatureName: Signataire émetteur
+  issuerSignatureDate: Date signature émetteur
+  recipientSignatureName: Signataire destinataire
+  recipientSignatureDate: Date signature destinataire
+  submit: Enregistrer l'incident
+  cancel: Retour au registre
+  success: Incident enregistré avec succès
+  errors:
+    stepValidation: Erreur de validation de l'étape. Réessayez.
+  placeholders:
+    select: Sélectionner…
+    clientCode: 'ex : IPBW'
+    clientName: 'ex : IPBW SA'
+    applicationName: 'ex : Portail Admin'
+    applicationDetail: 'ex : Module authentification'
+    reportedBy: 'ex : Support N1'
+    reportDate: 'ex : 2026-02-20T10:00:00.000Z'
+    recipientName: 'ex : Direction IT'
+    recipientOrg: 'ex : IPBW'
+    serviceName: 'ex : API Auth'
+    incidentStartAt: 'ex : 2026-02-19T08:00:00.000Z'
+    incidentEndAt: 'ex : 2026-02-19T12:30:00.000Z'
+    detectedAt: 'ex : 2026-02-19T08:15:00.000Z'
+    resolvedAt: 'ex : 2026-02-19T12:30:00.000Z'
+    resolutionDurationMinutes: 'ex : 255'
+    technicalLeadId: 'ID utilisateur (optionnel)'
+    legalContext: 'Objet et cadre légal (§1)'
+    impactSummary: "Nature et étendue de l'impact (§4)"
+    description: 'Description détaillée (§3)'
+    immediateCause: 'Cause immédiate (§6)'
+    conclusion: 'Conclusion et suites (§9)'
+    contributingFactor: 'Facteur contributif'
+    preventiveMeasure: 'Mesure préventive'
+    sectionTitle: 'Titre du bloc'
+    sectionDetail: 'Contenu du bloc'
+    timelineDate: 'AAAA-MM-JJ'
+    timelineTime: 'HH:MM'
+    timelineEvent: 'Événement'
+    actionPhase: 'Phase (optionnel)'
+    actionTitle: 'Titre action'
+    actionDetail: 'Détail action'
+    logDate: 'Date'
+    logUser: 'Utilisateur'
+    logEmail: 'E-mail'
+    logFiles: 'Fichiers'
+    signatureDate: 'ex : 2026-02-20'
+    affectedPersonsCount: 'ex : 50'
+    affectedPatientsCount: 'ex : 12'
+detail:
+  legal: Cadre légal
+  description: Description
+  impact: Impact
+  conclusion: Conclusion

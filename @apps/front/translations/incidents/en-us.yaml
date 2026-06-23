@@ -1,0 +1,136 @@
+table:
+  headers:
+    reference: Reference
+    client: Client
+    application: Application
+    status: Status
+    reportDate: Report date
+    art9: Art. 9
+filters:
+  status: Status
+  art9: Special category (art. 9)
+  all: All
+  yes: Yes
+  no: No
+actions:
+  create: New incident
+  exportRegistry: Export registry (PDF)
+  exportReport: Export report (PDF)
+export:
+  error: Export failed. Please try again.
+  success: Registry exported successfully.
+  inProgress: Exporting…
+pages:
+  list:
+    title: Incident registry
+form:
+  title: New incident report
+  steps:
+    header: Header (§1–§2)
+    context: Context & dates
+    description: Description (§3)
+    impact: Impact (§4)
+    timeline: Timeline (§5)
+    measures: Causes & measures (§6–§7)
+    closing: Communication & conclusion (§8–§9)
+    signatures: Annexes & signatures (§10)
+  sections:
+    timeline: Event timeline
+    descriptionBlocks: Description blocks
+    correctiveActions: Corrective actions
+    accessLogs: Access logs (annex)
+  actions:
+    previous: Previous step
+    next: Next step
+    addLine: Add
+    remove: Remove
+  hints:
+    communicationPlan: Communication plan can be added later from the incident detail view.
+  clientCode: Client code
+  clientName: Client name
+  applicationName: Application
+  applicationDetail: Application detail
+  reportedBy: Reported by
+  reportDate: Report date
+  version: Version
+  classification: Classification
+  status: Status
+  environment: Environment
+  recipientName: Recipient
+  recipientOrg: Recipient organization
+  serviceName: Service
+  deployedVersion: Deployed version
+  incidentStartAt: Incident start
+  incidentEndAt: Incident end
+  detectedAt: Detected at
+  resolvedAt: Resolved at
+  resolutionDurationMinutes: Resolution duration (minutes)
+  technicalLeadId: Technical lead
+  legalContext: Legal context (§1)
+  specialCategoryData: Special category data (art. 9)
+  personalDataImpacted: Personal data impacted
+  apdNotificationRequired: DPA notification required
+  impactSummary: Impact summary (§4)
+  severityOperational: Operational severity
+  severityCompliance: Compliance severity
+  severityOverall: Overall severity
+  affectedPersonsCount: Affected persons
+  affectedPatientsCount: Affected patients
+  description: Description (§3)
+  immediateCause: Immediate cause (§6)
+  contributingFactors: Contributing factors
+  preventiveMeasures: Preventive measures
+  conclusion: Conclusion (§9)
+  issuerSignatureName: Issuer signature
+  issuerSignatureDate: Issuer signature date
+  recipientSignatureName: Recipient signature
+  recipientSignatureDate: Recipient signature date
+  submit: Save incident
+  cancel: Back to registry
+  success: Incident saved successfully
+  errors:
+    stepValidation: Step validation failed. Please try again.
+  placeholders:
+    select: Select…
+    clientCode: 'e.g. IPBW'
+    clientName: 'e.g. IPBW SA'
+    applicationName: 'e.g. Admin Portal'
+    applicationDetail: 'e.g. Auth module'
+    reportedBy: 'e.g. Support L1'
+    reportDate: 'e.g. 2026-02-20T10:00:00.000Z'
+    recipientName: 'e.g. IT Director'
+    recipientOrg: 'e.g. IPBW'
+    serviceName: 'e.g. Auth API'
+    incidentStartAt: 'e.g. 2026-02-19T08:00:00.000Z'
+    incidentEndAt: 'e.g. 2026-02-19T12:30:00.000Z'
+    detectedAt: 'e.g. 2026-02-19T08:15:00.000Z'
+    resolvedAt: 'e.g. 2026-02-19T12:30:00.000Z'
+    resolutionDurationMinutes: 'e.g. 255'
+    technicalLeadId: 'User ID (optional)'
+    legalContext: 'Legal framework and context (§1)'
+    impactSummary: 'Nature and scope of impact (§4)'
+    description: 'Detailed incident description (§3)'
+    immediateCause: 'Immediate cause (§6)'
+    conclusion: 'Conclusion and follow-up (§9)'
+    contributingFactor: 'Contributing factor'
+    preventiveMeasure: 'Preventive measure'
+    sectionTitle: 'Block title'
+    sectionDetail: 'Block content'
+    timelineDate: 'YYYY-MM-DD'
+    timelineTime: 'HH:MM'
+    timelineEvent: 'Event'
+    actionPhase: 'Phase (optional)'
+    actionTitle: 'Action title'
+    actionDetail: 'Action detail'
+    logDate: 'Date'
+    logUser: 'User'
+    logEmail: 'Email'
+    logFiles: 'Files'
+    signatureDate: 'e.g. 2026-02-20'
+    affectedPersonsCount: 'e.g. 50'
+    affectedPatientsCount: 'e.g. 12'
+detail:
+  legal: Legal context
+  description: Description
+  impact: Impact
+  conclusion: Conclusion

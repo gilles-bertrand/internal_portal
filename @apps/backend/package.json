@@ -39,6 +39,7 @@
     "@fastify/swagger-ui": "catalog:",
     "@libs/access-registry-backend": "workspace:*",
     "@libs/audit-log-backend": "workspace:*",
+    "@libs/incident-registry-backend": "workspace:*",
     "@libs/backend-shared": "workspace:*",
     "@libs/todos-backend": "workspace:*",
     "@libs/users-backend": "workspace:*",

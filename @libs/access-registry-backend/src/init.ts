@@ -12,6 +12,14 @@ import { ListRoute } from "#src/routes/list.route.js";
 import { GetRoute } from "#src/routes/get.route.js";
 import { VerifyIntegrityRoute } from "#src/routes/verify-integrity.route.js";
 import { StatsRoute } from "#src/routes/stats.route.js";
+import { ExportRoute } from "#src/routes/export.route.js";
+import { RetentionRunRoute } from "#src/routes/retention-run.route.js";
+import { AuditEventsRoute } from "#src/routes/audit-events.route.js";
+import {
+  DataCategoriesRoute,
+  PurposesRoute,
+  LegalBasesRoute,
+} from "#src/routes/referentials.route.js";
 import { AccessRecordEntity } from "./entities/access-record.entity.js";
 import {
   handleJsonApiErrors,
@@ -41,45 +49,72 @@ export class Module implements ModuleInterface<FastifyInstanceTypeForModule> {
   }
 
   public async setupRoutes(fastify: FastifyInstanceTypeForModule): Promise<void> {
+    await fastify.register(async (f) => this.registerAccessRecordRoutes(f), {
+      prefix: "/access-records",
+    });
+    await fastify.register(async (f) => this.registerReferentialRoutes(f));
+  }
+
+  private registerAccessRecordRoutes(f: FastifyInstanceTypeForModule) {
+    this.applyCommonHooks(f);
+
     const repository = this.context.em.getRepository(AccessRecordEntity);
+    const routes: Route<FastifyInstanceTypeForModule>[] = [
+      new CreateRoute(this.context.em, this.auditLogger),
+      new ListRoute(this.context.em, this.auditLogger),
+      new GetRoute(repository, this.auditLogger),
+      new VerifyIntegrityRoute(this.context.em),
+      new StatsRoute(this.context.em),
+      new ExportRoute(
+        this.context.em,
+        this.context.configuration.exportSigningKey,
+        this.auditLogger,
+      ),
+      new RetentionRunRoute(
+        this.context.em,
+        this.context.configuration.exportSigningKey,
+        this.auditLogger,
+      ),
+      new AuditEventsRoute(this.context.em),
+    ];
 
-    await fastify.register(
-      async (f) => {
-        f.setErrorHandler((error, request, reply) => {
-          handleJsonApiErrors(error, request, reply);
-        });
+    for (const route of routes) {
+      route.routeDefinition(f);
+    }
+  }
 
-        const jwtAuth = createJwtAuthMiddleware(
-          this.context.em,
-          this.context.configuration.jwtSecret,
+  private registerReferentialRoutes(f: FastifyInstanceTypeForModule) {
+    this.applyCommonHooks(f);
+
+    const routes: Route<FastifyInstanceTypeForModule>[] = [
+      new DataCategoriesRoute(this.context.em),
+      new PurposesRoute(this.context.em),
+      new LegalBasesRoute(this.context.em),
+    ];
+
+    for (const route of routes) {
+      route.routeDefinition(f);
+    }
+  }
+
+  private applyCommonHooks(f: FastifyInstanceTypeForModule) {
+    f.setErrorHandler((error, request, reply) => {
+      handleJsonApiErrors(error, request, reply);
+    });
+
+    const jwtAuth = createJwtAuthMiddleware(this.context.em, this.context.configuration.jwtSecret);
+    f.addHook("preValidation", jwtAuth);
+
+    // tech_admin est interdit sur tout le registre (séparation des rôles)
+    f.addHook("preHandler", async (request, reply) => {
+      if (request.user?.role === "tech_admin") {
+        return reply.code(403).send(
+          makeJsonApiError(403, "Forbidden", {
+            code: "FORBIDDEN",
+            detail: "tech_admin n'a pas accès au contenu du registre",
+          }),
         );
-        f.addHook("preValidation", jwtAuth);
-
-        // tech_admin est interdit sur tout le registre (séparation des rôles)
-        f.addHook("preHandler", async (request, reply) => {
-          if (request.user?.role === "tech_admin") {
-            return reply.code(403).send(
-              makeJsonApiError(403, "Forbidden", {
-                code: "FORBIDDEN",
-                detail: "tech_admin n'a pas accès au contenu du registre",
-              }),
-            );
-          }
-        });
-
-        const routes: Route<FastifyInstanceTypeForModule>[] = [
-          new CreateRoute(this.context.em, this.auditLogger),
-          new ListRoute(this.context.em, this.auditLogger),
-          new GetRoute(repository, this.auditLogger),
-          new VerifyIntegrityRoute(this.context.em),
-          new StatsRoute(this.context.em),
-        ];
-
-        for (const route of routes) {
-          route.routeDefinition(f);
-        }
-      },
-      { prefix: "/access-records" },
-    );
+      }
+    });
   }
 }

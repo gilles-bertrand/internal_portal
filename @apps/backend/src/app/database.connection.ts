@@ -17,7 +17,13 @@ export function databaseConfig(config: Pick<AppConfiguration, "DATABASE_URI">) {
       seedersList: [DatabaseSeeder, E2ESeeder],
     },
     clientUrl: config.DATABASE_URI,
-    entities: [UserEntity, RefreshTokenEntity, TodoEntity, ...accessRegistryEntities, ...auditLogEntities],
+    entities: [
+      UserEntity,
+      RefreshTokenEntity,
+      TodoEntity,
+      ...accessRegistryEntities,
+      ...auditLogEntities,
+    ],
   });
 }
 

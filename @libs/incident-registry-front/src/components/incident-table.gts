@@ -6,6 +6,7 @@ import TableGenericPrefab, {
   type TableParams,
 } from '@triptyk/ember-ui/components/prefabs/tpk-table-generic-prefab';
 import TpkButton from '@triptyk/ember-input/components/prefabs/tpk-prefab-button';
+import TpkSelect from '@triptyk/ember-input/components/tpk-select';
 import { on } from '@ember/modifier';
 import { t, type IntlService } from 'ember-intl';
 import type FlashMessageService from 'ember-cli-flash/services/flash-messages';
@@ -23,6 +24,9 @@ class IncidentTable extends Component<object> {
   @tracked filterStatus = '';
   @tracked filterSpecial = '';
   @tracked exporting = false;
+
+  statusFilterOptions = ['open', 'in_progress', 'resolved', 'closed'];
+  specialFilterOptions = ['true', 'false'];
 
   get isEncoder(): boolean {
     return this.currentUser.user?.role === 'encoder';
@@ -99,12 +103,12 @@ class IncidentTable extends Component<object> {
     }
   };
 
-  onChangeStatus = (event: Event) => {
-    this.filterStatus = (event.target as HTMLSelectElement).value;
+  onChangeStatus = (value: unknown) => {
+    this.filterStatus = (value as string | null) ?? '';
   };
 
-  onChangeSpecial = (event: Event) => {
-    this.filterSpecial = (event.target as HTMLSelectElement).value;
+  onChangeSpecial = (value: unknown) => {
+    this.filterSpecial = (value as string | null) ?? '';
   };
 
   <template>
@@ -135,28 +139,24 @@ class IncidentTable extends Component<object> {
 
       <div class="flex flex-wrap items-end gap-4 my-4">
         <label class="flex flex-col gap-1 text-sm">
-          <span>{{t "incidents.filters.status"}}</span>
-          <select
-            class="select select-bordered select-sm"
-            {{on "change" this.onChangeStatus}}
-          >
-            <option value="">{{t "incidents.filters.all"}}</option>
-            <option value="open">open</option>
-            <option value="in_progress">in_progress</option>
-            <option value="resolved">resolved</option>
-            <option value="closed">closed</option>
-          </select>
+          <TpkSelect
+            @label={{t "incidents.filters.status"}}
+            @options={{this.statusFilterOptions}}
+            @selected={{if this.filterStatus this.filterStatus}}
+            @onChange={{this.onChangeStatus}}
+            @placeholder={{t "incidents.filters.all"}}
+            @allowClear={{true}}
+          />
         </label>
         <label class="flex flex-col gap-1 text-sm">
-          <span>{{t "incidents.filters.art9"}}</span>
-          <select
-            class="select select-bordered select-sm"
-            {{on "change" this.onChangeSpecial}}
-          >
-            <option value="">{{t "incidents.filters.all"}}</option>
-            <option value="true">{{t "incidents.filters.yes"}}</option>
-            <option value="false">{{t "incidents.filters.no"}}</option>
-          </select>
+          <TpkSelect
+            @label={{t "incidents.filters.art9"}}
+            @options={{this.specialFilterOptions}}
+            @selected={{if this.filterSpecial this.filterSpecial}}
+            @onChange={{this.onChangeSpecial}}
+            @placeholder={{t "incidents.filters.all"}}
+            @allowClear={{true}}
+          />
         </label>
       </div>
 

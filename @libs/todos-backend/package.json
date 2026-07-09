@@ -30,6 +30,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@libs/permissions-backend": "workspace:*",
     "@libs/repo-utils": "workspace:*",
     "@ngneat/falso": "catalog:",
     "@swc/core": "catalog:",

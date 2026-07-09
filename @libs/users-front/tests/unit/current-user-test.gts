@@ -145,9 +145,7 @@ describe('Service | CurrentUser | Unit', () => {
     } as never);
 
     const reportSpy = vi.spyOn(currentUserService.errorReporter, 'report');
-    vi.spyOn(globalThis, 'fetch').mockRejectedValue(
-      new Error('Network error')
-    );
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'));
 
     await expect(currentUserService.load()).resolves.toBeUndefined();
 

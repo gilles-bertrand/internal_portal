@@ -4,8 +4,12 @@ import UsersEditRoute from '#src/routes/dashboard/users/edit.gts';
 import { query } from '@warp-drive/utilities/json-api';
 
 vi.mock('@warp-drive/utilities/json-api', () => ({
-  findRecord: vi.fn((type, id, options) => ({ type, id, options })),
-  query: vi.fn((type, queryParams, options) => ({
+  findRecord: vi.fn((type: string, id: string, options: unknown) => ({
+    type,
+    id,
+    options,
+  })),
+  query: vi.fn((type: string, queryParams: unknown, options: unknown) => ({
     type,
     queryParams,
     options,
@@ -35,9 +39,13 @@ describe('users dashboard routes', () => {
 
     await route.model();
 
-    expect(query).toHaveBeenCalledWith('roles', {}, {
-      resourcePath: 'users/role-options',
-    });
+    expect(query).toHaveBeenCalledWith(
+      'roles',
+      {},
+      {
+        resourcePath: 'users/role-options',
+      }
+    );
     expect(request).toHaveBeenCalled();
   });
 
@@ -52,8 +60,12 @@ describe('users dashboard routes', () => {
 
     await route.model({ user_id: 'user-1' });
 
-    expect(query).toHaveBeenCalledWith('roles', {}, {
-      resourcePath: 'users/role-options',
-    });
+    expect(query).toHaveBeenCalledWith(
+      'roles',
+      {},
+      {
+        resourcePath: 'users/role-options',
+      }
+    );
   });
 });

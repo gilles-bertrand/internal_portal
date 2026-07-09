@@ -36,7 +36,9 @@ export default class RolePermissionMatrix extends Component<RolePermissionMatrix
   @service declare flashMessages: FlashMessageService;
 
   @tracked rules: PermissionRule[] = this.args.rules.filter((r) => !r.inverted);
-  preservedInvertedRules: PermissionRule[] = this.args.rules.filter((r) => r.inverted);
+  preservedInvertedRules: PermissionRule[] = this.args.rules.filter(
+    (r) => r.inverted
+  );
   @tracked saving = false;
 
   subjects = SUBJECTS;

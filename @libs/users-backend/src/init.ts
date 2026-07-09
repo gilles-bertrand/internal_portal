@@ -16,6 +16,7 @@ import { ListRoute } from "#src/routes/list.route.js";
 import { GetRoute } from "#src/routes/get.route.js";
 import { UpdateRoute } from "#src/routes/update.route.js";
 import { DeleteRoute } from "#src/routes/delete.route.js";
+import { RoleOptionsRoute } from "#src/routes/role-options.route.js";
 import { UserEntity } from "./entities/user.entity.js";
 import { type ModuleInterface, type Route } from "@libs/backend-shared";
 import { handleJsonApiErrors } from "@libs/backend-shared";
@@ -83,6 +84,7 @@ export class UserModule implements ModuleInterface<FastifyInstanceTypeForModule>
           new CreateRoute(repository),
           new ProfileRoute(),
           new ListRoute(this.context.em),
+          new RoleOptionsRoute(this.context.em),
           new GetRoute(repository),
           new UpdateRoute(repository),
           new DeleteRoute(repository),

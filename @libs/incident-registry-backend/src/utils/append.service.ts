@@ -63,6 +63,7 @@ function referenceYear(reportDate: string): string {
   return new Date(reportDate).getUTCFullYear().toString();
 }
 
+// @lat: [[backend/incident-registry#Référence et séquence annuelle globale]]
 async function nextAnnualSequence(tx: EntityManager, year: string): Promise<number> {
   const prefix = `INC-${year}-`;
   const rows = await tx.find(IncidentEntity, {

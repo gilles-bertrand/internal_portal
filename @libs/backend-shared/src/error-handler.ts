@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { hasZodFastifySchemaValidationErrors } from "fastify-type-provider-zod";
 
+// @lat: [[backend/platform#Enveloppe JSON:API et gestion d'erreurs partagées]]
 export function handleJsonApiErrors(error: unknown, _request: FastifyRequest, reply: FastifyReply) {
   if (hasZodFastifySchemaValidationErrors(error)) {
     return reply.status(400).send({

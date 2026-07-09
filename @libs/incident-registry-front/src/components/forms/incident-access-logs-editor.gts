@@ -30,7 +30,10 @@ export default class IncidentAccessLogsEditor extends Component<Args> {
   };
 
   @action
-  updateField(field: keyof AccessLogDraft, value: string | number | Date | null) {
+  updateField(
+    field: keyof AccessLogDraft,
+    value: string | number | Date | null
+  ) {
     const strValue = String(value ?? '');
     this.draft = {
       ...this.draft,

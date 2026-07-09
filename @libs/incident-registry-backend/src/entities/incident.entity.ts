@@ -21,7 +21,8 @@ export const IncidentEntity = defineEntity({
     encodedAt: p.string(),
     recipientName: p.string(),
     recipientOrg: p.string(),
-    legalContext: p.string(),
+    // @lat: [[incident-registry#Champs texte long : p.text() requis pour legalContext/description/conclusion]]
+    legalContext: p.text(),
     serviceName: p.string(),
     deployedVersion: p.string(),
     incidentStartAt: p.string(),
@@ -30,7 +31,7 @@ export const IncidentEntity = defineEntity({
     resolvedAt: p.string().nullable(),
     resolutionDurationMinutes: p.integer().nullable(),
     technicalLeadId: p.string().nullable(),
-    description: p.string(),
+    description: p.text(),
     descriptionSections: p.json<{ title: string; body?: string; items?: string[] }[]>().nullable(),
     personalDataImpacted: p.boolean().default(false),
     specialCategoryData: p.boolean().default(false),
@@ -56,7 +57,7 @@ export const IncidentEntity = defineEntity({
       >(),
     preventiveMeasures: p.json<string[]>(),
     communicationPlan: p.json<Record<string, unknown>[]>().nullable(),
-    conclusion: p.string(),
+    conclusion: p.text(),
     timelineEvents: p.json<{ date: string; time: string; event: string }[]>(),
     accessLogs: p
       .json<{ date: string; user: string; email: string; files: string; count: number }[]>()

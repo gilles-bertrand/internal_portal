@@ -4,6 +4,11 @@ import type IntlService from 'ember-intl/services/intl';
 import type RouterService from '@ember/routing/router-service';
 import type { ImmerChangeset } from 'ember-immer-changeset';
 import type ErrorReporterService from './error-reporter';
+import {
+  genericJsonApiErrorMessage,
+  resolveJsonApiErrorMessage,
+  type JsonApiError,
+} from '../utils/json-api-error-message.ts';
 
 interface HandleSaveOptions<T> {
   saveAction: () => Promise<T>;
@@ -14,11 +19,16 @@ interface HandleSaveOptions<T> {
   idForTransitionOnSuccess?: string | string[];
 }
 
-interface JSONAPIError {
-  source: { pointer: string };
-  detail: string;
+const FIELD_POINTER_RE = /\/data\/attributes\//;
+
+function isFieldError(e: JsonApiError): boolean {
+  return (
+    typeof e.source?.pointer === 'string' &&
+    FIELD_POINTER_RE.test(e.source.pointer)
+  );
 }
 
+// @lat: [[frontend/shared-front]]
 export default class HandleSaveService extends Service {
   @service declare flashMessages: FlashMessageService;
   @service declare intl: IntlService;
@@ -61,9 +71,12 @@ export default class HandleSaveService extends Service {
         handled = true;
       }
 
-      // probably a fatal error ?
       if (!handled) {
+        // Non-AggregateError: network failure, non-JSON body, etc. — no
+        // structured JSON:API errors to classify, so surface a generic flash
+        // in addition to reporting for monitoring.
         this.errorReporter.report(error);
+        this.flashMessages.danger(genericJsonApiErrorMessage(this.intl));
       }
 
       if (transitionOnError) {
@@ -76,32 +89,44 @@ export default class HandleSaveService extends Service {
     error: AggregateError,
     changeset?: ImmerChangeset
   ) {
-    if (changeset) {
-      this.addErrorsToChangeset(error, changeset);
-    } else {
-      this.reportAggregateError(error);
+    const errors = (error.errors ?? []) as JsonApiError[];
+    const fieldErrors = errors.filter(isFieldError);
+    const globalErrors = errors.filter((e) => !isFieldError(e));
+
+    if (changeset && fieldErrors.length) {
+      this.addErrorsToChangeset(fieldErrors, changeset);
+    }
+
+    // Without a changeset there is no field to attach a field error to, so
+    // every error — field or global — is flashed instead.
+    const toFlash = changeset ? globalErrors : errors;
+    for (const e of toFlash) {
+      this.flashMessages.danger(resolveJsonApiErrorMessage(e, this.intl));
+    }
+
+    if (!fieldErrors.length && !toFlash.length) {
+      this.flashMessages.danger(genericJsonApiErrorMessage(this.intl));
+    }
+
+    if (globalErrors.some((e) => (e.status ?? '').startsWith('5'))) {
+      this.errorReporter.report(error);
     }
   }
 
   private addErrorsToChangeset(
-    error: AggregateError,
+    fieldErrors: JsonApiError[],
     changeset: ImmerChangeset
   ) {
-    for (const singleError of error.errors as JSONAPIError[]) {
+    for (const e of fieldErrors) {
       changeset.addError({
-        message: singleError.detail,
-        key: singleError.source.pointer.replace('//data/attributes/', ''),
+        message: e.detail ?? genericJsonApiErrorMessage(this.intl),
+        key: e
+          .source!.pointer!.replace(FIELD_POINTER_RE, '')
+          .replace(/^\/+/, ''),
         value: undefined,
         originalValue: undefined,
       });
     }
-  }
-
-  private reportAggregateError(error: AggregateError) {
-    this.errorReporter.report(error);
-    this.flashMessages.danger(
-      this.intl.t('shared.handle-save.generic-error-message')
-    );
   }
 }
 

@@ -30,7 +30,10 @@ export default class IncidentCorrectiveActionsEditor extends Component<Args> {
   };
 
   @action
-  updateField(field: keyof CorrectiveActionDraft, value: string | number | Date | null) {
+  updateField(
+    field: keyof CorrectiveActionDraft,
+    value: string | number | Date | null
+  ) {
     const strValue = String(value ?? '');
     this.draft = {
       ...this.draft,

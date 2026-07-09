@@ -20,10 +20,12 @@ import packageJson from "../../package.json" with { type: "json" };
 import { appRouter } from "./app.router.js";
 import type { ApplicationContext } from "./application.context.js";
 import { logger } from "./logger.js";
-import { UserModule, AuthModule } from "@libs/users-backend";
+import { UserModule, AuthModule, createJwtAuthMiddleware } from "@libs/users-backend";
 import { Module as TodoModule } from "@libs/todos-backend";
 import { Module as AccessRegistryModule } from "@libs/access-registry-backend";
+import { Module as IncidentRegistryModule } from "@libs/incident-registry-backend";
 import { AuditAppendService } from "@libs/audit-log-backend";
+import { PermissionsModule } from "@libs/permissions-backend";
 
 export type FastifyInstanceType = FastifyInstance<
   RawServerDefault,
@@ -167,6 +169,21 @@ export class App {
           },
         },
         new AuditAppendService(this.context.orm.em.fork()),
+      ),
+      incidentRegistryModule: IncidentRegistryModule.init(
+        {
+          em: this.context.orm.em.fork(),
+          configuration: {
+            jwtSecret: this.context.configuration.JWT_SECRET,
+            exportSigningKey: this.context.configuration.EXPORT_SIGNING_KEY,
+          },
+        },
+        new AuditAppendService(this.context.orm.em.fork()),
+      ),
+      // @lat: [[backend/permissions#Module Fastify PermissionsModule]]
+      permissionsModule: PermissionsModule.init(
+        { em: this.context.orm.em.fork() },
+        createJwtAuthMiddleware(this.context.orm.em.fork(), this.context.configuration.JWT_SECRET),
       ),
     });
   }

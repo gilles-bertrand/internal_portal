@@ -3,17 +3,29 @@ import type { FastifyInstanceType } from "./app.js";
 import { statusRoute } from "./status.route.js";
 import { Module as TodoModule } from "@libs/todos-backend";
 import { type Module as AccessRegistryModule } from "@libs/access-registry-backend";
+import { type Module as IncidentRegistryModule } from "@libs/incident-registry-backend";
+import { type PermissionsModule } from "@libs/permissions-backend";
 
+// @lat: [[apps/backend-bootstrap#Assemblage incident-registry (module désormais branché)]]
 interface AppRouterOptions {
   authModule: AuthModule;
   userModule: UserModule;
   todosModule: TodoModule;
   accessRegistryModule: AccessRegistryModule;
+  incidentRegistryModule: IncidentRegistryModule;
+  permissionsModule: PermissionsModule;
 }
 
 export async function appRouter(
   fastify: FastifyInstanceType,
-  { authModule, userModule, todosModule, accessRegistryModule }: AppRouterOptions,
+  {
+    authModule,
+    userModule,
+    todosModule,
+    accessRegistryModule,
+    incidentRegistryModule,
+    permissionsModule,
+  }: AppRouterOptions,
 ) {
   await fastify.register(
     async function (fastify) {
@@ -31,6 +43,8 @@ export async function appRouter(
       await userModule.setupRoutes(fastify);
       await todosModule.setupRoutes(fastify);
       await accessRegistryModule.setupRoutes(fastify);
+      await incidentRegistryModule.setupRoutes(fastify);
+      await permissionsModule.setupRoutes(fastify);
     },
     {
       prefix: "api/v1",

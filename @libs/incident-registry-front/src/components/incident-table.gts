@@ -29,7 +29,7 @@ class IncidentTable extends Component<object> {
   specialFilterOptions = ['true', 'false'];
 
   get isEncoder(): boolean {
-    return this.currentUser.user?.role === 'encoder';
+    return this.currentUser.user?.roleName === 'encoder';
   }
 
   get additionalFilters(): Record<string, string> {

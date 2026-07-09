@@ -5,6 +5,7 @@ import type { EntityManager } from "@mikro-orm/postgresql";
 import { IncidentEntity } from "#src/entities/incident.entity.js";
 import { ExportService } from "#src/utils/export.service.js";
 import type { AuditLogger } from "#src/utils/audit-logger.type.js";
+import { requirePermission } from "@libs/permissions-backend";
 
 export class ExportOneRoute implements Route {
   public constructor(
@@ -17,6 +18,7 @@ export class ExportOneRoute implements Route {
     return f.post(
       "/:id/export",
       {
+        preHandler: [requirePermission("read", "Incident")],
         schema: {
           params: object({ id: string() }),
           response: {

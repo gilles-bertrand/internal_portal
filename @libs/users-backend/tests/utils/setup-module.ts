@@ -6,6 +6,13 @@ import {
   type FastifyInstanceTypeForModule,
   AuthModule,
 } from "#src/index.js";
+import {
+  entities as permissionsEntities,
+  PermissionRuleEntity,
+  PermissionsModule,
+  RoleEntity,
+  type RoleEntityType,
+} from "@libs/permissions-backend";
 import { MikroORM } from "@mikro-orm/postgresql";
 import { fastify } from "fastify";
 import {
@@ -17,6 +24,7 @@ import { sign } from "jsonwebtoken";
 import { hash } from "argon2";
 import { randomUUID } from "crypto";
 import { hashToken, generateFamilyId } from "#src/utils/token.utils.js";
+import { createJwtAuthMiddleware } from "#src/middlewares/jwt-auth.middleware.js";
 
 export class TestModule {
   public static JWT_SECRET = "testSecret";
@@ -39,7 +47,7 @@ export class TestModule {
     }
 
     const orm = await MikroORM.init({
-      entities: [...entities],
+      entities: [...entities, ...permissionsEntities],
       clientUrl: connectionUrl,
     });
 
@@ -63,12 +71,17 @@ export class TestModule {
         jwtRefreshSecret: TestModule.JWT_REFRESH_SECRET,
       },
     });
+    const permissionsModule = PermissionsModule.init(
+      { em: sharedEm },
+      createJwtAuthMiddleware(sharedEm, TestModule.JWT_SECRET),
+    );
 
     const testModule = new TestModule(module, orm);
     testModule.fastifyInstance = fastifyInstance;
 
     await module.setupRoutes(fastifyInstance);
     await authModule.setupRoutes(fastifyInstance);
+    await permissionsModule.setupRoutes(fastifyInstance);
 
     return testModule;
   }
@@ -117,18 +130,62 @@ export class TestModule {
     await this.em.flush();
   }
 
+  public async ensureRole(name: string): Promise<RoleEntityType> {
+    const roleRepository = this.em.getRepository(RoleEntity);
+    const existing = await roleRepository.findOne({ name });
+    if (existing) return existing;
+
+    const role = roleRepository.create({ id: randomUUID(), name, description: null });
+    await this.em.flush();
+    return role;
+  }
+
   public async createUser(data: {
-    id: string;
+    id?: string;
     email: string;
     firstName: string;
     lastName: string;
     password: string;
+    roleName?: string;
   }) {
+    const { roleName = "encoder", id = randomUUID(), ...rest } = data;
+    const role = await this.ensureRole(roleName);
     const hashedPassword = await hash(data.password);
     await this.em.getRepository(UserEntity).insert({
-      ...data,
+      ...rest,
+      id,
       password: hashedPassword,
+      role: role.id,
     });
+    return { id, roleId: role.id, roleName: role.name };
+  }
+
+  public async grantPermission(roleId: string, action: string, subject: string) {
+    this.em.getRepository(PermissionRuleEntity).create({
+      id: randomUUID(),
+      role: roleId,
+      action,
+      subject,
+      conditions: null,
+      fields: null,
+      inverted: false,
+      order: 0,
+    });
+    await this.em.flush();
+  }
+
+  /** Raccourci pour les tests qui doivent agir en tant qu'admin (manage:User/manage:Role). */
+  public async createTechAdmin(overrides?: { email?: string }) {
+    const admin = await this.createUser({
+      email: overrides?.email ?? `tech-admin-${randomUUID()}@test.com`,
+      firstName: "Tech",
+      lastName: "Admin",
+      password: "testpassword123",
+      roleName: "tech_admin",
+    });
+    await this.grantPermission(admin.roleId, "manage", "User");
+    await this.grantPermission(admin.roleId, "manage", "Role");
+    return admin;
   }
 
   public async close() {

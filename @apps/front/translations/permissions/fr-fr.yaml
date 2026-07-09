@@ -1,0 +1,27 @@
+roles:
+  title: Rôles
+  actions:
+    create: Nouveau rôle
+    edit: Modifier
+  table:
+    name: Nom
+    description: Description
+forms:
+  role:
+    createTitle: Nouveau rôle
+    editTitle: Modifier le rôle
+    labels:
+      name: Nom
+      description: Description
+    actions:
+      submit: Enregistrer
+      back: Retour
+    validation:
+      nameRequired: Le nom est requis
+    matrix:
+      title: Permissions
+      advancedRulesNotice: Cette matrice édite uniquement des règles action/sujet simples. Les conditions au niveau ligne et les restrictions de champs ne sont pas éditables ici.
+    messages:
+      saveSuccess: Rôle enregistré avec succès.
+      permissionsSaved: Permissions mises à jour.
+      permissionsError: Échec de la mise à jour des permissions. Veuillez réessayer.

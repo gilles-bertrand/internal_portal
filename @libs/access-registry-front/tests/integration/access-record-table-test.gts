@@ -24,7 +24,7 @@ describe('access-record-table', function () {
       const currentUser = context.owner.lookup(
         'service:current-user'
       ) as CurrentUserService;
-      currentUser.user = { role: 'dpo' } as CurrentUserService['user'];
+      currentUser.user = { roleName: 'dpo' } as CurrentUserService['user'];
 
       await render(<template><AccessRecordTable /></template>);
 
@@ -43,7 +43,7 @@ describe('access-record-table', function () {
       const currentUser = context.owner.lookup(
         'service:current-user'
       ) as CurrentUserService;
-      currentUser.user = { role: 'encoder' } as CurrentUserService['user'];
+      currentUser.user = { roleName: 'encoder' } as CurrentUserService['user'];
 
       await render(<template><AccessRecordTable /></template>);
 
@@ -60,7 +60,7 @@ describe('access-record-table', function () {
       const currentUser = context.owner.lookup(
         'service:current-user'
       ) as CurrentUserService;
-      currentUser.user = { role: 'dpo' } as CurrentUserService['user'];
+      currentUser.user = { roleName: 'dpo' } as CurrentUserService['user'];
 
       const registryExport = context.owner.lookup(
         'service:registry-export'
@@ -91,7 +91,7 @@ describe('access-record-table', function () {
       const currentUser = context.owner.lookup(
         'service:current-user'
       ) as CurrentUserService;
-      currentUser.user = { role: 'dpo' } as CurrentUserService['user'];
+      currentUser.user = { roleName: 'dpo' } as CurrentUserService['user'];
 
       const registryExport = context.owner.lookup(
         'service:registry-export'

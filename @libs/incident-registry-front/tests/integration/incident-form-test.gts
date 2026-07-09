@@ -29,7 +29,6 @@ describe('incident-form', function () {
       stubRouter(context.owner);
 
       const intl = context.owner.lookup('service:intl');
-      const now = new Date().toISOString();
       const changeset = new IncidentChangeset({
         version: '1.0',
         classification: 'CONFIDENTIEL',
@@ -38,12 +37,16 @@ describe('incident-form', function () {
         personalDataImpacted: false,
         specialCategoryData: false,
         apdNotificationRequired: false,
-        reportDate: now,
+        // TpkValidationDatepicker asserts string | Date | null — never
+        // undefined — so these must be explicitly null, not omitted.
+        reportDate: null,
         recipientName: '',
         recipientOrg: '',
         deployedVersion: '1.0',
-        incidentStartAt: now,
-        detectedAt: now,
+        incidentStartAt: null,
+        incidentEndAt: null,
+        detectedAt: null,
+        resolvedAt: null,
         contributingFactors: [],
         correctiveActions: [],
         preventiveMeasures: [],

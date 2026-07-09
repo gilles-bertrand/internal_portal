@@ -324,6 +324,7 @@ function drawTitleBlock(doc: InstanceType<typeof PDFDocument>, incident: Inciden
   ]);
 }
 
+// @lat: [[backend/incident-registry#Export PDF à 10 sections]]
 function drawConfidentialBanners(doc: InstanceType<typeof PDFDocument>) {
   const range = doc.bufferedPageRange();
   for (let i = range.start; i < range.start + range.count; i++) {

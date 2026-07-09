@@ -3,12 +3,12 @@ import { boolean, number, object, string } from "zod";
 import {
   canonicalSerialize,
   jsonApiErrorDocumentSchema,
-  makeJsonApiError,
   verifyChain,
   type Route,
 } from "@libs/backend-shared";
 import type { EntityManager } from "@mikro-orm/postgresql";
 import { AccessRecordEntity } from "#src/entities/access-record.entity.js";
+import { requirePermission } from "@libs/permissions-backend";
 
 export class VerifyIntegrityRoute implements Route {
   public constructor(private em: EntityManager) {}
@@ -17,6 +17,7 @@ export class VerifyIntegrityRoute implements Route {
     return f.get(
       "/verify-integrity",
       {
+        preHandler: [requirePermission("read", "AccessRecordIntegrity")],
         schema: {
           response: {
             200: object({
@@ -30,11 +31,6 @@ export class VerifyIntegrityRoute implements Route {
         },
       },
       async (request, reply) => {
-        const user = request.user!;
-        if (user.role !== "auditor" && user.role !== "dpo") {
-          return reply.code(403).send(makeJsonApiError(403, "Forbidden", { code: "FORBIDDEN" }));
-        }
-
         const records = await this.em
           .getRepository(AccessRecordEntity)
           .findAll({ orderBy: { seq: "ASC" } });

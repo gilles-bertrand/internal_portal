@@ -90,7 +90,7 @@ export class RefreshRoute implements Route {
 
         // Verify user still exists
         const userRepo = this.em.getRepository(UserEntity);
-        const user = await userRepo.findOne({ id: payload.userId });
+        const user = await userRepo.findOne({ id: payload.userId }, { populate: ["role"] });
 
         if (!user) {
           return reply.code(401).send(
@@ -104,9 +104,10 @@ export class RefreshRoute implements Route {
         // Revoke old token
         storedToken.revokedAt = new Date().toISOString();
 
-        // Generate new token pair
+        // Generate new token pair — inclut le claim role, aligné sur LoginRoute
+        // @lat: [[backend/permissions#Fix du claim role manquant au refresh]]
         const tokens = generateTokens(
-          { userId: user.id, email: user.email },
+          { userId: user.id, email: user.email, role: user.role.name },
           this.jwtSecret,
           this.jwtRefreshSecret,
         );

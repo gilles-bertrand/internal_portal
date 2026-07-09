@@ -5,6 +5,7 @@ import type { EntityManager } from "@mikro-orm/postgresql";
 import { AccessRecordEntity } from "#src/entities/access-record.entity.js";
 import { ExportService, type ExportFormat } from "#src/utils/export.service.js";
 import type { AuditLogger } from "#src/utils/audit-logger.type.js";
+import { requirePermission } from "@libs/permissions-backend";
 
 const VALID_FORMATS: ExportFormat[] = ["json", "csv", "pdf"];
 
@@ -19,6 +20,7 @@ export class ExportRoute implements Route {
     return f.post(
       "/export",
       {
+        preHandler: [requirePermission("read", "AccessRecord")],
         schema: {
           body: object({
             format: string().refine((v) => VALID_FORMATS.includes(v as ExportFormat), {

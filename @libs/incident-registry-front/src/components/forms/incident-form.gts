@@ -2,6 +2,7 @@ import Component from '@glimmer/component';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import TpkForm from '@triptyk/ember-input-validation/components/tpk-form';
+import TpkInput from '@triptyk/ember-input/components/tpk-input';
 import { service } from '@ember/service';
 import type IncidentService from '#src/services/incident.ts';
 import type { IncidentChangeset } from '#src/changesets/incident.ts';
@@ -260,18 +261,35 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
     this.args.changeset.set(field, value);
   }
 
+  // @lat: [[frontend/forms#Stocker un Date, pas une string, pendant l'édition]]
+  // Store the raw Date (not an ISO string): TpkDatepickerPrefab re-feeds this
+  // value to tempus-dominus on every re-render, and a string forces it back
+  // through DateTime.fromString (crash-prone, and always logs "TD: Using a
+  // string for date options..."). incident-validation.ts converts to ISO for
+  // the `z.string().datetime()` fields in the actual submitted payload.
+  // DraftIncident declares these fields as string (see @lat above) to satisfy
+  // TpkForm's changeset<->schema type coupling; `field: string` (not a keyof
+  // literal) already widens `.set()`'s value type, so no cast needed here.
+  @action
+  setDateField(field: string, dates: Date[]) {
+    this.args.changeset.set(field, dates[0] ?? null);
+  }
+
+  // @lat: [[frontend/forms#Prefabs vs composants standalone]]
   @action
   updateSignature(
     which: 'issuerSignature' | 'recipientSignature',
     field: 'name' | 'date',
-    event: Event
+    value: string | number | Date | null
   ) {
-    const value = (event.target as HTMLInputElement).value;
     const current = this.args.changeset.get(which) ?? {
       name: '',
       date: '',
     };
-    this.args.changeset.set(which, { ...current, [field]: value });
+    this.args.changeset.set(which, {
+      ...current,
+      [field]: String(value ?? ''),
+    });
   }
 
   @action
@@ -382,10 +400,11 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
             @placeholder={{t "incidents.form.placeholders.reportedBy"}}
             class="col-span-12 md:col-span-6"
           />
-          <F.TpkInputPrefab
+          <F.TpkDatepickerPrefab
             @label={{t "incidents.form.reportDate"}}
             @validationField="reportDate"
-            @placeholder={{t "incidents.form.placeholders.reportDate"}}
+            @onChange={{fn this.setDateField "reportDate"}}
+            @dateFormat="yyyy-MM-dd[T]HH:mm:ss[Z]"
             class="col-span-12 md:col-span-6"
           />
           <F.TpkInputPrefab
@@ -449,28 +468,32 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
             @validationField="deployedVersion"
             class="col-span-12 md:col-span-6"
           />
-          <F.TpkInputPrefab
+          <F.TpkDatepickerPrefab
             @label={{t "incidents.form.incidentStartAt"}}
             @validationField="incidentStartAt"
-            @placeholder={{t "incidents.form.placeholders.incidentStartAt"}}
+            @onChange={{fn this.setDateField "incidentStartAt"}}
+            @dateFormat="yyyy-MM-dd[T]HH:mm:ss[Z]"
             class="col-span-12 md:col-span-6"
           />
-          <F.TpkInputPrefab
+          <F.TpkDatepickerPrefab
             @label={{t "incidents.form.incidentEndAt"}}
             @validationField="incidentEndAt"
-            @placeholder={{t "incidents.form.placeholders.incidentEndAt"}}
+            @onChange={{fn this.setDateField "incidentEndAt"}}
+            @dateFormat="yyyy-MM-dd[T]HH:mm:ss[Z]"
             class="col-span-12 md:col-span-6"
           />
-          <F.TpkInputPrefab
+          <F.TpkDatepickerPrefab
             @label={{t "incidents.form.detectedAt"}}
             @validationField="detectedAt"
-            @placeholder={{t "incidents.form.placeholders.detectedAt"}}
+            @onChange={{fn this.setDateField "detectedAt"}}
+            @dateFormat="yyyy-MM-dd[T]HH:mm:ss[Z]"
             class="col-span-12 md:col-span-6"
           />
-          <F.TpkInputPrefab
+          <F.TpkDatepickerPrefab
             @label={{t "incidents.form.resolvedAt"}}
             @validationField="resolvedAt"
-            @placeholder={{t "incidents.form.placeholders.resolvedAt"}}
+            @onChange={{fn this.setDateField "resolvedAt"}}
+            @dateFormat="yyyy-MM-dd[T]HH:mm:ss[Z]"
             class="col-span-12 md:col-span-6"
           />
           <F.TpkInputPrefab
@@ -644,58 +667,36 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
               @onChange={{fn this.setArrayField "accessLogs"}}
             />
           </div>
-          <label class="col-span-12 md:col-span-6 flex flex-col gap-1">
-            <span class="text-sm font-medium">{{t
-                "incidents.form.issuerSignatureName"
-              }}</span>
-            <input
-              type="text"
-              class="input input-bordered w-full rounded-none"
-              value={{this.issuerSignature.name}}
-              {{on "input" (fn this.updateSignature "issuerSignature" "name")}}
+          <div class="col-span-12 md:col-span-6">
+            <TpkInput
+              @label={{t "incidents.form.issuerSignatureName"}}
+              @value={{this.issuerSignature.name}}
+              @onChange={{fn this.updateSignature "issuerSignature" "name"}}
             />
-          </label>
-          <label class="col-span-12 md:col-span-6 flex flex-col gap-1">
-            <span class="text-sm font-medium">{{t
-                "incidents.form.issuerSignatureDate"
-              }}</span>
-            <input
-              type="text"
-              class="input input-bordered w-full rounded-none"
-              value={{this.issuerSignature.date}}
-              placeholder={{t "incidents.form.placeholders.signatureDate"}}
-              {{on "input" (fn this.updateSignature "issuerSignature" "date")}}
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <TpkInput
+              @label={{t "incidents.form.issuerSignatureDate"}}
+              @value={{this.issuerSignature.date}}
+              @placeholder={{t "incidents.form.placeholders.signatureDate"}}
+              @onChange={{fn this.updateSignature "issuerSignature" "date"}}
             />
-          </label>
-          <label class="col-span-12 md:col-span-6 flex flex-col gap-1">
-            <span class="text-sm font-medium">{{t
-                "incidents.form.recipientSignatureName"
-              }}</span>
-            <input
-              type="text"
-              class="input input-bordered w-full rounded-none"
-              value={{this.recipientSignature.name}}
-              {{on
-                "input"
-                (fn this.updateSignature "recipientSignature" "name")
-              }}
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <TpkInput
+              @label={{t "incidents.form.recipientSignatureName"}}
+              @value={{this.recipientSignature.name}}
+              @onChange={{fn this.updateSignature "recipientSignature" "name"}}
             />
-          </label>
-          <label class="col-span-12 md:col-span-6 flex flex-col gap-1">
-            <span class="text-sm font-medium">{{t
-                "incidents.form.recipientSignatureDate"
-              }}</span>
-            <input
-              type="text"
-              class="input input-bordered w-full rounded-none"
-              value={{this.recipientSignature.date}}
-              placeholder={{t "incidents.form.placeholders.signatureDate"}}
-              {{on
-                "input"
-                (fn this.updateSignature "recipientSignature" "date")
-              }}
+          </div>
+          <div class="col-span-12 md:col-span-6">
+            <TpkInput
+              @label={{t "incidents.form.recipientSignatureDate"}}
+              @value={{this.recipientSignature.date}}
+              @placeholder={{t "incidents.form.placeholders.signatureDate"}}
+              @onChange={{fn this.updateSignature "recipientSignature" "date"}}
             />
-          </label>
+          </div>
         {{/if}}
 
         <div class="col-span-12 flex items-center justify-between gap-2 mt-4">

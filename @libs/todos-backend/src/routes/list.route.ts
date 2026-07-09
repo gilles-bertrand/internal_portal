@@ -32,6 +32,7 @@ export class ListRoute implements Route {
         const searchQuery = queryParams["filter[search]"] as string | undefined;
         const sortParam = queryParams["sort"] as string | undefined;
 
+        // @lat: [[todos]]
         const where: any = { userId: currentUser.id };
 
         if (searchQuery) {

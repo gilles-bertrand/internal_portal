@@ -12,7 +12,16 @@ import {
   makeSingleJsonApiTopDocument,
   type Route,
 } from "@libs/backend-shared";
+import { requirePermission, RoleEntity } from "@libs/permissions-backend";
 
+const updateUserAttributesSchema = object({
+  email: string().optional(),
+  firstName: string().optional(),
+  lastName: string().optional(),
+  roleId: string().optional(),
+});
+
+// @lat: [[backend/permissions#Édition d'utilisateur guardée par manage:User]]
 export class UpdateRoute implements Route {
   public constructor(private userRepository: EntityRepository<UserEntityType>) {}
 
@@ -20,13 +29,15 @@ export class UpdateRoute implements Route {
     return f.patch(
       "/:id",
       {
+        preHandler: [requirePermission("manage", "User")],
         schema: {
           params: object({
             id: string(),
           }),
-          body: makeSingleJsonApiTopDocument(SerializedUserSchema),
+          body: makeSingleJsonApiTopDocument(object({ attributes: updateUserAttributesSchema })),
           response: {
             200: makeSingleJsonApiTopDocument(SerializedUserSchema),
+            400: jsonApiErrorDocumentSchema,
             403: jsonApiErrorDocumentSchema,
             404: jsonApiErrorDocumentSchema,
           },
@@ -34,9 +45,10 @@ export class UpdateRoute implements Route {
       },
       async (request, reply) => {
         const { id } = request.params as { id: string };
-        const body = request.body;
+        const { roleId, ...attributes } = request.body.data.attributes;
+        const em = this.userRepository.getEntityManager();
 
-        const user = await this.userRepository.findOne({ id });
+        const user = await this.userRepository.findOne({ id }, { populate: ["role"] });
 
         if (!user) {
           return reply.code(404).send(
@@ -47,9 +59,22 @@ export class UpdateRoute implements Route {
           );
         }
 
-        wrap(user).assign(body.data.attributes);
+        if (roleId) {
+          const role = await em.getRepository(RoleEntity).findOne({ id: roleId });
+          if (!role) {
+            return reply.code(400).send(
+              makeJsonApiError(400, "Bad Request", {
+                code: "ROLE_NOT_FOUND",
+                detail: `Role with id ${roleId} not found`,
+              }),
+            );
+          }
+          user.role = role;
+        }
 
-        await this.userRepository.getEntityManager().flush();
+        wrap(user).assign(attributes);
+
+        await em.flush();
 
         return reply.send(jsonApiSerializeSingleUserDocument(user));
       },

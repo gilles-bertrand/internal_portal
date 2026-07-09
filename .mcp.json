@@ -2,11 +2,16 @@
   "mcpServers": {
     "ember": {
       "command": "npx",
-      "args": ["-y", "ember-mcp"]
+      "args": [
+        "-y",
+        "ember-mcp"
+      ]
     },
     "chrome-devtools": {
       "command": "npx",
-      "args": ["chrome-devtools-mcp@latest"]
+      "args": [
+        "chrome-devtools-mcp@latest"
+      ]
     },
     "gitscrum": {
       "command": "npx",
@@ -30,6 +35,20 @@
       "command": "npx",
       "args": [
         "@playwright/mcp@latest"
+      ]
+    },
+    "codegraph": {
+      "type": "stdio",
+      "command": "codegraph",
+      "args": [
+        "serve",
+        "--mcp"
+      ]
+    },
+    "lat": {
+      "command": "lat",
+      "args": [
+        "mcp"
       ]
     }
   }

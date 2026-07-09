@@ -22,7 +22,10 @@ export default class IncidentTimelineEditor extends Component<Args> {
   @tracked draft: TimelineEventDraft = { date: '', time: '', event: '' };
 
   @action
-  updateField(field: keyof TimelineEventDraft, value: string | number | Date | null) {
+  updateField(
+    field: keyof TimelineEventDraft,
+    value: string | number | Date | null
+  ) {
     this.draft = {
       ...this.draft,
       [field]: String(value ?? ''),

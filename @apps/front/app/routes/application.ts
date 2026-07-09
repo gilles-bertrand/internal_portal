@@ -5,11 +5,15 @@ import { setupWorker } from 'msw/browser';
 import { initialize as initializeUserLib } from '@libs/users-front';
 import { initialize as initializeTodoLib } from '@libs/todos-front';
 import { initialize as initializeAccessRegistryLib } from '@libs/access-registry-front';
+import { initialize as initializeIncidentRegistryLib } from '@libs/incident-registry-front';
+import { initialize as initializePermissionsLib } from '@libs/permissions-front';
 import { getOwner } from '@ember/-internals/owner';
 import type SessionService from '@apps/front/services/session';
 import allUsersHandlers from '@libs/users-front/http-mocks/all';
 import allTodosHandlers from '@libs/todos-front/http-mocks/all';
 import allAccessRecordsHandlers from '@libs/access-registry-front/http-mocks/all';
+import allIncidentsHandlers from '@libs/incident-registry-front/http-mocks/all';
+import allPermissionsHandlers from '@libs/permissions-front/http-mocks/all';
 import setTheme from '../utils/set-theme';
 import translationsForFrFr from 'virtual:ember-intl/translations/fr-fr';
 import translationsForEnUs from 'virtual:ember-intl/translations/en-us';
@@ -31,7 +35,9 @@ export default class ApplicationRoute extends Route {
       const worker = setupWorker(
         ...allUsersHandlers,
         ...allTodosHandlers,
-        ...allAccessRecordsHandlers
+        ...allAccessRecordsHandlers,
+        ...allIncidentsHandlers,
+        ...allPermissionsHandlers
       );
       this.worker = worker;
       await worker.start({
@@ -42,6 +48,8 @@ export default class ApplicationRoute extends Route {
     await initializeUserLib(getOwner(this)!);
     initializeTodoLib(getOwner(this)!);
     initializeAccessRegistryLib(getOwner(this)!);
+    initializeIncidentRegistryLib(getOwner(this)!);
+    initializePermissionsLib(getOwner(this)!);
   }
 
   willDestroy() {

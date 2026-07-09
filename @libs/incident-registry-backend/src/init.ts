@@ -57,8 +57,15 @@ export class Module implements ModuleInterface<FastifyInstanceTypeForModule> {
         );
         f.addHook("preValidation", jwtAuth);
 
+        // tech_admin porte une règle CASL explicite cannot("manage", "Incident") — les
+        // routes du groupe demandent des actions différentes (create/read selon le rôle),
+        // donc ce guard ne peut pas être un requirePermission générique (même pattern
+        // que access-registry-backend/src/init.ts).
         f.addHook("preHandler", async (request, reply) => {
-          if (request.user?.role === "tech_admin") {
+          const forbidden = request.ability
+            ?.rulesFor("manage", "Incident")
+            .some((rule) => rule.inverted);
+          if (forbidden) {
             return reply.code(403).send(
               makeJsonApiError(403, "Forbidden", {
                 code: "FORBIDDEN",

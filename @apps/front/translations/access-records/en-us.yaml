@@ -20,14 +20,16 @@ forms:
       accessedAt: 'Access date/time (ISO UTC)'
       accessorRef: 'Accessor reference'
       dataSubjectRef: 'Data subject reference'
-      dataCategories: 'Data categories (comma-separated)'
-      accessType: 'Access type (consultation/modification/export/transmission)'
+      dataCategories: 'Data categories'
+      accessType: 'Access type'
       purpose: 'Purpose of access'
       legalBasis: 'Legal basis'
       sourceSystem: 'Source system'
       recipient: 'Recipient (if transmission)'
       isSpecialCategory: 'Special category (GDPR art. 9)'
       justification: 'Justification'
+    placeholders:
+      select: 'Select…'
     actions:
       submit: 'Save'
       back: 'Back to registry'

@@ -105,9 +105,16 @@ export class Module implements ModuleInterface<FastifyInstanceTypeForModule> {
     const jwtAuth = createJwtAuthMiddleware(this.context.em, this.context.configuration.jwtSecret);
     f.addHook("preValidation", jwtAuth);
 
-    // tech_admin est interdit sur tout le registre (séparation des rôles)
+    // @lat: [[backend/access-registry#RBAC : séparation des rôles]]
+    // tech_admin est interdit sur tout le registre (séparation des rôles) : il porte une
+    // règle CASL explicite `cannot("manage", "AccessRecord")` — les routes du groupe
+    // demandent des actions différentes (create/read/manage selon le rôle), donc ce guard
+    // ne peut pas être un requirePermission générique sans bloquer par erreur encoder/dpo/auditor.
     f.addHook("preHandler", async (request, reply) => {
-      if (request.user?.role === "tech_admin") {
+      const forbidden = request.ability
+        ?.rulesFor("manage", "AccessRecord")
+        .some((rule) => rule.inverted);
+      if (forbidden) {
         return reply.code(403).send(
           makeJsonApiError(403, "Forbidden", {
             code: "FORBIDDEN",

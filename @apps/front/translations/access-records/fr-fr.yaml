@@ -20,14 +20,16 @@ forms:
       accessedAt: "Date/heure d'accès (ISO UTC)"
       accessorRef: "Référence de l'accédant"
       dataSubjectRef: 'Référence de la personne concernée'
-      dataCategories: 'Catégories de données (séparées par des virgules)'
-      accessType: "Type d'accès (consultation/modification/export/transmission)"
+      dataCategories: 'Catégories de données'
+      accessType: "Type d'accès"
       purpose: "Finalité de l'accès"
       legalBasis: 'Base légale'
       sourceSystem: 'Système source'
       recipient: 'Destinataire (si transmission)'
       isSpecialCategory: 'Données sensibles (art. 9 RGPD)'
       justification: 'Justification'
+    placeholders:
+      select: 'Sélectionner…'
     actions:
       submit: 'Enregistrer'
       back: 'Retour au registre'

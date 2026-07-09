@@ -21,11 +21,12 @@ aroundEach(async (runTest) => {
 });
 
 test("GetRoute returns user in JSON:API format", async () => {
+  const admin = await module.createTechAdmin();
   const response = await module.fastifyInstance.inject({
     method: "GET",
     url: `/users/${TestModule.TEST_USER_ID}`,
     headers: {
-      authorization: module.generateBearerToken(TestModule.TEST_USER_ID),
+      authorization: module.generateBearerToken(admin.id),
     },
   });
 
@@ -44,11 +45,12 @@ test("GetRoute returns user in JSON:API format", async () => {
 });
 
 test("GetRoute returns JSON:API error when user not found", async () => {
+  const admin = await module.createTechAdmin();
   const response = await module.fastifyInstance.inject({
     method: "GET",
     url: "/users/nonexistent-id",
     headers: {
-      authorization: module.generateBearerToken(TestModule.TEST_USER_ID),
+      authorization: module.generateBearerToken(admin.id),
     },
   });
 

@@ -23,7 +23,7 @@ class AccessRecordTable extends Component<object> {
   @tracked exporting = false;
 
   get isDpo(): boolean {
-    return this.currentUser.user?.role === 'dpo';
+    return this.currentUser.user?.roleName === 'dpo';
   }
 
   get tableParams(): TableParams {

@@ -1,10 +1,11 @@
 import type { FastifyInstanceTypeForModule } from "#src/init.js";
 import { number, object, string } from "zod";
-import { jsonApiErrorDocumentSchema, makeJsonApiError, type Route } from "@libs/backend-shared";
+import { jsonApiErrorDocumentSchema, type Route } from "@libs/backend-shared";
 import type { EntityManager } from "@mikro-orm/postgresql";
 import { AccessRecordEntity } from "#src/entities/access-record.entity.js";
 import { ExportService } from "#src/utils/export.service.js";
 import type { AuditLogger } from "#src/utils/audit-logger.type.js";
+import { requirePermission } from "@libs/permissions-backend";
 
 export class RetentionRunRoute implements Route {
   public constructor(
@@ -17,12 +18,14 @@ export class RetentionRunRoute implements Route {
     return f.post(
       "/retention/run",
       {
+        preHandler: [requirePermission("manage", "AccessRecordRetention")],
         schema: {
           response: {
             200: object({
               data: object({
                 expiredCount: number(),
                 archivedAt: string(),
+                // @lat: [[backend/access-registry#Rétention et archivage (sans suppression physique)]]
                 // Décision de conception : archivage signé SANS suppression physique.
                 // Le registre est append-only chaîné ; supprimer un maillon casserait
                 // la chaîne. La purge effective est différée (opération DBA hors app).
@@ -48,10 +51,6 @@ export class RetentionRunRoute implements Route {
       },
       async (request, reply) => {
         const user = request.user!;
-        if (user.role !== "dpo") {
-          return reply.code(403).send(makeJsonApiError(403, "Forbidden", { code: "FORBIDDEN" }));
-        }
-
         const now = new Date().toISOString();
 
         const expired = await this.em

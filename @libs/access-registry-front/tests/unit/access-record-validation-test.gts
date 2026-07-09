@@ -9,10 +9,10 @@ const BASE_VALID = {
   accessedAt: '2026-06-10T09:30:00.000Z',
   accessorRef: 'emp-001',
   dataSubjectRef: 'cust-pseudonym-001',
-  dataCategories: 'identité',
+  dataCategories: 'identification',
   accessType: 'consultation',
   purpose: 'support-client',
-  legalBasis: 'art6.1b',
+  legalBasis: 'contract',
   sourceSystem: 'CRM',
   justification: 'Demande client #4821',
 };
@@ -40,6 +40,39 @@ describe('createAccessRecordValidationSchema', () => {
   test('rejette si justification est vide', () => {
     const result = schema.safeParse({ ...BASE_VALID, justification: '' });
     expect(result.success).toBe(false);
+  });
+
+  test('rejette un accessType hors énumération', () => {
+    const result = schema.safeParse({ ...BASE_VALID, accessType: 'piratage' });
+    expect(result.success).toBe(false);
+  });
+
+  test('accepte tous les slugs accessType valides', () => {
+    for (const slug of [
+      'consultation',
+      'modification',
+      'export',
+      'transmission',
+    ]) {
+      const result = schema.safeParse({ ...BASE_VALID, accessType: slug });
+      expect(result.success).toBe(true);
+    }
+  });
+
+  // legalBasis codes come from the /legal-bases referential (fetched at
+  // runtime by the route), so zod only enforces non-empty — the closed set of
+  // valid codes is enforced by the select only offering fetched options, not
+  // by this schema.
+  test('rejette legalBasis vide', () => {
+    const result = schema.safeParse({ ...BASE_VALID, legalBasis: '' });
+    expect(result.success).toBe(false);
+  });
+
+  test('accepte tout code legalBasis non vide', () => {
+    for (const code of ['consent', 'art6.1b', 'any-referential-code']) {
+      const result = schema.safeParse({ ...BASE_VALID, legalBasis: code });
+      expect(result.success).toBe(true);
+    }
   });
 
   test('accepte une string pour dataCategories', () => {

@@ -12,11 +12,11 @@ import { moduleRegistry as sharedModuleRegistry } from '@libs/shared-front';
 
 export function moduleRegistry() {
   return buildRegistry({
-    ...import.meta.glob('./routes/**/*.{js,ts}', { eager: true }),
-    ...import.meta.glob('./templates/**/*.{js,ts}', { eager: true }),
-    ...import.meta.glob('./helpers/**/*.{js,ts}', { eager: true }),
-    ...import.meta.glob('./components/**/*.{js,ts}', { eager: true }),
-    ...import.meta.glob('./services/**/*.{js,ts}', { eager: true }),
+    ...import.meta.glob('./routes/**/*.{js,ts,gjs,gts}', { eager: true }),
+    ...import.meta.glob('./templates/**/*.{js,ts,gjs,gts}', { eager: true }),
+    ...import.meta.glob('./helpers/**/*.{js,ts,gjs,gts}', { eager: true }),
+    ...import.meta.glob('./components/**/*.{js,ts,gjs,gts}', { eager: true }),
+    ...import.meta.glob('./services/**/*.{js,ts,gjs,gts}', { eager: true }),
     ...sharedModuleRegistry(),
     './services/session': {
       default: SessionService,

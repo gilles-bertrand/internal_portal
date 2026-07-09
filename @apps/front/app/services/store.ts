@@ -10,6 +10,12 @@ import AuthHandler from '@libs/users-front/handlers/auth';
 import { getOwner } from '@ember/owner';
 import TodoSchema from '@libs/todos-front/schemas/todos';
 import AccessRecordSchema from '@libs/access-registry-front/schemas/access-records';
+// @lat: [[frontend/access-record-options#Enregistrement obligatoire des schémas warp-drive]]
+import PurposeSchema from '@libs/access-registry-front/schemas/purposes';
+import LegalBasisSchema from '@libs/access-registry-front/schemas/legal-bases';
+import DataCategorySchema from '@libs/access-registry-front/schemas/data-categories';
+import IncidentSchema from '@libs/incident-registry-front/schemas/incidents';
+import RoleSchema from '@libs/permissions-front/schemas/roles';
 
 setBuildURLConfig({
   host: null,
@@ -21,7 +27,16 @@ const legacyStore = useLegacyStore({
   legacyRequests: true,
   modelFragments: true,
   cache: JSONAPICache,
-  schemas: [UserSchema, TodoSchema, AccessRecordSchema],
+  schemas: [
+    UserSchema,
+    TodoSchema,
+    AccessRecordSchema,
+    PurposeSchema,
+    LegalBasisSchema,
+    DataCategorySchema,
+    IncidentSchema,
+    RoleSchema,
+  ],
   handlers: [],
 });
 

@@ -43,7 +43,7 @@ export class LoginRoute implements Route {
       async (request, reply) => {
         const { email, password, deviceInfo } = request.body;
 
-        const user = await this.userRepository.findOne({ email });
+        const user = await this.userRepository.findOne({ email }, { populate: ["role"] });
 
         const invalidCredentials = () =>
           reply.code(401).send(
@@ -95,7 +95,7 @@ export class LoginRoute implements Route {
         }
 
         const tokens = generateTokens(
-          { userId: user.id, email: user.email, role: user.role },
+          { userId: user.id, email: user.email, role: user.role.name },
           this.jwtSecret,
           this.jwtRefreshSecret,
         );

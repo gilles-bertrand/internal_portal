@@ -4,6 +4,7 @@ import {
   type FastifyInstanceTypeForModule,
 } from "#src/index.js";
 import { entities as userEntities, UserEntity } from "@libs/users-backend";
+import { entities as permissionsEntities, RoleEntity } from "@libs/permissions-backend";
 import { entities as auditLogEntities, AuditAppendService } from "@libs/audit-log-backend";
 import { MikroORM } from "@mikro-orm/postgresql";
 import { fastify } from "fastify";
@@ -13,6 +14,7 @@ import {
   type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import { sign } from "jsonwebtoken";
+import { randomUUID } from "node:crypto";
 import type { EntityManager } from "@mikro-orm/postgresql";
 
 export class TestModule {
@@ -33,7 +35,12 @@ export class TestModule {
     }
 
     const orm = await MikroORM.init({
-      entities: [...incidentRegistryEntities, ...auditLogEntities, ...userEntities],
+      entities: [
+        ...incidentRegistryEntities,
+        ...auditLogEntities,
+        ...userEntities,
+        ...permissionsEntities,
+      ],
       clientUrl: connectionUrl,
     });
 
@@ -79,16 +86,27 @@ export class TestModule {
     return "Bearer " + sign({ userId, role }, TestModule.JWT_SECRET);
   }
 
-  public async insertUser(id: string, role: string, em = this.em) {
+  public async ensureRole(name: string, em = this.em) {
+    const roleRepository = em.getRepository(RoleEntity);
+    const existing = await roleRepository.findOne({ name });
+    if (existing) return existing;
+
+    const role = roleRepository.create({ id: randomUUID(), name, description: null });
+    await em.flush();
+    return role;
+  }
+
+  public async insertUser(id: string, roleName: string, em = this.em) {
     const hashedPassword =
       "$argon2id$v=19$m=65536,t=3,p=4$ETHkx8pEQN6qQwlIR+vUTQ$+QC4JBKJCQUL1dyCHzRMBNjbk+QaJi3PV+HkPY00kcc";
+    const role = await this.ensureRole(roleName, em);
     await em.getRepository(UserEntity).insert({
       id,
       email: `${id}@test.com`,
       firstName: "Test",
       lastName: "User",
       password: hashedPassword,
-      role,
+      role: role.id,
       failedLoginAttempts: 0,
       lockedUntil: null,
       passwordChangedAt: null,

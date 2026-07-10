@@ -5,6 +5,7 @@ import {
   type FastifyInstanceTypeForModule,
 } from "#src/index.js";
 import { entities as userEntities } from "@libs/users-backend";
+import { entities as permissionsEntities } from "@libs/permissions-backend";
 import { MikroORM } from "@mikro-orm/postgresql";
 import { fastify } from "fastify";
 import {
@@ -35,7 +36,7 @@ export class TestModule {
     }
 
     const orm = await MikroORM.init({
-      entities: [...todoEntities, ...userEntities],
+      entities: [...todoEntities, ...userEntities, ...permissionsEntities],
       clientUrl: connectionUrl,
     });
 

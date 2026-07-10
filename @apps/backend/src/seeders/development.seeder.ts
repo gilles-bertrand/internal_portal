@@ -5,7 +5,7 @@ import { PermissionRuleEntity, RoleEntity, type RoleEntityType } from "@libs/per
 import type { EntityManager } from "@mikro-orm/core";
 import { Seeder } from "@mikro-orm/seeder";
 import { randomUUID } from "crypto";
-import { incidentIPBW, incidentOCM } from "#src/seeders/seed-data/incidents.js";
+import { incidentIPBW, incidentOCM } from "./seed-data/incidents.js";
 
 interface RuleSeed {
   action: string;

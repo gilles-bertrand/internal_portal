@@ -48,6 +48,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@casl/ability": "^7.0.1",
     "@embroider/addon-shim": "catalog:",
     "@warp-drive/core": "catalog:",
     "@warp-drive/ember": "catalog:",
@@ -131,6 +132,7 @@
     "type": "addon",
     "main": "addon-main.cjs",
     "app-js": {
+      "./services/ability.js": "./dist/_app_/services/ability.js",
       "./services/error-reporter.js": "./dist/_app_/services/error-reporter.js",
       "./services/handle-save.js": "./dist/_app_/services/handle-save.js"
     }

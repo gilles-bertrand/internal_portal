@@ -13,6 +13,7 @@ import {
   SerializedIncidentSchema,
 } from "#src/serializers/incident.serializer.js";
 import type { AuditLogger } from "#src/utils/audit-logger.type.js";
+import { requirePermission } from "@libs/permissions-backend";
 
 export class GetRoute implements Route {
   public constructor(
@@ -24,6 +25,7 @@ export class GetRoute implements Route {
     return f.get(
       "/:id",
       {
+        preHandler: [requirePermission("read", "Incident")],
         schema: {
           params: object({ id: string() }),
           response: {

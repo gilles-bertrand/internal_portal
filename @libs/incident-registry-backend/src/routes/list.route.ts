@@ -7,6 +7,7 @@ import { type Route } from "@libs/backend-shared";
 import { IncidentEntity } from "#src/entities/incident.entity.js";
 import { SerializedIncidentSchema } from "#src/serializers/incident.serializer.js";
 import type { AuditLogger } from "#src/utils/audit-logger.type.js";
+import { requirePermission } from "@libs/permissions-backend";
 
 const SerializedIncidentWithUserSchema = SerializedIncidentSchema.extend({
   attributes: SerializedIncidentSchema.shape.attributes.extend({
@@ -24,6 +25,7 @@ export class ListRoute implements Route {
     return f.get(
       "/",
       {
+        preHandler: [requirePermission("read", "Incident")],
         schema: {
           response: {
             200: object({

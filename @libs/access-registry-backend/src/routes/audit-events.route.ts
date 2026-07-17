@@ -5,6 +5,7 @@ import { array, number, object, string } from "zod";
 import { type Route } from "@libs/backend-shared";
 import type { EntityManager } from "@mikro-orm/postgresql";
 import { AuditEventEntity, SerializedAuditEventSchema } from "@libs/audit-log-backend";
+import { requirePermission } from "@libs/permissions-backend";
 
 const SerializedAuditEventWithActorSchema = SerializedAuditEventSchema.extend({
   attributes: SerializedAuditEventSchema.shape.attributes.extend({
@@ -19,6 +20,7 @@ export class AuditEventsRoute implements Route {
     return f.get(
       "/audit-events",
       {
+        preHandler: [requirePermission("read", "AccessRecord")],
         schema: {
           response: {
             200: object({
@@ -36,6 +38,7 @@ export class AuditEventsRoute implements Route {
         if (q["filter[actorId]"]) where["actorId"] = q["filter[actorId]"];
 
         const repo = this.em.getRepository(AuditEventEntity);
+        // @lat: [[backend/platform#Audit-log : noyau sans HTTP]]
         // Plus récent en premier (le méta-journal est chronologique inversé).
         const [events, total] = await repo.findAndCount(where, {
           orderBy: { seq: "DESC" },

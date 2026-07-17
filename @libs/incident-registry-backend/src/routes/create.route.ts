@@ -13,6 +13,7 @@ import {
 } from "#src/serializers/incident.serializer.js";
 import type { EntityManager } from "@mikro-orm/postgresql";
 import type { AuditLogger } from "#src/utils/audit-logger.type.js";
+import { requirePermission } from "@libs/permissions-backend";
 
 const CLASSIFICATIONS = ["CONFIDENTIEL", "INTERNE", "PUBLIC"] as const;
 const STATUSES = ["open", "in_progress", "resolved", "closed"] as const;
@@ -150,6 +151,7 @@ export class CreateRoute implements Route {
     return f.post(
       "/",
       {
+        preHandler: [requirePermission("create", "Incident")],
         schema: {
           body: makeSingleJsonApiTopDocument(
             object({
@@ -169,15 +171,7 @@ export class CreateRoute implements Route {
         const attrs = request.body.data.attributes;
         const user = request.user!;
 
-        if (user.role !== "encoder") {
-          return reply.code(403).send(
-            makeJsonApiError(403, "Forbidden", {
-              code: "FORBIDDEN",
-              detail: "seul le rôle encoder peut créer des incidents",
-            }),
-          );
-        }
-
+        // @lat: [[backend/incident-registry#Validation métier à la création]]
         const start = parseIso(attrs.incidentStartAt);
         const end = parseIso(attrs.incidentEndAt);
         if (end !== null && start !== null && end < start) {

@@ -5,6 +5,7 @@ table:
     firstName: 'Prénom'
     lastName: 'Nom'
     email: 'Email'
+    role: 'Rôle'
   actions:
     addUser: 'Ajouter un utilisateur'
     edit: 'Modifier'
@@ -21,16 +22,23 @@ forms:
     validation:
       invalidEmail: 'Veuillez saisir une adresse email valide'
   user:
+    titles:
+      create: 'Ajouter un utilisateur'
+      edit: 'Modifier un utilisateur'
     labels:
       firstName: 'Prénom'
       lastName: 'Nom'
       password: 'Mot de passe'
       email: 'Email'
+      role: 'Rôle'
+    placeholders:
+      select: 'Sélectionner…'
     validation:
       firstNameRequired: 'Le prénom est requis'
       lastNameRequired: 'Le nom est requis'
       invalidEmail: 'Adresse email invalide'
       minLength: 'Au moins 2 caractères'
+      roleRequired: 'Le rôle est requis'
     actions:
       submit: 'Soumettre'
       back: 'Retour à la liste des utilisateurs'

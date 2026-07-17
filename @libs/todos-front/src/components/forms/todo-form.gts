@@ -16,6 +16,7 @@ import { t, type IntlService } from 'ember-intl';
 import { LinkTo } from '@ember/routing';
 import type ImmerChangeset from 'ember-immer-changeset';
 import HandleSaveService from '@libs/shared-front/services/handle-save';
+import ArrowLeftIcon from '@libs/shared-front/assets/icons/arrow-left';
 
 interface TodosFormArgs {
   changeset: TodoChangeset;
@@ -30,6 +31,10 @@ export default class TodosForm extends Component<TodosFormArgs> {
   @service declare flashMessages: FlashMessageService;
   @service declare intl: IntlService;
   @service declare handleSave: HandleSaveService;
+
+  get isCreate() {
+    return !this.args.changeset.get('id');
+  }
 
   onSubmit = async (
     data: ValidatedTodo | UpdatedTodo,
@@ -46,6 +51,13 @@ export default class TodosForm extends Component<TodosFormArgs> {
   tpkButton = () => {};
 
   <template>
+    <h1 class="text-2xl font-semibold mb-4" data-test-todos-form-title>
+      {{if
+        this.isCreate
+        (t "todos.forms.todo.titles.create")
+        (t "todos.forms.todo.titles.edit")
+      }}
+    </h1>
     <TpkForm
       @changeset={{@changeset}}
       @onSubmit={{this.onSubmit}}
@@ -75,8 +87,9 @@ export default class TodosForm extends Component<TodosFormArgs> {
           </button>
           <LinkTo
             @route="dashboard.todos"
-            class="text-sm text-primary underline text-center mt-2"
+            class="text-sm text-primary underline text-center mt-2 inline-flex items-center gap-1"
           >
+            <ArrowLeftIcon class="size-4" />
             {{t "todos.forms.todo.actions.back"}}
           </LinkTo>
         </div>

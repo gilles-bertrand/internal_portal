@@ -7,6 +7,7 @@ import {
   SerializedUserSchema,
 } from "#src/serializers/user.serializer.js";
 import type { Route } from "@libs/backend-shared";
+import { requirePermission } from "@libs/permissions-backend";
 
 export class ListRoute implements Route {
   public constructor(private em: EntityManager) {}
@@ -15,6 +16,7 @@ export class ListRoute implements Route {
     return f.get(
       "/",
       {
+        preHandler: [requirePermission("manage", "User")],
         schema: {
           response: {
             200: object({
@@ -55,7 +57,10 @@ export class ListRoute implements Route {
         }
 
         const userRepository = this.em.getRepository(UserEntity);
-        const [users, total] = await userRepository.findAndCount(where, { orderBy });
+        const [users, total] = await userRepository.findAndCount(where, {
+          orderBy,
+          populate: ["role"],
+        });
 
         return reply.send({
           data: jsonApiSerializeManyUsers(users),

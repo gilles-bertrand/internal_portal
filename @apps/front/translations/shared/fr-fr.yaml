@@ -1,0 +1,18 @@
+handle-save:
+  generic-error-message: 'Une erreur est survenue. Veuillez réessayer.'
+  errors:
+    UNAUTHORIZED: 'Votre session a expiré. Veuillez vous reconnecter.'
+    FORBIDDEN: "Vous n'avez pas les droits nécessaires pour cette action."
+  status:
+    '401': 'Votre session a expiré. Veuillez vous reconnecter.'
+    '403': "Vous n'avez pas les droits nécessaires pour cette action."
+    '404': 'La ressource demandée est introuvable.'
+    '409': "Conflit : cette action entre en conflit avec l'état actuel des données."
+    '422': 'Les données envoyées sont invalides.'
+    '500': 'Une erreur serveur est survenue. Veuillez réessayer plus tard.'
+error-page:
+  titles:
+    '403': 'Accès refusé'
+    '404': 'Ressource introuvable'
+    generic: 'Une erreur est survenue'
+  backToDashboard: 'Retour au tableau de bord'

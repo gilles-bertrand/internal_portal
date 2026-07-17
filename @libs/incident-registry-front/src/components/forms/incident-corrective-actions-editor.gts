@@ -2,6 +2,7 @@ import Component from '@glimmer/component';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import TpkButton from '@triptyk/ember-input/components/prefabs/tpk-prefab-button';
+import TpkInput from '@triptyk/ember-input/components/tpk-input';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { t } from 'ember-intl';
@@ -29,11 +30,14 @@ export default class IncidentCorrectiveActionsEditor extends Component<Args> {
   };
 
   @action
-  updateField(field: keyof CorrectiveActionDraft, event: Event) {
-    const value = (event.target as HTMLInputElement).value;
+  updateField(
+    field: keyof CorrectiveActionDraft,
+    value: string | number | Date | null
+  ) {
+    const strValue = String(value ?? '');
     this.draft = {
       ...this.draft,
-      [field]: field === 'order' ? Number(value) || 1 : value,
+      [field]: field === 'order' ? Number(strValue) || 1 : strValue,
     };
   }
 
@@ -68,40 +72,44 @@ export default class IncidentCorrectiveActionsEditor extends Component<Args> {
   }
 
   <template>
-    {{! template-lint-disable require-input-label }}
     <fieldset class="fieldset border border-base-300 p-4">
       <legend class="fieldset-legend">{{t
           "incidents.form.sections.correctiveActions"
         }}</legend>
       <div class="grid grid-cols-12 gap-2 mb-3">
-        <input
-          type="text"
-          class="input input-bordered rounded-none col-span-12 md:col-span-2"
-          placeholder={{t "incidents.form.placeholders.actionPhase"}}
-          value={{this.draft.phase}}
-          {{on "input" (fn this.updateField "phase")}}
-        />
-        <input
-          type="number"
-          class="input input-bordered rounded-none col-span-12 md:col-span-1"
-          placeholder="#"
-          value={{this.draft.order}}
-          {{on "input" (fn this.updateField "order")}}
-        />
-        <input
-          type="text"
-          class="input input-bordered rounded-none col-span-12 md:col-span-3"
-          placeholder={{t "incidents.form.placeholders.actionTitle"}}
-          value={{this.draft.title}}
-          {{on "input" (fn this.updateField "title")}}
-        />
-        <input
-          type="text"
-          class="input input-bordered rounded-none col-span-12 md:col-span-4"
-          placeholder={{t "incidents.form.placeholders.actionDetail"}}
-          value={{this.draft.detail}}
-          {{on "input" (fn this.updateField "detail")}}
-        />
+        <div class="col-span-12 md:col-span-2">
+          <TpkInput
+            @label=""
+            @value={{this.draft.phase}}
+            @placeholder={{t "incidents.form.placeholders.actionPhase"}}
+            @onChange={{fn this.updateField "phase"}}
+          />
+        </div>
+        <div class="col-span-12 md:col-span-1">
+          <TpkInput
+            @label=""
+            @value={{this.draft.order}}
+            @type="number"
+            @placeholder="#"
+            @onChange={{fn this.updateField "order"}}
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <TpkInput
+            @label=""
+            @value={{this.draft.title}}
+            @placeholder={{t "incidents.form.placeholders.actionTitle"}}
+            @onChange={{fn this.updateField "title"}}
+          />
+        </div>
+        <div class="col-span-12 md:col-span-4">
+          <TpkInput
+            @label=""
+            @value={{this.draft.detail}}
+            @placeholder={{t "incidents.form.placeholders.actionDetail"}}
+            @onChange={{fn this.updateField "detail"}}
+          />
+        </div>
         <div class="col-span-12 md:col-span-2 flex items-end">
           <TpkButton
             @label={{t "incidents.form.actions.addLine"}}

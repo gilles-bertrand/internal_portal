@@ -67,6 +67,15 @@ const optionalDatetime = z
   .optional()
   .transform((value) => (value ? value : null));
 
+// @lat: [[frontend/forms#Stocker un Date, pas une string, pendant l'édition]]
+// The changeset holds a Date while editing these 5 fields (see DraftIncident);
+// convert to ISO here so the validated/submitted payload stays a proper ISO
+// string for the backend contract. Strings pass through unchanged.
+const dateInputToIso = (value: unknown) =>
+  value instanceof Date ? value.toISOString() : value;
+const requiredDatetime = z.preprocess(dateInputToIso, z.string().datetime());
+const optionalDatetimeInput = z.preprocess(dateInputToIso, optionalDatetime);
+
 const optionalInt = z
   .union([z.coerce.number().int(), z.literal(''), z.null()])
   .optional()
@@ -82,7 +91,7 @@ const optionalString = z
 function createIncidentBaseSchema(intl: IntlService) {
   void intl;
   return z.object({
-    reportDate: z.string().datetime(),
+    reportDate: requiredDatetime,
     version: z.string().min(1),
     classification: z.enum(CLASSIFICATIONS),
     status: z.enum(STATUSES),
@@ -97,10 +106,10 @@ function createIncidentBaseSchema(intl: IntlService) {
     legalContext: z.string().min(1),
     serviceName: z.string().min(1),
     deployedVersion: z.string().min(1),
-    incidentStartAt: z.string().datetime(),
-    incidentEndAt: optionalDatetime,
-    detectedAt: z.string().datetime(),
-    resolvedAt: optionalDatetime,
+    incidentStartAt: requiredDatetime,
+    incidentEndAt: optionalDatetimeInput,
+    detectedAt: requiredDatetime,
+    resolvedAt: optionalDatetimeInput,
     resolutionDurationMinutes: optionalInt,
     technicalLeadId: optionalString,
     description: z.string().min(1),

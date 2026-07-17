@@ -12,6 +12,10 @@ export const createUserValidationSchema = (intl: IntlService) =>
     password: string(
       intl.t('users.forms.user.validation.passwordRequired')
     ).min(8, intl.t('users.forms.user.validation.passwordTooShort')),
+    roleId: string(intl.t('users.forms.user.validation.roleRequired')).min(
+      1,
+      intl.t('users.forms.user.validation.roleRequired')
+    ),
     id: string().optional().nullable(),
   });
 
@@ -23,6 +27,7 @@ export const editUserValidationSchema = (intl: IntlService) =>
     ).min(1, intl.t('users.forms.user.validation.lastNameRequired')),
     password: string().optional().nullable(),
     email: email(intl.t('users.forms.user.validation.invalidEmail')),
+    roleId: string().optional(),
     id: string(),
   });
 

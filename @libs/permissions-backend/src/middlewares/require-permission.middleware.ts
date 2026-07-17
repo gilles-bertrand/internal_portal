@@ -1,11 +1,10 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { makeJsonApiError } from "@libs/backend-shared";
-import type { UserRole } from "#src/entities/user.entity.js";
 
-export function requireRole(...roles: UserRole[]) {
-  return async function roleGuard(request: FastifyRequest, reply: FastifyReply) {
-    const user = request.user;
-    if (!user) {
+// @lat: [[backend/permissions#Guard requirePermission]]
+export function requirePermission(action: string, subject: string) {
+  return async function permissionGuard(request: FastifyRequest, reply: FastifyReply) {
+    if (!request.ability) {
       return reply.code(401).send(
         makeJsonApiError(401, "Unauthorized", {
           code: "UNAUTHORIZED",
@@ -13,11 +12,11 @@ export function requireRole(...roles: UserRole[]) {
         }),
       );
     }
-    if (!roles.includes(user.role as UserRole)) {
+    if (!request.ability.can(action, subject)) {
       return reply.code(403).send(
         makeJsonApiError(403, "Forbidden", {
           code: "FORBIDDEN",
-          detail: "Insufficient role",
+          detail: "Insufficient permission",
         }),
       );
     }

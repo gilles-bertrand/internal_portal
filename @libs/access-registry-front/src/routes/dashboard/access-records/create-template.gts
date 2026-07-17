@@ -10,7 +10,8 @@ import { createAccessRecordValidationSchema } from '#src/components/forms/access
 export default class AccessRecordsCreateRouteTemplate extends Component<AccessRecordsCreateRouteSignature> {
   @service declare intl: IntlService;
   validationSchema: ReturnType<typeof createAccessRecordValidationSchema>;
-  changeset = new AccessRecordChangeset({});
+  // accessedAt must be null (not undefined) so TpkDatepicker accepts the value.
+  changeset = new AccessRecordChangeset({ accessedAt: null });
 
   constructor(owner: Owner, args: AccessRecordsCreateRouteSignature) {
     super(owner, args);
@@ -21,6 +22,9 @@ export default class AccessRecordsCreateRouteTemplate extends Component<AccessRe
     <AccessRecordForm
       @changeset={{this.changeset}}
       @validationSchema={{this.validationSchema}}
+      @purposes={{@model.purposes}}
+      @legalBases={{@model.legalBases}}
+      @dataCategories={{@model.dataCategories}}
     />
   </template>
 }

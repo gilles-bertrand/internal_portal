@@ -10,9 +10,15 @@
       "Bash(git log *)",
       "Bash(npm *)",
       "Bash(npx *)",
-      "Bash(pnpm *)"
+      "Bash(pnpm *)",
+      "mcp__codegraph__*"
     ],
-    "deny": ["Bash(rm -rf *)", "Bash(sudo *)", "Bash(chmod 777 *)", "Read(.env)"]
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(sudo *)",
+      "Bash(chmod 777 *)",
+      "Read(.env)"
+    ]
   },
   "hooks": {
     "PreToolUse": [
@@ -65,6 +71,34 @@
             "type": "command",
             "command": "node /Users/gilles/www/internal_portal/.claude/hooks/damage-control/bash-output-validator.mjs",
             "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "codegraph prompt-hook"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "lat hook claude UserPromptSubmit"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "lat hook claude Stop"
           }
         ]
       }

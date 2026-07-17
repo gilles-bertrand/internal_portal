@@ -2,6 +2,7 @@ import type { FastifyInstanceTypeForModule } from "#src/init.js";
 import { array, number, object, string } from "zod";
 import { type Route } from "@libs/backend-shared";
 import type { EntityManager } from "@mikro-orm/postgresql";
+import { requirePermission } from "@libs/permissions-backend";
 
 export class StatsRoute implements Route {
   public constructor(private em: EntityManager) {}
@@ -10,6 +11,7 @@ export class StatsRoute implements Route {
     return f.get(
       "/stats",
       {
+        preHandler: [requirePermission("read", "AccessRecord")],
         schema: {
           response: {
             200: object({

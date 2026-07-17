@@ -2,6 +2,7 @@ import Component from '@glimmer/component';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import TpkButton from '@triptyk/ember-input/components/prefabs/tpk-prefab-button';
+import TpkInput from '@triptyk/ember-input/components/tpk-input';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { t } from 'ember-intl';
@@ -21,10 +22,13 @@ export default class IncidentTimelineEditor extends Component<Args> {
   @tracked draft: TimelineEventDraft = { date: '', time: '', event: '' };
 
   @action
-  updateField(field: keyof TimelineEventDraft, event: Event) {
+  updateField(
+    field: keyof TimelineEventDraft,
+    value: string | number | Date | null
+  ) {
     this.draft = {
       ...this.draft,
-      [field]: (event.target as HTMLInputElement).value,
+      [field]: String(value ?? ''),
     };
   }
 
@@ -47,33 +51,35 @@ export default class IncidentTimelineEditor extends Component<Args> {
   }
 
   <template>
-    {{! template-lint-disable require-input-label }}
     <fieldset class="fieldset border border-base-300 p-4">
       <legend class="fieldset-legend">{{t
           "incidents.form.sections.timeline"
         }}</legend>
       <div class="grid grid-cols-12 gap-2 mb-3">
-        <input
-          type="text"
-          class="input input-bordered rounded-none col-span-12 md:col-span-3"
-          placeholder={{t "incidents.form.placeholders.timelineDate"}}
-          value={{this.draft.date}}
-          {{on "input" (fn this.updateField "date")}}
-        />
-        <input
-          type="text"
-          class="input input-bordered rounded-none col-span-12 md:col-span-2"
-          placeholder={{t "incidents.form.placeholders.timelineTime"}}
-          value={{this.draft.time}}
-          {{on "input" (fn this.updateField "time")}}
-        />
-        <input
-          type="text"
-          class="input input-bordered rounded-none col-span-12 md:col-span-5"
-          placeholder={{t "incidents.form.placeholders.timelineEvent"}}
-          value={{this.draft.event}}
-          {{on "input" (fn this.updateField "event")}}
-        />
+        <div class="col-span-12 md:col-span-3">
+          <TpkInput
+            @label=""
+            @value={{this.draft.date}}
+            @placeholder={{t "incidents.form.placeholders.timelineDate"}}
+            @onChange={{fn this.updateField "date"}}
+          />
+        </div>
+        <div class="col-span-12 md:col-span-2">
+          <TpkInput
+            @label=""
+            @value={{this.draft.time}}
+            @placeholder={{t "incidents.form.placeholders.timelineTime"}}
+            @onChange={{fn this.updateField "time"}}
+          />
+        </div>
+        <div class="col-span-12 md:col-span-5">
+          <TpkInput
+            @label=""
+            @value={{this.draft.event}}
+            @placeholder={{t "incidents.form.placeholders.timelineEvent"}}
+            @onChange={{fn this.updateField "event"}}
+          />
+        </div>
         <div class="col-span-12 md:col-span-2 flex items-end">
           <TpkButton
             @label={{t "incidents.form.actions.addLine"}}

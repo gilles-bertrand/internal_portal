@@ -13,6 +13,7 @@ import {
 } from "#src/serializers/access-record.serializer.js";
 import type { EntityManager } from "@mikro-orm/postgresql";
 import type { AuditLogger } from "#src/utils/audit-logger.type.js";
+import { requirePermission } from "@libs/permissions-backend";
 
 export class CreateRoute implements Route {
   public constructor(
@@ -24,6 +25,7 @@ export class CreateRoute implements Route {
     return f.post(
       "/",
       {
+        preHandler: [requirePermission("create", "AccessRecord")],
         schema: {
           body: makeSingleJsonApiTopDocument(
             object({
@@ -58,15 +60,7 @@ export class CreateRoute implements Route {
         const attrs = request.body.data.attributes;
         const user = request.user!;
 
-        if (user.role !== "encoder") {
-          return reply.code(403).send(
-            makeJsonApiError(403, "Forbidden", {
-              code: "FORBIDDEN",
-              detail: "seul le rôle encoder peut créer des enregistrements",
-            }),
-          );
-        }
-
+        // @lat: [[backend/access-registry#Règle art. 9 RGPD (données sensibles)]]
         if (attrs.accessType === "transmission" && !attrs.recipient) {
           return reply.code(400).send(
             makeJsonApiError(400, "Validation Error", {

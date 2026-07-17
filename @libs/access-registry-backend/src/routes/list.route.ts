@@ -2,17 +2,15 @@ import type { FastifyInstanceTypeForModule } from "#src/init.js";
 import type { EntityManager } from "@mikro-orm/postgresql";
 import { array, number, object } from "zod";
 import { type Route } from "@libs/backend-shared";
+import type { AppAbility } from "@libs/permissions-backend";
 import { AccessRecordEntity } from "#src/entities/access-record.entity.js";
 import {
   jsonApiSerializeManyAccessRecords,
   SerializedAccessRecordSchema,
 } from "#src/serializers/access-record.serializer.js";
 import type { AuditLogger } from "#src/utils/audit-logger.type.js";
-
-interface RequestUser {
-  id: string;
-  role: string;
-}
+import { extractEqualityCondition } from "#src/utils/extract-equality-condition.js";
+import { requirePermission } from "@libs/permissions-backend";
 
 const SORTABLE_FIELDS = ["accessedAt", "encodedAt", "seq"] as const;
 
@@ -51,15 +49,15 @@ function applyDateRangeFilter(
 
 function buildWhereFilters(
   q: Record<string, string | undefined>,
-  user: RequestUser,
+  ability: AppAbility,
 ): Record<string, unknown> {
   const where: Record<string, unknown> = {};
 
-  if (user.role === "encoder") {
-    where["encodedBy"] = user.id;
-  }
-
-  if (q["filter[encodedBy]"] && user.role !== "encoder") {
+  // @lat: [[backend/access-registry#Filtre de liste dérivé de la condition CASL de l'encoder]]
+  const forcedEncodedBy = extractEqualityCondition(ability, "read", "AccessRecord", "encodedBy");
+  if (forcedEncodedBy) {
+    where["encodedBy"] = forcedEncodedBy;
+  } else if (q["filter[encodedBy]"]) {
     where["encodedBy"] = q["filter[encodedBy]"];
   }
 
@@ -92,6 +90,7 @@ export class ListRoute implements Route {
     return f.get(
       "/",
       {
+        preHandler: [requirePermission("read", "AccessRecord")],
         schema: {
           response: {
             200: object({
@@ -104,7 +103,7 @@ export class ListRoute implements Route {
       async (request, reply) => {
         const user = request.user!;
         const q = request.query as Record<string, string | undefined>;
-        const where = buildWhereFilters(q, user);
+        const where = buildWhereFilters(q, request.ability!);
         const orderBy = parseSortParam(q["sort"]);
 
         const repo = this.em.getRepository(AccessRecordEntity);

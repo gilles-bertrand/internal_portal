@@ -1,0 +1,27 @@
+roles:
+  title: Roles
+  actions:
+    create: New role
+    edit: Edit
+  table:
+    name: Name
+    description: Description
+forms:
+  role:
+    createTitle: New role
+    editTitle: Edit role
+    labels:
+      name: Name
+      description: Description
+    actions:
+      submit: Save
+      back: Back
+    validation:
+      nameRequired: Name is required
+    matrix:
+      title: Permissions
+      advancedRulesNotice: This matrix only edits coarse action/subject rules. Row-level conditions and field restrictions are not editable here.
+    messages:
+      saveSuccess: Role saved successfully.
+      permissionsSaved: Permissions updated.
+      permissionsError: Failed to update permissions. Please try again.

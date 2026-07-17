@@ -13,6 +13,9 @@ table:
 
 forms:
   todo:
+    titles:
+      create: 'Add todo'
+      edit: 'Edit todo'
     labels:
       title: 'Title'
       description: 'Description'

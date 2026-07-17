@@ -8,7 +8,6 @@ import { createIncidentValidationSchema } from '#src/components/forms/incident-v
 import { t } from 'ember-intl';
 
 function buildDefaultChangeset(): IncidentChangeset {
-  const now = new Date().toISOString();
   return new IncidentChangeset({
     version: '1.0',
     classification: 'CONFIDENTIEL',
@@ -17,12 +16,15 @@ function buildDefaultChangeset(): IncidentChangeset {
     personalDataImpacted: false,
     specialCategoryData: false,
     apdNotificationRequired: false,
-    reportDate: now,
+    // @lat: [[frontend/forms#Valeur initiale null obligatoire pour TpkDatepickerPrefab]]
+    reportDate: null,
     recipientName: '',
     recipientOrg: '',
     deployedVersion: '1.0',
-    incidentStartAt: now,
-    detectedAt: now,
+    incidentStartAt: null,
+    incidentEndAt: null,
+    detectedAt: null,
+    resolvedAt: null,
     contributingFactors: [],
     correctiveActions: [],
     preventiveMeasures: [],

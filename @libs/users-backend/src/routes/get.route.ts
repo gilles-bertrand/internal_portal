@@ -7,6 +7,7 @@ import {
 } from "#src/serializers/user.serializer.js";
 import type { UserEntityType } from "#src/entities/user.entity.js";
 import { jsonApiErrorDocumentSchema, makeJsonApiError, type Route } from "@libs/backend-shared";
+import { requirePermission } from "@libs/permissions-backend";
 
 export class GetRoute implements Route {
   public constructor(private userRepository: EntityRepository<UserEntityType>) {}
@@ -15,6 +16,7 @@ export class GetRoute implements Route {
     return f.get(
       "/:id",
       {
+        preHandler: [requirePermission("manage", "User")],
         schema: {
           params: object({
             id: string(),
@@ -30,7 +32,7 @@ export class GetRoute implements Route {
       async (request, reply) => {
         const { id } = request.params as { id: string };
 
-        const user = await this.userRepository.findOne({ id });
+        const user = await this.userRepository.findOne({ id }, { populate: ["role"] });
 
         if (!user) {
           return reply.code(404).send(

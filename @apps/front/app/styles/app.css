@@ -5,6 +5,7 @@
 @import '@triptyk/ember-input-validation/dist/app.css';
 @import './auth.css';
 @import './flash.css';
+@import './icons.css';
 
 @plugin "daisyui" {
   themes:
@@ -22,3 +23,5 @@
 @source "../../node_modules/@libs/users-front";
 @source "../../node_modules/@libs/todos-front";
 @source "../../node_modules/@libs/access-registry-front";
+@source "../../node_modules/@libs/incident-registry-front";
+@source "../../node_modules/@libs/permissions-front";

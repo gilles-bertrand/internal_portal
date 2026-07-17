@@ -167,6 +167,7 @@ export class ExportService {
       chainHeadHash,
       manifestBase,
     );
+    // @lat: [[backend/access-registry#Export signé multi-format (JSON/CSV/PDF)]]
     const contentSha256 = createHash("sha256").update(rawContent).digest("hex");
     const signature = createHmac("sha256", this.signingKey).update(rawContent).digest("hex");
 

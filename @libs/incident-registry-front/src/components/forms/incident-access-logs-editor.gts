@@ -2,6 +2,7 @@ import Component from '@glimmer/component';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import TpkButton from '@triptyk/ember-input/components/prefabs/tpk-prefab-button';
+import TpkInput from '@triptyk/ember-input/components/tpk-input';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { t } from 'ember-intl';
@@ -29,11 +30,14 @@ export default class IncidentAccessLogsEditor extends Component<Args> {
   };
 
   @action
-  updateField(field: keyof AccessLogDraft, event: Event) {
-    const value = (event.target as HTMLInputElement).value;
+  updateField(
+    field: keyof AccessLogDraft,
+    value: string | number | Date | null
+  ) {
+    const strValue = String(value ?? '');
     this.draft = {
       ...this.draft,
-      [field]: field === 'count' ? Number(value) || 0 : value,
+      [field]: field === 'count' ? Number(strValue) || 0 : strValue,
     };
   }
 
@@ -52,47 +56,52 @@ export default class IncidentAccessLogsEditor extends Component<Args> {
   }
 
   <template>
-    {{! template-lint-disable require-input-label }}
     <fieldset class="fieldset border border-base-300 p-4">
       <legend class="fieldset-legend">{{t
           "incidents.form.sections.accessLogs"
         }}</legend>
       <div class="grid grid-cols-12 gap-2 mb-3">
-        <input
-          type="text"
-          class="input input-bordered rounded-none col-span-12 md:col-span-2"
-          placeholder={{t "incidents.form.placeholders.logDate"}}
-          value={{this.draft.date}}
-          {{on "input" (fn this.updateField "date")}}
-        />
-        <input
-          type="text"
-          class="input input-bordered rounded-none col-span-12 md:col-span-2"
-          placeholder={{t "incidents.form.placeholders.logUser"}}
-          value={{this.draft.user}}
-          {{on "input" (fn this.updateField "user")}}
-        />
-        <input
-          type="text"
-          class="input input-bordered rounded-none col-span-12 md:col-span-3"
-          placeholder={{t "incidents.form.placeholders.logEmail"}}
-          value={{this.draft.email}}
-          {{on "input" (fn this.updateField "email")}}
-        />
-        <input
-          type="text"
-          class="input input-bordered rounded-none col-span-12 md:col-span-3"
-          placeholder={{t "incidents.form.placeholders.logFiles"}}
-          value={{this.draft.files}}
-          {{on "input" (fn this.updateField "files")}}
-        />
-        <input
-          type="number"
-          class="input input-bordered rounded-none col-span-12 md:col-span-1"
-          placeholder="#"
-          value={{this.draft.count}}
-          {{on "input" (fn this.updateField "count")}}
-        />
+        <div class="col-span-12 md:col-span-2">
+          <TpkInput
+            @label=""
+            @value={{this.draft.date}}
+            @placeholder={{t "incidents.form.placeholders.logDate"}}
+            @onChange={{fn this.updateField "date"}}
+          />
+        </div>
+        <div class="col-span-12 md:col-span-2">
+          <TpkInput
+            @label=""
+            @value={{this.draft.user}}
+            @placeholder={{t "incidents.form.placeholders.logUser"}}
+            @onChange={{fn this.updateField "user"}}
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <TpkInput
+            @label=""
+            @value={{this.draft.email}}
+            @placeholder={{t "incidents.form.placeholders.logEmail"}}
+            @onChange={{fn this.updateField "email"}}
+          />
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <TpkInput
+            @label=""
+            @value={{this.draft.files}}
+            @placeholder={{t "incidents.form.placeholders.logFiles"}}
+            @onChange={{fn this.updateField "files"}}
+          />
+        </div>
+        <div class="col-span-12 md:col-span-1">
+          <TpkInput
+            @label=""
+            @value={{this.draft.count}}
+            @type="number"
+            @placeholder="#"
+            @onChange={{fn this.updateField "count"}}
+          />
+        </div>
         <div class="col-span-12 md:col-span-1 flex items-end">
           <TpkButton
             @label={{t "incidents.form.actions.addLine"}}

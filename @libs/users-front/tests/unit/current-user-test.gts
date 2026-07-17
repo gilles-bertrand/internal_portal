@@ -41,7 +41,7 @@ describe('Service | CurrentUser | Unit', () => {
     });
   });
 
-  test('load method clears user when session is not authenticated', async ({
+  test('load method clears user and resets ability when session is not authenticated', async ({
     context,
   }) => {
     await initializeTestApp(context.owner, 'en-us');
@@ -56,6 +56,7 @@ describe('Service | CurrentUser | Unit', () => {
       lastName: 'Smith',
       email: 'jane.smith@example.com',
     } as never;
+    currentUserService.ability.load([{ action: 'manage', subject: 'User' }]);
 
     // Mock session as not authenticated
     vi.spyOn(
@@ -67,9 +68,10 @@ describe('Service | CurrentUser | Unit', () => {
     await currentUserService.load();
 
     expect(currentUserService.user).toBeUndefined();
+    expect(currentUserService.ability.can('manage', 'User')).toBe(false);
   });
 
-  test('load method fetches and sets user when session is authenticated', async ({
+  test('load method fetches and sets user + ability when session is authenticated', async ({
     context,
   }) => {
     await initializeTestApp(context.owner, 'en-us');
@@ -97,10 +99,59 @@ describe('Service | CurrentUser | Unit', () => {
       content: { data: mockUser },
     } as never);
 
+    // Mock the /me/ability fetch
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          data: { rules: [{ action: 'manage', subject: 'User' }] },
+        }),
+    } as never);
+
     await currentUserService.load();
 
     expect(currentUserService.user).toBeDefined();
     expect(currentUserService.user).toBe(mockUser);
+    const [url, options] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/v1/me/ability');
+    expect(options.headers).toBeDefined();
+    expect(currentUserService.ability.can('manage', 'User')).toBe(true);
+    expect(currentUserService.ability.can('manage', 'Role')).toBe(false);
+  });
+
+  test('load method still sets the user and falls back to an empty ability when the /me/ability fetch fails', async ({
+    context,
+  }) => {
+    await initializeTestApp(context.owner, 'en-us');
+    const currentUserService = context.owner.lookup(
+      'service:current-user'
+    ) as CurrentUserService;
+
+    const mockUser = {
+      id: '123',
+      type: 'users' as const,
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john.doe@example.com',
+    };
+
+    vi.spyOn(
+      currentUserService.session,
+      'isAuthenticated',
+      'get'
+    ).mockReturnValue(true);
+
+    vi.spyOn(currentUserService.store, 'request').mockResolvedValue({
+      content: { data: mockUser },
+    } as never);
+
+    const reportSpy = vi.spyOn(currentUserService.errorReporter, 'report');
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'));
+
+    await expect(currentUserService.load()).resolves.toBeUndefined();
+
+    expect(currentUserService.user).toBe(mockUser);
+    expect(currentUserService.ability.can('manage', 'User')).toBe(false);
+    expect(reportSpy).toHaveBeenCalledOnce();
   });
 
   test('currentUser getter works after successful load', async ({
@@ -129,6 +180,10 @@ describe('Service | CurrentUser | Unit', () => {
     // Mock store request to return our mock user
     vi.spyOn(currentUserService.store, 'request').mockResolvedValue({
       content: { data: mockUser },
+    } as never);
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      json: () => Promise.resolve({ data: { rules: [] } }),
     } as never);
 
     await currentUserService.load();

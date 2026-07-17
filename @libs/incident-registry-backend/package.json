@@ -22,6 +22,7 @@
   "dependencies": {
     "@libs/audit-log-backend": "workspace:*",
     "@libs/backend-shared": "workspace:*",
+    "@libs/permissions-backend": "workspace:*",
     "@libs/users-backend": "workspace:*",
     "@mikro-orm/core": "7.1.4",
     "@mikro-orm/postgresql": "7.1.4",

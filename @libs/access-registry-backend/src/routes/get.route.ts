@@ -13,6 +13,8 @@ import {
   SerializedAccessRecordSchema,
 } from "#src/serializers/access-record.serializer.js";
 import type { AuditLogger } from "#src/utils/audit-logger.type.js";
+import { requirePermission } from "@libs/permissions-backend";
+import { subject } from "@casl/ability";
 
 export class GetRoute implements Route {
   public constructor(
@@ -24,6 +26,7 @@ export class GetRoute implements Route {
     return f.get(
       "/:id",
       {
+        preHandler: [requirePermission("read", "AccessRecord")],
         schema: {
           params: object({ id: string() }),
           response: {
@@ -42,7 +45,10 @@ export class GetRoute implements Route {
           return reply.code(404).send(makeJsonApiError(404, "Not Found", { code: "NOT_FOUND" }));
         }
 
-        if (user.role === "encoder" && record.encodedBy !== user.id) {
+        // `subject()` tags le record avec son type pour que CASL évalue la condition
+        // `encodedBy: "$user.id"` de la règle `encoder` contre l'instance réelle — le
+        // tuple `[string, string]` de l'ability type le 2e paramètre en `string` pur.
+        if (!request.ability!.can("read", subject("AccessRecord", record) as never)) {
           return reply.code(403).send(makeJsonApiError(403, "Forbidden", { code: "FORBIDDEN" }));
         }
 

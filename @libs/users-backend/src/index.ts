@@ -11,6 +11,7 @@ export * from "#src/routes/login.route.js";
 export * from "#src/routes/logout.route.js";
 export * from "#src/routes/profile.route.js";
 export * from "#src/routes/refresh.route.js";
+export * from "#src/routes/role-options.route.js";
 export * from "#src/routes/update.route.js";
 export * from "#src/serializers/user.serializer.js";
 export * from "#src/utils/token.utils.js";
@@ -19,6 +20,5 @@ export * from "#src/init.js";
 export * from "#src/utils/jwt.utils.js";
 export * from "#src/utils/auth.utils.js";
 export * from "#src/middlewares/jwt-auth.middleware.ts";
-export * from "#src/middlewares/role-guard.middleware.ts";
 
 export const entities = [UserEntity, RefreshTokenEntity];

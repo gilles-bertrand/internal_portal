@@ -8,7 +8,7 @@ import { moduleRegistry as sharedModuleRegistry } from '@libs/shared-front';
 
 export function moduleRegistry() {
   return buildRegistry({
-    ...import.meta.glob('./routes/**/*.{js,ts}', { eager: true }),
+    ...import.meta.glob('./routes/**/*.{js,ts,gjs,gts}', { eager: true }),
     ...import.meta.glob('./templates/**/*.{js,ts}', { eager: true }),
     ...import.meta.glob('./helpers/**/*.{js,ts}', { eager: true }),
     ...import.meta.glob('./components/**/*.{js,ts}', { eager: true }),
@@ -31,4 +31,5 @@ export function forRouter(this: DSL) {
   this.route('access-records', function () {
     this.route('create');
   });
+  this.route('audit-events', function () {});
 }

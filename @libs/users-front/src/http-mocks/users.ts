@@ -11,6 +11,8 @@ const mockUsers = [
       firstName: 'John',
       lastName: 'Doe',
       email: 'john.doe@example.com',
+      roleId: 'role-tech_admin',
+      roleName: 'tech_admin',
     },
   },
   {
@@ -20,6 +22,8 @@ const mockUsers = [
       firstName: 'Jane',
       lastName: 'Smith',
       email: 'jane.smith@example.com',
+      roleId: 'role-encoder',
+      roleName: 'encoder',
     },
   },
   {
@@ -29,7 +33,32 @@ const mockUsers = [
       firstName: 'Bob Johnson',
       lastName: 'Johnson',
       email: 'bob.johnson@example.com',
+      roleId: 'role-dpo',
+      roleName: 'dpo',
     },
+  },
+];
+
+const mockRoleOptions = [
+  {
+    id: 'role-auditor',
+    type: 'roles' as const,
+    attributes: { name: 'auditor', description: null },
+  },
+  {
+    id: 'role-dpo',
+    type: 'roles' as const,
+    attributes: { name: 'dpo', description: null },
+  },
+  {
+    id: 'role-encoder',
+    type: 'roles' as const,
+    attributes: { name: 'encoder', description: null },
+  },
+  {
+    id: 'role-tech_admin',
+    type: 'roles' as const,
+    attributes: { name: 'tech_admin', description: null },
   },
 ];
 
@@ -37,6 +66,11 @@ export default [
   http.get('/api/v1/users/profile', () => {
     return HttpResponse.json({
       data: mockUsers[0]!,
+    });
+  }),
+  http.get('/api/v1/users/role-options', () => {
+    return HttpResponse.json({
+      data: mockRoleOptions,
     });
   }),
   http.get('/api/v1/users/{id}', (req) => {

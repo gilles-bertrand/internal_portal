@@ -2,6 +2,7 @@ import Component from '@glimmer/component';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import TpkButton from '@triptyk/ember-input/components/prefabs/tpk-prefab-button';
+import TpkInput from '@triptyk/ember-input/components/tpk-input';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { t } from 'ember-intl';
@@ -32,22 +33,22 @@ export default class IncidentStringListEditor extends Component<Args> {
   }
 
   @action
-  updateDraft(event: Event) {
-    this.draft = (event.target as HTMLInputElement).value;
+  updateDraft(value: string | number | Date | null) {
+    this.draft = String(value ?? '');
   }
 
   <template>
-    {{! template-lint-disable require-input-label }}
     <fieldset class="fieldset border border-base-300 p-4">
       <legend class="fieldset-legend">{{@label}}</legend>
       <div class="flex gap-2 mb-3">
-        <input
-          type="text"
-          class="input input-bordered w-full rounded-none"
-          value={{this.draft}}
-          placeholder={{@placeholder}}
-          {{on "input" this.updateDraft}}
-        />
+        <div class="w-full">
+          <TpkInput
+            @label=""
+            @value={{this.draft}}
+            @placeholder={{@placeholder}}
+            @onChange={{this.updateDraft}}
+          />
+        </div>
         <TpkButton
           @label={{t "incidents.form.actions.addLine"}}
           @onClick={{this.addItem}}

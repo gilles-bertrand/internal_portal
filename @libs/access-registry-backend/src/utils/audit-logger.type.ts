@@ -1,3 +1,4 @@
+// @lat: [[backend/platform#Audit-log : noyau sans HTTP]]
 export interface AuditLogInput {
   actorId: string;
   action: string;

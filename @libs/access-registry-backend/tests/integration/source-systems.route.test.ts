@@ -91,6 +91,19 @@ test("POST /source-systems créé est ensuite listé par GET", async () => {
 });
 
 // @lat: [[backend/access-registry#Référentiel source-systems (creatable)]]
+test("POST /source-systems refuse un libellé sans caractère alphanumérique (400)", async () => {
+  const response = await module.fastifyInstance.inject({
+    method: "POST",
+    url: "/source-systems",
+    headers: { authorization: module.generateBearerToken("encoder-id", "encoder") },
+    payload: createPayload("!!!"),
+  });
+
+  expect(response.statusCode).toBe(400);
+  expect(response.json().errors[0].code).toBe("INVALID_SOURCE_SYSTEM_LABEL");
+});
+
+// @lat: [[backend/access-registry#Référentiel source-systems (creatable)]]
 test("POST /source-systems sans droit create AccessRecord reçoit 403", async () => {
   const response = await module.fastifyInstance.inject({
     method: "POST",

@@ -1,7 +1,12 @@
 import type { FastifyInstanceTypeForModule } from "#src/init.js";
 import { randomUUID } from "node:crypto";
 import { array, object, string } from "zod";
-import { makeSingleJsonApiTopDocument, type Route } from "@libs/backend-shared";
+import {
+  jsonApiErrorDocumentSchema,
+  makeJsonApiError,
+  makeSingleJsonApiTopDocument,
+  type Route,
+} from "@libs/backend-shared";
 import type { EntityManager } from "@mikro-orm/postgresql";
 import { requirePermission } from "@libs/permissions-backend";
 import { SourceSystemEntity } from "#src/entities/source-system.entity.js";
@@ -57,12 +62,29 @@ export class CreateSourceSystemRoute implements Route {
               attributes: object({ label: string().min(1) }),
             }),
           ),
-          response: { 200: makeSingleJsonApiTopDocument(SerializedSourceSystemSchema) },
+          response: {
+            200: makeSingleJsonApiTopDocument(SerializedSourceSystemSchema),
+            400: jsonApiErrorDocumentSchema,
+          },
         },
       },
       async (request, reply) => {
         const label = request.body.data.attributes.label.trim();
         const code = slugifySourceSystem(label);
+
+        // Un libellé composé uniquement de ponctuation/espaces (ex. "!!!") passe
+        // la validation `min(1)` mais slugifie en chaîne vide : on refuse plutôt
+        // que de créer un référentiel au code vide et non descriptif.
+        if (!code) {
+          return reply.code(400).send(
+            makeJsonApiError(400, "Validation Error", {
+              code: "INVALID_SOURCE_SYSTEM_LABEL",
+              detail: "le libellé doit contenir au moins un caractère alphanumérique",
+              source: { pointer: "/data/attributes/label" },
+            }),
+          );
+        }
+
         const repository = this.em.getRepository(SourceSystemEntity);
 
         const existing = await repository.findOne({ code });

@@ -13,6 +13,7 @@ const baseRecord = {
   accessedAt: '2026-06-11T14:00:00.000Z',
   encodedAt: '2026-06-11T14:02:00.000Z',
   encodedBy: 'encoder-2',
+  encodedByName: 'Camille DPO',
   accessorRef: 'Amaury Deflorenne',
   dataSubjectRef: 'cust-pseudonym-117',
   dataCategories: ['santé'],
@@ -49,6 +50,8 @@ describe('access-record-detail', function () {
       expect(text).toContain('cust-pseudonym-117');
       expect(text).toContain('dossier-medical');
       expect(text).toContain('Transmission pour remboursement');
+      // « Encodé par » affiche le nom résolu, pas l'UUID.
+      expect(text).toContain('Camille DPO');
 
       // Lecture seule : aucun champ de saisie.
       expect(document.querySelector('input, textarea, select')).toBeNull();

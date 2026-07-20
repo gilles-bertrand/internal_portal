@@ -1,5 +1,6 @@
 import type { FastifyInstanceTypeForModule } from "#src/init.js";
 import { randomUUID } from "node:crypto";
+import { UniqueConstraintViolationException } from "@mikro-orm/core";
 import { array, object, string } from "zod";
 import {
   jsonApiErrorDocumentSchema,
@@ -93,7 +94,21 @@ export class CreateSourceSystemRoute implements Route {
         }
 
         const entity = { id: randomUUID(), code, label };
-        await repository.insert(entity);
+        try {
+          await repository.insert(entity);
+        } catch (error) {
+          // Course entre le findOne ci-dessus et l'insert : deux requêtes
+          // concurrentes pour un même code neuf passent toutes deux le findOne,
+          // l'une viole la contrainte d'unicité. On retombe alors sur l'existant
+          // (idempotence) plutôt que de renvoyer une 500.
+          if (error instanceof UniqueConstraintViolationException) {
+            const raced = await repository.findOne({ code });
+            if (raced) {
+              return reply.send({ data: jsonApiSerializeSourceSystem(raced) });
+            }
+          }
+          throw error;
+        }
 
         return reply.send({ data: jsonApiSerializeSourceSystem(entity) });
       },

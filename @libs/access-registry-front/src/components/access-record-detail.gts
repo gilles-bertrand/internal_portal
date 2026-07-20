@@ -44,7 +44,7 @@ export default class AccessRecordDetail extends Component<AccessRecordDetailArgs
   }
 
   get encodedByLabel(): string {
-    return this.args.record.encodedBy ?? '—';
+    return this.args.record.encodedByName ?? this.args.record.encodedBy ?? '—';
   }
 
   <template>

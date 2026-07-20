@@ -9,6 +9,9 @@ export const SerializedAccessRecordSchema = makeJsonApiDocumentSchema(
     accessedAt: string(),
     encodedAt: string(),
     encodedBy: string(),
+    // Nom d'affichage de l'encodeur, résolu et ajouté par GET /:id (optionnel :
+    // list/create renvoient l'enregistrement brut sans résolution de nom).
+    encodedByName: string().optional(),
     accessorRef: string(),
     dataSubjectRef: string(),
     dataCategories: array(string()),

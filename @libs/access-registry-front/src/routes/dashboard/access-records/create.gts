@@ -11,6 +11,8 @@ import type IntlService from 'ember-intl/services/intl';
 import type { Purpose } from '#src/schemas/purposes.ts';
 import type { LegalBasis } from '#src/schemas/legal-bases.ts';
 import type { DataCategory } from '#src/schemas/data-categories.ts';
+import type { SourceSystem } from '#src/schemas/source-systems.ts';
+import type { EligibleAccessor } from '#src/schemas/eligible-accessors.ts';
 
 export type AccessRecordsCreateRouteSignature = {
   model: Awaited<ReturnType<AccessRecordsCreateRoute['model']>>;
@@ -38,7 +40,13 @@ export default class AccessRecordsCreateRoute extends Route {
   // fetched once here rather than inside the form component so the form stays
   // a pure presentational component driven by @args.
   async model() {
-    const [purposes, legalBases, dataCategories] = await Promise.all([
+    const [
+      purposes,
+      legalBases,
+      dataCategories,
+      sourceSystems,
+      eligibleAccessors,
+    ] = await Promise.all([
       this.store.request<ReactiveDataDocument<Purpose[]>>(
         query<Purpose>('purposes')
       ),
@@ -48,11 +56,19 @@ export default class AccessRecordsCreateRoute extends Route {
       this.store.request<ReactiveDataDocument<DataCategory[]>>(
         query<DataCategory>('data-categories')
       ),
+      this.store.request<ReactiveDataDocument<SourceSystem[]>>(
+        query<SourceSystem>('source-systems')
+      ),
+      this.store.request<ReactiveDataDocument<EligibleAccessor[]>>(
+        query<EligibleAccessor>('eligible-accessors')
+      ),
     ]);
     return {
       purposes: purposes.content.data,
       legalBases: legalBases.content.data,
       dataCategories: dataCategories.content.data,
+      sourceSystems: sourceSystems.content.data,
+      eligibleAccessors: eligibleAccessors.content.data,
     };
   }
 }

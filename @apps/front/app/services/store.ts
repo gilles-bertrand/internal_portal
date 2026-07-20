@@ -14,6 +14,8 @@ import AccessRecordSchema from '@libs/access-registry-front/schemas/access-recor
 import PurposeSchema from '@libs/access-registry-front/schemas/purposes';
 import LegalBasisSchema from '@libs/access-registry-front/schemas/legal-bases';
 import DataCategorySchema from '@libs/access-registry-front/schemas/data-categories';
+import SourceSystemSchema from '@libs/access-registry-front/schemas/source-systems';
+import EligibleAccessorSchema from '@libs/access-registry-front/schemas/eligible-accessors';
 import IncidentSchema from '@libs/incident-registry-front/schemas/incidents';
 import RoleSchema from '@libs/permissions-front/schemas/roles';
 
@@ -34,6 +36,8 @@ const legacyStore = useLegacyStore({
     PurposeSchema,
     LegalBasisSchema,
     DataCategorySchema,
+    SourceSystemSchema,
+    EligibleAccessorSchema,
     IncidentSchema,
     RoleSchema,
   ],

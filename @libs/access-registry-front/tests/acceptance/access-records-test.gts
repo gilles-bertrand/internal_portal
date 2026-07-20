@@ -107,4 +107,36 @@ describe('access records route guards (acceptance)', function () {
       expect(currentURL()).not.toBe('/dashboard');
     }
   );
+
+  applicationTest(
+    '/dashboard/access-records/:id redirects a caller without read:AccessRecord to /dashboard and shows a flash',
+    async function ({ context }) {
+      initializeTestApp(context.owner, 'en-us');
+      const flashMessages = context.owner.lookup(
+        'service:flash-messages'
+      ) as FlashMessageService;
+      const dangerSpy = vi.spyOn(flashMessages, 'danger');
+
+      await visit('/dashboard/access-records/1');
+
+      expect(currentURL()).toBe('/dashboard');
+      expect(dangerSpy).toHaveBeenCalled();
+    }
+  );
+
+  applicationTest(
+    '/dashboard/access-records/:id does not redirect a caller with read:AccessRecord away',
+    async function ({ context }) {
+      initializeTestApp(context.owner, 'en-us');
+      const ability = context.owner.lookup('service:ability');
+      ability.load([{ action: 'read', subject: 'AccessRecord' }]);
+
+      // La route interroge le store WarpDrive (findRecord) — hors de portée de
+      // ce test (pas de mockServiceWorker.js dans ce harnais). On ne vérifie
+      // donc que la garde de route : pas de redirection.
+      await visit('/dashboard/access-records/1').catch(() => undefined);
+
+      expect(currentURL()).not.toBe('/dashboard');
+    }
+  );
 });

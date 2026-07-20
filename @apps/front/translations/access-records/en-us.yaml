@@ -4,9 +4,13 @@ table:
     dataSubjectRef: 'Data subject'
     accessType: 'Access type'
     purpose: 'Purpose'
+    accessorRef: 'Accessor ref.'
+    sourceSystem: 'Source system'
     isSpecialCategory: 'Special category'
+  sensitiveAria: 'Special category data (GDPR art. 9)'
   actions:
     addRecord: 'Record an access'
+    viewDetails: 'View details'
 actions:
   exportRegistry: 'Export registry (PDF)'
 export:
@@ -30,11 +34,16 @@ forms:
       justification: 'Justification'
     placeholders:
       select: 'Select…'
+      newSourceSystem: 'New system name'
     actions:
       submit: 'Save'
       back: 'Back to registry'
+      addSourceSystem: '+ Add a system'
+      saveSourceSystem: 'Add'
+      cancelSourceSystem: 'Cancel'
     messages:
       saveSuccess: 'Access recorded in the registry.'
+      sourceSystemError: 'Failed to add source system. Please try again.'
     validation:
       accessedAtRequired: 'Access date is required.'
       accessorRefRequired: 'Accessor reference is required.'
@@ -47,8 +56,17 @@ forms:
       sourceSystemRequired: 'Source system is required.'
       justificationRequired: 'Justification is required.'
 
+detail:
+  metadata: 'Metadata'
+  encodedBy: 'Encoded by'
+  encodedAt: 'Encoded at'
+  retentionUntil: 'Retention until'
+  seq: 'Sequence number'
+
 pages:
   list:
     title: 'Access registry'
   create:
     title: 'Record an access'
+  show:
+    title: 'Access detail'

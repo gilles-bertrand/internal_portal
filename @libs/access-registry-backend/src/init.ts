@@ -20,6 +20,8 @@ import {
   PurposesRoute,
   LegalBasesRoute,
 } from "#src/routes/referentials.route.js";
+import { SourceSystemsRoute, CreateSourceSystemRoute } from "#src/routes/source-systems.route.js";
+import { EligibleAccessorsRoute } from "#src/routes/eligible-accessors.route.js";
 import { AccessRecordEntity } from "./entities/access-record.entity.js";
 import {
   handleJsonApiErrors,
@@ -90,6 +92,9 @@ export class Module implements ModuleInterface<FastifyInstanceTypeForModule> {
       new DataCategoriesRoute(this.context.em),
       new PurposesRoute(this.context.em),
       new LegalBasesRoute(this.context.em),
+      new SourceSystemsRoute(this.context.em),
+      new CreateSourceSystemRoute(this.context.em),
+      new EligibleAccessorsRoute(this.context.em),
     ];
 
     for (const route of routes) {

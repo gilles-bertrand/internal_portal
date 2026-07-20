@@ -11,6 +11,8 @@ import { createAccessRecordValidationSchema } from '#src/components/forms/access
 import type { Purpose } from '#src/schemas/purposes.ts';
 import type { LegalBasis } from '#src/schemas/legal-bases.ts';
 import type { DataCategory } from '#src/schemas/data-categories.ts';
+import type { SourceSystem } from '#src/schemas/source-systems.ts';
+import type { EligibleAccessor } from '#src/schemas/eligible-accessors.ts';
 
 const expect = hardExpect.soft;
 
@@ -29,6 +31,14 @@ const DATA_CATEGORIES = [
   { code: 'identification', label: 'Identification' },
   { code: 'health', label: 'Santé' },
 ] as unknown as DataCategory[];
+const SOURCE_SYSTEMS = [
+  { code: 'crm', label: 'CRM' },
+  { code: 'erp', label: 'ERP' },
+] as unknown as SourceSystem[];
+const ELIGIBLE_ACCESSORS = [
+  { name: 'Amaury Deflorenne' },
+  { name: 'Jeanne Encodeuse' },
+] as unknown as EligibleAccessor[];
 
 // Stub minimal de HandleSaveService — on évite d'étendre la vraie classe
 // pour ne pas déclencher les injections (@service) non enregistrées en test
@@ -38,6 +48,20 @@ vi.mock('@libs/shared-front/services/handle-save', async () => {
   return {
     default: class MockHandleSaveService extends EmberService {
       handleSave = vi.fn().mockResolvedValue(undefined);
+    },
+  };
+});
+
+// Stub du service source-system : `create` renvoie un référentiel figé sans
+// toucher au store/réseau, ce qui permet de tester l'affordance « + Ajouter ».
+vi.mock('#src/services/source-system.ts', async () => {
+  const { default: EmberService } = await import('@ember/service');
+  return {
+    default: class MockSourceSystemService extends EmberService {
+      create = vi.fn().mockResolvedValue({
+        code: 'nouveau-systeme',
+        label: 'Nouveau Système',
+      });
     },
   };
 });
@@ -94,6 +118,8 @@ describe('access-record-form', function () {
             @purposes={{PURPOSES}}
             @legalBases={{LEGAL_BASES}}
             @dataCategories={{DATA_CATEGORIES}}
+            @sourceSystems={{SOURCE_SYSTEMS}}
+            @eligibleAccessors={{ELIGIBLE_ACCESSORS}}
           />
         </template>
       );
@@ -144,6 +170,8 @@ describe('access-record-form', function () {
             @purposes={{PURPOSES}}
             @legalBases={{LEGAL_BASES}}
             @dataCategories={{DATA_CATEGORIES}}
+            @sourceSystems={{SOURCE_SYSTEMS}}
+            @eligibleAccessors={{ELIGIBLE_ACCESSORS}}
           />
         </template>
       );
@@ -173,6 +201,8 @@ describe('access-record-form', function () {
             @purposes={{PURPOSES}}
             @legalBases={{LEGAL_BASES}}
             @dataCategories={{DATA_CATEGORIES}}
+            @sourceSystems={{SOURCE_SYSTEMS}}
+            @eligibleAccessors={{ELIGIBLE_ACCESSORS}}
           />
         </template>
       );
@@ -202,6 +232,8 @@ describe('access-record-form', function () {
             @purposes={{PURPOSES}}
             @legalBases={{LEGAL_BASES}}
             @dataCategories={{DATA_CATEGORIES}}
+            @sourceSystems={{SOURCE_SYSTEMS}}
+            @eligibleAccessors={{ELIGIBLE_ACCESSORS}}
           />
         </template>
       );
@@ -230,6 +262,8 @@ describe('access-record-form', function () {
             @purposes={{PURPOSES}}
             @legalBases={{LEGAL_BASES}}
             @dataCategories={{DATA_CATEGORIES}}
+            @sourceSystems={{SOURCE_SYSTEMS}}
+            @eligibleAccessors={{ELIGIBLE_ACCESSORS}}
           />
         </template>
       );
@@ -261,6 +295,8 @@ describe('access-record-form', function () {
             @purposes={{PURPOSES}}
             @legalBases={{LEGAL_BASES}}
             @dataCategories={{DATA_CATEGORIES}}
+            @sourceSystems={{SOURCE_SYSTEMS}}
+            @eligibleAccessors={{ELIGIBLE_ACCESSORS}}
           />
         </template>
       );
@@ -270,6 +306,100 @@ describe('access-record-form', function () {
 
       // T3f : multi-select → CSV de slugs (le service le re-splitte en tableau).
       expect(changeset.get('dataCategories')).toBe('identification,health');
+    }
+  );
+
+  renderingTest(
+    'Sélectionner accessorRef stocke le nom affiché (snapshot)',
+    async function ({ context }) {
+      initializeTestApp(context.owner, 'fr-fr');
+      stubRouter(context.owner);
+
+      const intl = context.owner.lookup('service:intl');
+      const changeset = new AccessRecordChangeset({ accessedAt: null });
+      const validationSchema = createAccessRecordValidationSchema(intl);
+
+      await render(
+        <template>
+          <AccessRecordForm
+            @changeset={{changeset}}
+            @validationSchema={{validationSchema}}
+            @purposes={{PURPOSES}}
+            @legalBases={{LEGAL_BASES}}
+            @dataCategories={{DATA_CATEGORIES}}
+            @sourceSystems={{SOURCE_SYSTEMS}}
+            @eligibleAccessors={{ELIGIBLE_ACCESSORS}}
+          />
+        </template>
+      );
+
+      await chooseOption('accessorRef', 'Amaury Deflorenne');
+
+      // Décision produit : on stocke le nom affiché, pas un id.
+      expect(changeset.get('accessorRef')).toBe('Amaury Deflorenne');
+    }
+  );
+
+  renderingTest(
+    'Sélectionner sourceSystem (référentiel) stocke le code',
+    async function ({ context }) {
+      initializeTestApp(context.owner, 'fr-fr');
+      stubRouter(context.owner);
+
+      const intl = context.owner.lookup('service:intl');
+      const changeset = new AccessRecordChangeset({ accessedAt: null });
+      const validationSchema = createAccessRecordValidationSchema(intl);
+
+      await render(
+        <template>
+          <AccessRecordForm
+            @changeset={{changeset}}
+            @validationSchema={{validationSchema}}
+            @purposes={{PURPOSES}}
+            @legalBases={{LEGAL_BASES}}
+            @dataCategories={{DATA_CATEGORIES}}
+            @sourceSystems={{SOURCE_SYSTEMS}}
+            @eligibleAccessors={{ELIGIBLE_ACCESSORS}}
+          />
+        </template>
+      );
+
+      await chooseOption('sourceSystem', 'CRM');
+
+      expect(changeset.get('sourceSystem')).toBe('crm');
+    }
+  );
+
+  renderingTest(
+    'Ajouter un système source le persiste et le sélectionne',
+    async function ({ context }) {
+      initializeTestApp(context.owner, 'fr-fr');
+      stubRouter(context.owner);
+
+      const intl = context.owner.lookup('service:intl');
+      const changeset = new AccessRecordChangeset({ accessedAt: null });
+      const validationSchema = createAccessRecordValidationSchema(intl);
+
+      await render(
+        <template>
+          <AccessRecordForm
+            @changeset={{changeset}}
+            @validationSchema={{validationSchema}}
+            @purposes={{PURPOSES}}
+            @legalBases={{LEGAL_BASES}}
+            @dataCategories={{DATA_CATEGORIES}}
+            @sourceSystems={{SOURCE_SYSTEMS}}
+            @eligibleAccessors={{ELIGIBLE_ACCESSORS}}
+          />
+        </template>
+      );
+
+      await pageObject.clickAddSourceSystem();
+      await pageObject.fillNewSourceSystem('Nouveau Système');
+      await pageObject.clickSaveSourceSystem();
+
+      // Le service (mocké) renvoie le référentiel créé → code sélectionné.
+      expect(changeset.get('sourceSystem')).toBe('nouveau-systeme');
     }
   );
 });

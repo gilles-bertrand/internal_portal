@@ -6,6 +6,8 @@
 @import './auth.css';
 @import './flash.css';
 @import './icons.css';
+@import './access-records.css';
+@import './incidents.css';
 
 @plugin "daisyui" {
   themes:

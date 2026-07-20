@@ -10,6 +10,7 @@ const AccessRecordSchema = withDefaults({
     { name: 'accessedAt', kind: 'attribute' },
     { name: 'encodedAt', kind: 'attribute' },
     { name: 'encodedBy', kind: 'attribute' },
+    { name: 'encodedByName', kind: 'attribute' },
     { name: 'accessorRef', kind: 'attribute' },
     { name: 'dataSubjectRef', kind: 'attribute' },
     { name: 'dataCategories', kind: 'attribute' },
@@ -33,6 +34,7 @@ export type AccessRecord = WithLegacy<{
   accessedAt: string;
   encodedAt: string;
   encodedBy: string;
+  encodedByName?: string;
   accessorRef: string;
   dataSubjectRef: string;
   dataCategories: string[];

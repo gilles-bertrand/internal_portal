@@ -139,3 +139,24 @@ test("un dpo/auditor peut accéder au détail de l'enregistrement de n'importe q
   expect(dpoResponse.statusCode).toBe(200);
   expect(auditorResponse.statusCode).toBe(200);
 });
+
+// @lat: [[backend/access-registry#Détail : nom d'affichage de l'encodeur]]
+test("le détail (GET /:id) résout encodedByName depuis l'utilisateur encodeur", async () => {
+  const createResponse = await module.fastifyInstance.inject({
+    method: "POST",
+    url: "/access-records",
+    headers: { authorization: module.generateBearerToken("encoder-id", "encoder") },
+    payload: otherPayload,
+  });
+  const recordId = createResponse.json().data.id as string;
+
+  const response = await module.fastifyInstance.inject({
+    method: "GET",
+    url: `/access-records/${recordId}`,
+    headers: { authorization: module.generateBearerToken("dpo-id", "dpo") },
+  });
+
+  expect(response.statusCode).toBe(200);
+  // encoder-id est seedé firstName "E" / lastName "N" (global-setup).
+  expect(response.json().data.attributes.encodedByName).toBe("E N");
+});

@@ -15,6 +15,8 @@ import {
 import type { AuditLogger } from "#src/utils/audit-logger.type.js";
 import { requirePermission } from "@libs/permissions-backend";
 import { subject } from "@casl/ability";
+import { UserEntity } from "@libs/users-backend";
+import { userNameFor } from "#src/utils/user-display.js";
 
 export class GetRoute implements Route {
   public constructor(
@@ -62,7 +64,23 @@ export class GetRoute implements Route {
           userAgent: request.headers["user-agent"] ?? null,
         });
 
-        return reply.send(jsonApiSerializeSingleAccessRecordDocument(record));
+        // Résout le nom d'affichage de l'encodeur (l'attribut `encodedBy` ne porte
+        // que l'UUID) pour l'afficher côté détail plutôt qu'un identifiant brut.
+        const encoder = await this.repository
+          .getEntityManager()
+          .getRepository(UserEntity)
+          .findOne({ id: record.encodedBy });
+
+        const document = jsonApiSerializeSingleAccessRecordDocument(record);
+        return reply.send({
+          data: {
+            ...document.data,
+            attributes: {
+              ...document.data.attributes,
+              encodedByName: userNameFor(encoder ?? undefined, record.encodedBy),
+            },
+          },
+        });
       },
     );
   }

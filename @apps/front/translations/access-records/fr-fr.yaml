@@ -4,9 +4,13 @@ table:
     dataSubjectRef: 'Personne concernée'
     accessType: "Type d'accès"
     purpose: 'Finalité'
+    accessorRef: 'Réf. accédant'
+    sourceSystem: 'Système source'
     isSpecialCategory: 'Données sensibles'
+  sensitiveAria: 'Données sensibles (art. 9 RGPD)'
   actions:
     addRecord: 'Encoder un accès'
+    viewDetails: 'Voir les détails'
 actions:
   exportRegistry: 'Exporter le registre (PDF)'
 export:
@@ -30,11 +34,16 @@ forms:
       justification: 'Justification'
     placeholders:
       select: 'Sélectionner…'
+      newSourceSystem: 'Nom du nouveau système'
     actions:
       submit: 'Enregistrer'
       back: 'Retour au registre'
+      addSourceSystem: '+ Ajouter un système'
+      saveSourceSystem: 'Ajouter'
+      cancelSourceSystem: 'Annuler'
     messages:
       saveSuccess: 'Accès enregistré dans le registre.'
+      sourceSystemError: "Échec de l'ajout du système source. Réessayez."
     validation:
       accessedAtRequired: "La date d'accès est requise."
       accessorRefRequired: "La référence de l'accédant est requise."
@@ -47,8 +56,17 @@ forms:
       sourceSystemRequired: 'Le système source est requis.'
       justificationRequired: 'La justification est requise.'
 
+detail:
+  metadata: 'Métadonnées'
+  encodedBy: 'Encodé par'
+  encodedAt: "Date d'encodage"
+  retentionUntil: "Conservation jusqu'au"
+  seq: 'Numéro de séquence'
+
 pages:
   list:
     title: 'Registre des accès'
   create:
     title: 'Encoder un accès'
+  show:
+    title: "Détail de l'accès"

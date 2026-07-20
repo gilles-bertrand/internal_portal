@@ -2,7 +2,7 @@
 
 Les champs à choix fermé du formulaire `access-record-form` sont soit un enum statique frontend, soit un select alimenté par un référentiel backend, selon qu'une table de référence existe pour ce champ.
 
-Champs concernés : `accessType` (enum statique), `purpose`, `legalBasis`, `dataCategories` (référentiels dynamiques).
+Champs concernés : `accessType` (enum statique), `purpose`, `legalBasis`, `dataCategories`, `sourceSystem` (référentiels dynamiques), `accessorRef` (select d'utilisateurs habilités).
 
 ## Référentiels dynamiques vs enum statique
 
@@ -17,6 +17,26 @@ Pour les champs référentiels, le formulaire construit des options `{value: cod
 Le même piège existait sur le sélecteur de rôle du formulaire utilisateur (`user-form.gts`, `@libs/users-front`) : sans `@selectedItemComponent`, `TpkValidationSelectPrefab` affiche `String(@selected)` — donc l'UUID du rôle stocké dans le changeset, pas son nom — dès qu'un rôle est déjà sélectionné (édition, ou juste après un choix en création). Corrigé en dupliquant localement le même pattern `selectedOptionComponent(getOptions)`/`idOf` (pas de factorisation vers `shared-front`, chaque lib front reste indépendante). Toujours ajouter `@selectedItemComponent` à un `F.TpkSelectPrefab` dont la valeur stockée est un id/code distinct du libellé affiché.
 
 `accessType` reste seul en Approche A (valeur stockée = libellé affiché, mots français stables dans les deux locales, `string[]` brut) — même pattern que dans `incident-form.gts` (`@libs/incident-registry-front/src/components/forms/incident-form.gts`, non lié en wiki-link : `.gts` non supporté par `lat check`).
+
+## accessorRef — select des utilisateurs habilités (défaut = user courant)
+
+`accessorRef` n'est plus un texte libre mais une select alimentée par `/eligible-accessors` (utilisateurs habilités `create AccessRecord`), pré-remplie par défaut avec le nom de l'utilisateur courant.
+
+Décision produit : on stocke le **nom affiché** (« Prénom Nom »), pas l'id — snapshot cohérent avec un journal append-only, sans changement du contrat backend (`accessorRef` reste `string().min(1)`). C'est donc l'Approche A (valeur = libellé, `string[]` brut), comme `accessType`. Le défaut est posé dans `create-template.gts` (non lié en wiki-link : `.gts` non supporté par `lat check`) via le service `currentUser` (`@libs/users-front`) à la construction du changeset ; la select reste **modifiable** car l'accédant n'est pas toujours l'encodeur. Endpoint documenté côté backend : [[access-registry#Liste des accédants habilités (accessorRef)]].
+
+## sourceSystem — référentiel creatable
+
+`sourceSystem` est un référentiel backend (`{value: code, label}`, comme purpose/legalBasis) mais **creatable** : le formulaire propose les systèmes existants ET une affordance « + Ajouter » pour en créer un nouveau, persisté et partagé.
+
+Faute d'addon `ember-power-select-with-create` dans le projet, la création n'est pas native au select : une affordance custom (input + bouton) appelle [[@libs/access-registry-front/src/services/source-system.ts#SourceSystemService]]`#create`, ajoute le référentiel retourné aux options `@tracked addedSourceSystems` (fusionnées aux `@sourceSystems` chargés), puis sélectionne automatiquement le nouveau code dans le changeset. Le changeset stocke le **code** (pas le label), comme les autres référentiels. Référentiel backend documenté : [[access-registry#Référentiel source-systems (creatable)]].
+
+## Liste : colonnes, icône « données sensibles », détail lecture seule
+
+La liste affiche `accessedAt`, `dataSubjectRef`, `accessType`, `purpose`, `accessorRef`, `sourceSystem` + une icône données sensibles ; chaque ligne ouvre une vue détail **en lecture seule** — ni édition ni suppression (registre inaltérable).
+
+`access-record-table.gts` utilise `TableGenericPrefab` (`@triptyk/ember-ui`). La colonne `isSpecialCategory` est rendue par une **cellule custom** `SpecialCategoryCell` (icône `shield-exclamation` amber affichée ssi `isSpecialCategory`), câblée via `component: 'isSpecialCategory'` + `@columnsComponent={{hash isSpecialCategory=(component SpecialCategoryCell)}}` — même mécanisme que `OccurredAtCell` dans `audit-event-table.gts`. Le menu d'action ne contient qu'une entrée **« voir les détails »** (icône `eye`) + `rowClick`, tous deux vers `dashboard.access-records.show`. `sourceSystem` s'affiche par son **code** (cohérent avec `purpose`/`accessType`), pas son libellé.
+
+La route `show` (`/:access_record_id`, fichier `routes/dashboard/access-records/show.gts` — `.gts` non lié en wiki-link) garde `read AccessRecord` et charge via `findRecord` (le backend applique la règle row-level : 403/404 pour un record d'autrui). Le composant `access-record-detail.gts` affiche tous les champs en lecture seule (aucun input) : **pas d'édition ni de suppression**, car `access_record` est append-only et toute mutation est bloquée par les triggers Postgres ([[backend/hash-chain-integrity#Défense en profondeur : triggers Postgres append-only]]). Aucune route backend ajoutée (`GET /access-records/:id` existait déjà).
 
 ## Getters retournant une classe anonyme : annotation ComponentLike obligatoire
 

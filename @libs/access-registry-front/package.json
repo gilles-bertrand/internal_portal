@@ -146,16 +146,21 @@
       "./components/forms/access-record-form.js": "./dist/_app_/components/forms/access-record-form.js",
       "./routes/dashboard/access-records/create.js": "./dist/_app_/routes/dashboard/access-records/create.js",
       "./routes/dashboard/access-records/index.js": "./dist/_app_/routes/dashboard/access-records/index.js",
+      "./routes/dashboard/access-records/show.js": "./dist/_app_/routes/dashboard/access-records/show.js",
       "./routes/dashboard/audit-events/index.js": "./dist/_app_/routes/dashboard/audit-events/index.js",
       "./schemas/access-records.js": "./dist/_app_/schemas/access-records.js",
       "./schemas/audit-events.js": "./dist/_app_/schemas/audit-events.js",
       "./schemas/data-categories.js": "./dist/_app_/schemas/data-categories.js",
+      "./schemas/eligible-accessors.js": "./dist/_app_/schemas/eligible-accessors.js",
       "./schemas/legal-bases.js": "./dist/_app_/schemas/legal-bases.js",
       "./schemas/purposes.js": "./dist/_app_/schemas/purposes.js",
+      "./schemas/source-systems.js": "./dist/_app_/schemas/source-systems.js",
       "./services/access-record.js": "./dist/_app_/services/access-record.js",
       "./services/registry-export.js": "./dist/_app_/services/registry-export.js",
+      "./services/source-system.js": "./dist/_app_/services/source-system.js",
       "./templates/dashboard/access-records/create.js": "./dist/_app_/templates/dashboard/access-records/create.js",
       "./templates/dashboard/access-records/index.js": "./dist/_app_/templates/dashboard/access-records/index.js",
+      "./templates/dashboard/access-records/show.js": "./dist/_app_/templates/dashboard/access-records/show.js",
       "./templates/dashboard/audit-events/index.js": "./dist/_app_/templates/dashboard/audit-events/index.js"
     }
   }

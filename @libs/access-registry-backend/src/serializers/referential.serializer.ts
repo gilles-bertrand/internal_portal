@@ -4,6 +4,7 @@ import { makeJsonApiDocumentSchema } from "@libs/backend-shared";
 import type { DataCategoryEntityType } from "#src/entities/data-category.entity.js";
 import type { PurposeEntityType } from "#src/entities/purpose.entity.js";
 import type { LegalBasisEntityType } from "#src/entities/legal-basis.entity.js";
+import type { SourceSystemEntityType } from "#src/entities/source-system.entity.js";
 
 export const SerializedDataCategorySchema = makeJsonApiDocumentSchema(
   "data-categories",
@@ -18,6 +19,11 @@ export const SerializedPurposeSchema = makeJsonApiDocumentSchema(
 export const SerializedLegalBasisSchema = makeJsonApiDocumentSchema(
   "legal-bases",
   object({ code: string(), label: string(), isArticle9: boolean() }),
+);
+
+export const SerializedSourceSystemSchema = makeJsonApiDocumentSchema(
+  "source-systems",
+  object({ code: string(), label: string() }),
 );
 
 export function jsonApiSerializeDataCategory(
@@ -43,5 +49,15 @@ export function jsonApiSerializeLegalBasis(
     id: e.id,
     type: "legal-bases" as const,
     attributes: { code: e.code, label: e.label, isArticle9: e.isArticle9 },
+  };
+}
+
+export function jsonApiSerializeSourceSystem(
+  e: SourceSystemEntityType,
+): z.infer<typeof SerializedSourceSystemSchema> {
+  return {
+    id: e.id,
+    type: "source-systems" as const,
+    attributes: { code: e.code, label: e.label },
   };
 }

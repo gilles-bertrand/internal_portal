@@ -71,3 +71,15 @@ Actions tracées : `REGISTRY_CREATED`, `REGISTRY_VIEWED` (list et get), `REGISTR
 Les catégories de données, finalités et bases légales sont des entités DB dédiées exposées en lecture seule, pas des enums en dur côté front — complète [[access-record-options|le pattern front de sélection traduite]].
 
 Chaque référentiel a un `code` unique (valeur de contrat API/DB stable) et un `label` traduit (cosmétique). `LegalBasisEntity.isArticle9` distingue les bases "art.9" des bases "art.6" standard, mais ce champ n'est actuellement pas consommé par la validation de `CreateRoute` (qui recode sa propre liste de préfixes, cf. section art. 9 ci-dessus) — un point de vigilance en cas d'évolution du référentiel. Aucune donnée de seed ne peuple `RetentionPolicyEntity`, contrairement aux trois autres référentiels qui sont peuplés en dev ([[@apps/backend/src/seeders/development.seeder.ts#DatabaseSeeder]]).
+
+## Référentiel source-systems (creatable)
+
+`SourceSystemEntity` ([[@libs/access-registry-backend/src/entities/source-system.entity.ts#SourceSystemEntity]]) est un référentiel `{ code, label }` comme purposes/legal-bases, mais **creatable** : un encodeur peut en ajouter à la volée depuis le formulaire, sans passer par une UI d'admin.
+
+[[@libs/access-registry-backend/src/routes/source-systems.route.ts#SourceSystemsRoute]] expose `GET /source-systems` (lecture, groupe référentiels). [[@libs/access-registry-backend/src/routes/source-systems.route.ts#CreateSourceSystemRoute]] expose `POST /source-systems`, gardé `requirePermission("create", "AccessRecord")` : créer un système est un acte d'encodage, pas d'administration. Le `code` est dérivé du `label` par [[@libs/access-registry-backend/src/routes/source-systems.route.ts#slugifySourceSystem]] (minuscules, sans accents, tirets). La création est **idempotente** : un `code` déjà présent renvoie l'existant (200) plutôt qu'un 409, pour une UX de formulaire fluide. Pas de données de seed — le référentiel démarre vide et se remplit à l'usage. Testé par [[@libs/access-registry-backend/tests/integration/source-systems.route.test.ts]].
+
+## Liste des accédants habilités (accessorRef)
+
+[[@libs/access-registry-backend/src/routes/eligible-accessors.route.ts#EligibleAccessorsRoute]] expose `GET /eligible-accessors` : la liste des utilisateurs habilités à créer un enregistrement, destinée à peupler la select `accessorRef` du formulaire (le champ n'est plus un texte libre).
+
+`GET /users` étant gardé `manage:User` (inaccessible à un encodeur), cet endpoint dédié est gardé `create:AccessRecord` et ne renvoie que `{ id, name }`. Les habilités sont dérivés des règles CASL en base : rôles avec une règle non-inversée `create`/`manage` sur `AccessRecord` (ou `all`), moins les rôles portant un `cannot manage AccessRecord` (ex. `tech_admin`). C'est une approximation suffisante pour une liste de suggestions — l'autorisation réelle reste appliquée par `requirePermission` sur le `POST`. Testé par [[@libs/access-registry-backend/tests/integration/eligible-accessors.route.test.ts]].

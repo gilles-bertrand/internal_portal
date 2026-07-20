@@ -3,12 +3,14 @@ import { DataCategoryEntity } from "#src/entities/data-category.entity.js";
 import { PurposeEntity } from "#src/entities/purpose.entity.js";
 import { LegalBasisEntity } from "#src/entities/legal-basis.entity.js";
 import { RetentionPolicyEntity } from "#src/entities/retention-policy.entity.js";
+import { SourceSystemEntity } from "#src/entities/source-system.entity.js";
 
 export * from "#src/entities/access-record.entity.js";
 export * from "#src/entities/data-category.entity.js";
 export * from "#src/entities/purpose.entity.js";
 export * from "#src/entities/legal-basis.entity.js";
 export * from "#src/entities/retention-policy.entity.js";
+export * from "#src/entities/source-system.entity.js";
 export * from "#src/routes/create.route.js";
 export * from "#src/routes/list.route.js";
 export * from "#src/routes/get.route.js";
@@ -18,6 +20,8 @@ export * from "#src/routes/export.route.js";
 export * from "#src/routes/retention-run.route.js";
 export * from "#src/routes/audit-events.route.js";
 export * from "#src/routes/referentials.route.js";
+export * from "#src/routes/source-systems.route.js";
+export * from "#src/routes/eligible-accessors.route.js";
 export * from "#src/serializers/access-record.serializer.js";
 export * from "#src/serializers/referential.serializer.js";
 export * from "#src/utils/append.service.js";
@@ -33,4 +37,5 @@ export const entities = [
   PurposeEntity,
   LegalBasisEntity,
   RetentionPolicyEntity,
+  SourceSystemEntity,
 ];

@@ -1,9 +1,12 @@
 import Component from '@glimmer/component';
-import { cached } from '@glimmer/tracking';
+import { cached, tracked } from '@glimmer/tracking';
+import { action } from '@ember/object';
+import { on } from '@ember/modifier';
 import type { ComponentLike } from '@glint/template';
 import TpkForm from '@triptyk/ember-input-validation/components/tpk-form';
 import { service } from '@ember/service';
 import type AccessRecordService from '#src/services/access-record.ts';
+import type SourceSystemService from '#src/services/source-system.ts';
 import type { AccessRecordChangeset } from '#src/changesets/access-record.ts';
 import {
   createAccessRecordValidationSchema,
@@ -21,6 +24,8 @@ import { ACCESS_TYPES } from '#src/utils/access-record-options.ts';
 import type { Purpose } from '#src/schemas/purposes.ts';
 import type { LegalBasis } from '#src/schemas/legal-bases.ts';
 import type { DataCategory } from '#src/schemas/data-categories.ts';
+import type { SourceSystem } from '#src/schemas/source-systems.ts';
+import type { EligibleAccessor } from '#src/schemas/eligible-accessors.ts';
 
 interface AccessRecordFormArgs {
   changeset: AccessRecordChangeset;
@@ -28,6 +33,8 @@ interface AccessRecordFormArgs {
   purposes: Purpose[];
   legalBases: LegalBasis[];
   dataCategories: DataCategory[];
+  sourceSystems: SourceSystem[];
+  eligibleAccessors: EligibleAccessor[];
 }
 
 // @lat: [[frontend/access-record-options#Référentiels dynamiques vs enum statique]]
@@ -98,10 +105,18 @@ function selectedOptionComponent(
 
 export default class AccessRecordForm extends Component<AccessRecordFormArgs> {
   @service declare accessRecord: AccessRecordService;
+  @service('source-system') declare sourceSystem: SourceSystemService;
   @service declare router: RouterService;
   @service declare flashMessages: FlashMessageService;
   @service declare intl: IntlService;
   @service declare handleSave: HandleSaveService;
+
+  // Systèmes sources ajoutés à la volée via l'affordance « + Ajouter », fusionnés
+  // aux référentiels chargés depuis le backend (@sourceSystems).
+  @tracked addedSourceSystems: ReferentialOption[] = [];
+  @tracked isAddingSourceSystem = false;
+  @tracked newSourceSystemLabel = '';
+  @tracked sourceSystemSaving = false;
 
   onSubmit = async (
     data: ValidatedAccessRecord,
@@ -182,6 +197,76 @@ export default class AccessRecordForm extends Component<AccessRecordFormArgs> {
     return selectedOptionComponent(() => this.dataCategoryOptions);
   }
 
+  // accessorRef — select des utilisateurs habilités à créer un record (chargés
+  // depuis /eligible-accessors). Approche A : la valeur stockée EST le nom
+  // affiché (snapshot), donc options string simples, comme accessType.
+  get accessorOptions(): string[] {
+    return this.args.eligibleAccessors.map((accessor) => accessor.name);
+  }
+
+  // sourceSystem — référentiel backend (comme purpose/legalBasis) MAIS creatable :
+  // les systèmes ajoutés via « + Ajouter » sont fusionnés aux options chargées.
+  get sourceSystemOptions(): ReferentialOption[] {
+    const fromBackend = this.args.sourceSystems.map((s) =>
+      referentialOption(s.code, s.label)
+    );
+    return [...fromBackend, ...this.addedSourceSystems];
+  }
+
+  @cached
+  get sourceSystemSelectedItemComponent(): ComponentLike<SelectedItemSignature> {
+    return selectedOptionComponent(() => this.sourceSystemOptions);
+  }
+
+  setSourceSystem = (option: unknown) => {
+    const value = (option as ReferentialOption | null)?.value;
+    this.args.changeset.set('sourceSystem', value);
+  };
+
+  @action
+  toggleAddSourceSystem() {
+    this.isAddingSourceSystem = !this.isAddingSourceSystem;
+    this.newSourceSystemLabel = '';
+  }
+
+  @action
+  updateNewSourceSystemLabel(event: Event) {
+    this.newSourceSystemLabel = (event.target as HTMLInputElement).value;
+  }
+
+  @action
+  async addSourceSystem() {
+    const label = this.newSourceSystemLabel.trim();
+    if (!label || this.sourceSystemSaving) {
+      return;
+    }
+    this.sourceSystemSaving = true;
+    try {
+      const created = await this.sourceSystem.create(label);
+      // Éviter les doublons d'options si le backend a renvoyé un système déjà connu.
+      const alreadyKnown = this.sourceSystemOptions.some(
+        (o) => o.value === created.code
+      );
+      if (!alreadyKnown) {
+        this.addedSourceSystems = [
+          ...this.addedSourceSystems,
+          referentialOption(created.code, created.label),
+        ];
+      }
+      this.args.changeset.set('sourceSystem', created.code);
+      this.isAddingSourceSystem = false;
+      this.newSourceSystemLabel = '';
+    } catch {
+      this.flashMessages.danger(
+        this.intl.t(
+          'access-records.forms.accessRecord.messages.sourceSystemError'
+        )
+      );
+    } finally {
+      this.sourceSystemSaving = false;
+    }
+  }
+
   // dataCategories — multi-select. Stored as a CSV string of codes to match
   // the existing AccessRecordService contract (it splits the CSV into the
   // array the backend expects: dataCategories: array(string()).min(1)).
@@ -238,9 +323,13 @@ export default class AccessRecordForm extends Component<AccessRecordFormArgs> {
           @dateFormat="yyyy-MM-dd[T]HH:mm:ss[Z]"
           class="col-span-12 md:col-span-6"
         />
-        <F.TpkInputPrefab
+        <F.TpkSelectPrefab
           @label={{t "access-records.forms.accessRecord.labels.accessorRef"}}
           @validationField="accessorRef"
+          @options={{this.accessorOptions}}
+          @placeholder={{t
+            "access-records.forms.accessRecord.placeholders.select"
+          }}
           class="col-span-12 md:col-span-6"
         />
         <F.TpkInputPrefab
@@ -291,11 +380,64 @@ export default class AccessRecordForm extends Component<AccessRecordFormArgs> {
           }}
           class="col-span-12 md:col-span-6"
         />
-        <F.TpkInputPrefab
-          @label={{t "access-records.forms.accessRecord.labels.sourceSystem"}}
-          @validationField="sourceSystem"
-          class="col-span-12 md:col-span-6"
-        />
+        <div class="col-span-12 md:col-span-6">
+          <F.TpkSelectPrefab
+            @label={{t "access-records.forms.accessRecord.labels.sourceSystem"}}
+            @validationField="sourceSystem"
+            @options={{this.sourceSystemOptions}}
+            @onChange={{this.setSourceSystem}}
+            @selectedItemComponent={{this.sourceSystemSelectedItemComponent}}
+            @placeholder={{t
+              "access-records.forms.accessRecord.placeholders.select"
+            }}
+          />
+          {{#if this.isAddingSourceSystem}}
+            <div class="flex items-center gap-2 mt-2">
+              <input
+                type="text"
+                class="input input-bordered input-sm flex-1"
+                aria-label={{t
+                  "access-records.forms.accessRecord.placeholders.newSourceSystem"
+                }}
+                placeholder={{t
+                  "access-records.forms.accessRecord.placeholders.newSourceSystem"
+                }}
+                value={{this.newSourceSystemLabel}}
+                {{on "input" this.updateNewSourceSystemLabel}}
+                data-test-new-source-system-input
+              />
+              <button
+                type="button"
+                class="btn btn-sm btn-primary"
+                disabled={{this.sourceSystemSaving}}
+                {{on "click" this.addSourceSystem}}
+                data-test-save-source-system
+              >
+                {{t
+                  "access-records.forms.accessRecord.actions.saveSourceSystem"
+                }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-sm btn-ghost"
+                {{on "click" this.toggleAddSourceSystem}}
+              >
+                {{t
+                  "access-records.forms.accessRecord.actions.cancelSourceSystem"
+                }}
+              </button>
+            </div>
+          {{else}}
+            <button
+              type="button"
+              class="btn btn-link btn-sm px-0 mt-1"
+              {{on "click" this.toggleAddSourceSystem}}
+              data-test-add-source-system
+            >
+              {{t "access-records.forms.accessRecord.actions.addSourceSystem"}}
+            </button>
+          {{/if}}
+        </div>
         <F.TpkInputPrefab
           @label={{t "access-records.forms.accessRecord.labels.recipient"}}
           @validationField="recipient"
@@ -335,8 +477,10 @@ export const pageObject = create({
   accessedAt: fillable(
     '[data-test-tpk-prefab-datepicker-container="accessedAt"] input'
   ),
-  accessorRef: fillable(
-    '[data-test-tpk-prefab-input-container="accessorRef"] input'
+  // accessorRef is now an ember-power-select trigger (users habilités), not a
+  // plain input: open it then pick an option via power-select test helpers.
+  openAccessor: clickable(
+    '[data-test-tpk-prefab-select-container="accessorRef"] .ember-power-select-trigger'
   ),
   dataSubjectRef: fillable(
     '[data-test-tpk-prefab-input-container="dataSubjectRef"] input'
@@ -356,9 +500,14 @@ export const pageObject = create({
   openDataCategories: clickable(
     '[data-test-tpk-prefab-select-container="dataCategories"] .ember-power-select-trigger'
   ),
-  sourceSystem: fillable(
-    '[data-test-tpk-prefab-input-container="sourceSystem"] input'
+  // sourceSystem is now a referential-backed select (creatable) instead of a
+  // plain input: open the trigger, or use the "+ Ajouter" affordance below.
+  openSourceSystem: clickable(
+    '[data-test-tpk-prefab-select-container="sourceSystem"] .ember-power-select-trigger'
   ),
+  clickAddSourceSystem: clickable('[data-test-add-source-system]'),
+  fillNewSourceSystem: fillable('[data-test-new-source-system-input]'),
+  clickSaveSourceSystem: clickable('[data-test-save-source-system]'),
   justification: fillable(
     '[data-test-tpk-prefab-textarea-container="justification"] textarea'
   ),

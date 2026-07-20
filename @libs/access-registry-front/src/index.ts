@@ -30,6 +30,7 @@ export function initialize(owner: Owner) {
 export function forRouter(this: DSL) {
   this.route('access-records', function () {
     this.route('create');
+    this.route('show', { path: '/:access_record_id' });
   });
   this.route('audit-events', function () {});
 }

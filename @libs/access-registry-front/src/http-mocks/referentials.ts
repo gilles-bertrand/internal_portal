@@ -80,6 +80,42 @@ const legalBases = [
   },
 ];
 
+const sourceSystems = [
+  {
+    id: 'ss-crm',
+    type: 'source-systems' as const,
+    attributes: { code: 'crm', label: 'CRM' },
+  },
+  {
+    id: 'ss-erp',
+    type: 'source-systems' as const,
+    attributes: { code: 'erp', label: 'ERP' },
+  },
+];
+
+const eligibleAccessors = [
+  {
+    id: 'encoder-id',
+    type: 'eligible-accessors' as const,
+    attributes: { name: 'Amaury Deflorenne' },
+  },
+  {
+    id: 'encoder-2',
+    type: 'eligible-accessors' as const,
+    attributes: { name: 'Jeanne Encodeuse' },
+  },
+];
+
+function slugify(label: string): string {
+  return label
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 export default [
   http.get('/api/v1/data-categories', () =>
     HttpResponse.json({ data: dataCategories })
@@ -87,5 +123,25 @@ export default [
   http.get('/api/v1/purposes', () => HttpResponse.json({ data: purposes })),
   http.get('/api/v1/legal-bases', () =>
     HttpResponse.json({ data: legalBases })
+  ),
+  http.get('/api/v1/source-systems', () =>
+    HttpResponse.json({ data: sourceSystems })
+  ),
+  http.post('/api/v1/source-systems', async ({ request }) => {
+    const body = (await request.json()) as {
+      data: { attributes: { label: string } };
+    };
+    const label = body.data.attributes.label.trim();
+    const code = slugify(label);
+    return HttpResponse.json({
+      data: {
+        id: `ss-${code}`,
+        type: 'source-systems' as const,
+        attributes: { code, label },
+      },
+    });
+  }),
+  http.get('/api/v1/eligible-accessors', () =>
+    HttpResponse.json({ data: eligibleAccessors })
   ),
 ];

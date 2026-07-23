@@ -14,8 +14,10 @@ L'insertion est protégée par un verrou consultatif Postgres (`pg_advisory_xact
 
 ## Défense en profondeur : triggers Postgres append-only
 
-En plus du chaînage applicatif, des triggers Postgres bloquent physiquement tout UPDATE/DELETE/TRUNCATE sur `access_record`, `incident` et `audit_event` — deuxième ligne de défense contre une modification hors application.
+En plus du chaînage applicatif, des triggers Postgres bloquent physiquement les mutations hors application — deuxième ligne de défense.
 
-`forbid_mutation()` (fonction PL/pgSQL définie dans [[@apps/backend/src/cli/append-only.sql.ts#APPEND_ONLY_DDL]]) lève une exception sur toute tentative de mutation ; les triggers sont créés de façon idempotente (`IF NOT EXISTS` sur `pg_trigger`) pour supporter les re-runs de migration/schema-fresh.
+`access_record` et `audit_event` sont **totalement** figés (UPDATE/DELETE/TRUNCATE interdits) ; `incident` est figé **sur son contenu uniquement** : ses colonnes lifecycle (versioning/soft-delete) doivent rester mutables.
+
+`forbid_mutation()` (fonction PL/pgSQL définie dans [[@apps/backend/src/cli/append-only.sql.ts#APPEND_ONLY_DDL]]) lève une exception sur toute tentative de mutation ; elle protège `access_record`/`audit_event` (UPDATE+DELETE+TRUNCATE) et, sur `incident`, le DELETE et le TRUNCATE. Pour l'UPDATE d'`incident`, le trigger `incident_no_mutation` utilise `forbid_incident_content_mutation()` qui compare `to_jsonb(OLD)` et `to_jsonb(NEW)` en excluant les 6 colonnes lifecycle (`revision`, `superseded_by_id`, `updated_by`, `updated_at`, `deleted_at`, `deleted_by`) : toute modification d'une colonne de contenu lève une exception, la mutation lifecycle passe. Les triggers sont créés de façon idempotente (`IF NOT EXISTS` sur `pg_trigger`) pour supporter les re-runs de migration/schema-fresh.
 
 Décision explicite : la garantie d'immuabilité ne repose pas uniquement sur la discipline applicative (`AppendService`) — un accès direct psql ou un bug de migration ne peut pas casser la chaîne, car la DB elle-même refuse la mutation. Testé côté access-registry (`@libs/access-registry-backend/tests/integration/verify-integrity.route.test.ts`) : `UPDATE`/`DELETE` directs déclenchent bien l'exception du trigger.

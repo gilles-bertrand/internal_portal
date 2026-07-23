@@ -11,6 +11,9 @@ import { type ZodTypeProvider } from "fastify-type-provider-zod";
 import { CreateRoute } from "#src/routes/create.route.js";
 import { ListRoute } from "#src/routes/list.route.js";
 import { GetRoute } from "#src/routes/get.route.js";
+import { UpdateRoute } from "#src/routes/update.route.js";
+import { DeleteRoute } from "#src/routes/delete.route.js";
+import { RestoreRoute } from "#src/routes/restore.route.js";
 import { VerifyIntegrityRoute } from "#src/routes/verify-integrity.route.js";
 import { ExportRoute } from "#src/routes/export.route.js";
 import { ExportOneRoute } from "#src/routes/export-one.route.js";
@@ -79,6 +82,9 @@ export class Module implements ModuleInterface<FastifyInstanceTypeForModule> {
           new CreateRoute(this.context.em, this.auditLogger),
           new ListRoute(this.context.em, this.auditLogger),
           new GetRoute(repository, this.auditLogger),
+          new UpdateRoute(this.context.em, this.auditLogger),
+          new DeleteRoute(this.context.em, this.auditLogger),
+          new RestoreRoute(this.context.em, this.auditLogger),
           new VerifyIntegrityRoute(this.context.em),
           new ExportRoute(
             this.context.em,

@@ -44,8 +44,26 @@ Les données réelles de ce type de champ (contexte légal, description d'incide
 
 Le bandeau "CONFIDENTIEL" apposé sur chaque page est codé en dur, indépendamment de la valeur réelle du champ `classification` — pas conditionné par `classification === 'CONFIDENTIEL'`, état constaté plutôt que garanti stable. Deux formats d'export existent : registre complet (json/csv/pdf) et export unitaire détaillé ([[@libs/incident-registry-backend/src/routes/export-one.route.ts#ExportOneRoute]]) ; le manifeste signé HMAC réutilise le mécanisme générique déjà documenté pour access-registry ([[access-registry#Export signé multi-format (JSON/CSV/PDF)]]).
 
+## Édition = nouvelle version (append)
+
+Éditer un incident n'écrase jamais la ligne existante : on **ajoute une nouvelle version chaînée** (même `reference`, `revision + 1`) ; l'original reste immuable.
+
+[[@libs/incident-registry-backend/src/utils/append.service.ts#AppendService]]`#appendNewVersion` préserve l'identité d'origine (`encodedBy`/`encodedAt`) et enregistre l'éditeur dans `updatedBy`/`updatedAt`. `reference` n'est donc plus contrainte unique (plusieurs versions la partagent) ; l'unicité de la chaîne reste portée par `seq`. La **version courante** d'une référence est celle dont `supersededById` est `null` ; les colonnes lifecycle (`revision`, `supersededById`, `updatedBy`, `updatedAt`, `deletedAt`, `deletedBy`) sont **hors** de [[@libs/incident-registry-backend/src/utils/integrity.ts#incidentCanonicalFields]] → elles n'affectent pas le hash et `verifyIncidentChain` reste valide. `PUT /incidents/:id` ([[@libs/incident-registry-backend/src/routes/update.route.ts#UpdateRoute]]) garde `update Incident` (row-level `encodedBy=$user.id` pour l'encoder, inconditionnel pour le dpo) et refuse d'éditer une version non courante ou supprimée (409).
+
+> Contrainte : la table `incident` est append-only pour son **contenu** uniquement. Le trigger `incident_no_mutation` (fonction `forbid_incident_content_mutation`, [[@apps/backend/src/cli/append-only.sql.ts#APPEND_ONLY_DDL]]) autorise en `UPDATE` seulement les colonnes lifecycle (`revision`, `superseded_by_id`, `updated_by`, `updated_at`, `deleted_at`, `deleted_by`) et lève une exception dès qu'une colonne de contenu change ; `DELETE`/`TRUNCATE` restent interdits (`incident_no_delete`/`incident_no_truncate`, fonction `forbid_mutation`). Ce trigger est désormais posé **en prod** (schema-fresh) comme en test ([[@libs/incident-registry-backend/tests/utils/append-only-test.sql.ts#APPEND_ONLY_DDL_TEST]]) — il manquait côté prod. Le hash n'étant calculé que sur les champs canoniques, la mutation lifecycle ne casse pas [[hash-chain-integrity]].
+
+## Suppression = soft-delete + restauration
+
+La suppression est un **soft-delete** (pas de `DELETE` physique) : la ligne reste en base, marquée `deletedAt`/`deletedBy`, et sort de la liste par défaut.
+
+`DELETE /incidents/:id` ([[@libs/incident-registry-backend/src/routes/delete.route.ts#DeleteRoute]]) pose ces colonnes lifecycle (hors hash) et garde `delete Incident` (row-level : encoder = les siens, dpo = tous).
+
+La restauration ([[@libs/incident-registry-backend/src/routes/restore.route.ts#RestoreRoute]], `POST /incidents/:id/restore`) est **réservée au DPO** (action CASL `restore Incident`) et efface `deletedAt`/`deletedBy`. La liste inclut les supprimés uniquement via `filter[includeDeleted]=true` + droit `restore` (dpo).
+
 ## Audit et enrichissement des noms
 
-Actions tracées propres à ce module : `INCIDENT_CREATED`, `INCIDENT_VIEWED` (get et list, `targetType` diffère), `INCIDENT_EXPORTED` (export registre et export unitaire, `targetType` diffère).
+Actions tracées propres à ce module : `INCIDENT_CREATED`, `INCIDENT_VIEWED` (get et list, `targetType` diffère), `INCIDENT_EXPORTED` (export registre et unitaire).
+
+Les actions de cycle de vie `INCIDENT_UPDATED`, `INCIDENT_DELETED`, `INCIDENT_RESTORED` sont journalisées dans `audit_event` (table immuable, trigger-protégée) — c'est le socle de traçabilité « qui a modifié/supprimé ».
 
 Le nom d'utilisateur affiché (`encodedByName`) est résolu à la volée depuis `@libs/users-backend` par [[@libs/incident-registry-backend/src/utils/incident-enrichment.ts#serializeIncidentsWithUserNames]] — pas stocké en base, recalculé à chaque requête de liste. Même pattern dupliqué à l'identique côté access-registry.

@@ -106,6 +106,8 @@ export class E2ESeeder extends Seeder {
       { action: "read", subject: "AccessRecord", conditions: { encodedBy: "$user.id" } },
       { action: "create", subject: "Incident" },
       { action: "read", subject: "Incident" },
+      { action: "update", subject: "Incident", conditions: { encodedBy: "$user.id" } },
+      { action: "delete", subject: "Incident", conditions: { encodedBy: "$user.id" } },
     ]);
     await this.ensureRules(em, roles.dpo, [
       { action: "read", subject: "AccessRecord" },
@@ -113,6 +115,9 @@ export class E2ESeeder extends Seeder {
       { action: "read", subject: "AccessRecordIntegrity" },
       { action: "read", subject: "IncidentIntegrity" },
       { action: "read", subject: "Incident" },
+      { action: "update", subject: "Incident" },
+      { action: "delete", subject: "Incident" },
+      { action: "restore", subject: "Incident" },
     ]);
     await this.ensureRules(em, roles.auditor, [
       { action: "read", subject: "AccessRecord" },
@@ -123,7 +128,8 @@ export class E2ESeeder extends Seeder {
     await this.ensureRules(em, roles.tech_admin, [
       { action: "manage", subject: "User" },
       { action: "manage", subject: "Role" },
-      { action: "manage", subject: "AccessRecord", inverted: true, order: 10 },
+      // tech_admin accède au registre d'accès en lecture (list/get/export/stats/audit-events).
+      { action: "read", subject: "AccessRecord" },
       { action: "manage", subject: "Incident", inverted: true, order: 10 },
     ]);
 

@@ -20,6 +20,7 @@
     "lint:fix": "oxlint --type-aware --type-check --fix"
   },
   "dependencies": {
+    "@casl/ability": "^7.0.1",
     "@libs/audit-log-backend": "workspace:*",
     "@libs/backend-shared": "workspace:*",
     "@libs/permissions-backend": "workspace:*",

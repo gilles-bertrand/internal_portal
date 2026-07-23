@@ -108,6 +108,8 @@ Le tableau de la liste des utilisateurs (composant `UsersTable`, `@libs/users-fr
 
 `encoder`, `dpo` et `auditor` portent aussi désormais `read Incident` — un audit de sécurité a révélé que cette règle manquait totalement (seul `encoder` avait `create Incident`), alors que plusieurs routes d'incident-registry-backend n'avaient aucun `requirePermission` propre pour compenser (cf. [[incident-registry#Guards manquants comblés sur list/get/export/export-one]]).
 
+`tech_admin` porte `read AccessRecord` (en plus de `manage User`/`manage Role`) : il accède au **registre d'accès** en lecture (list/get/export/stats/audit-events), remplaçant l'ancien `manage AccessRecord` inversé qui l'en bannissait totalement. Il reste banni du **registre des incidents** (`manage Incident` inversé, `order` 10). Cf. la séparation détaillée dans [[access-registry#RBAC : séparation des rôles]].
+
 Un utilisateur `tech_admin` (`gilles@triptyk.eu`) est seedé avec les deux autres (`encoder`, `dpo`) — sans lui, une base de dev fraîche n'a personne capable de gérer les rôles via l'UI. Un utilisateur `auditor` (`auditor@triptyk.eu`, id `e2e-auditor-user`) est désormais seedé aussi — absent jusqu'ici malgré le rôle lui-même existant depuis le début.
 
 ## Matrice de couverture obligatoire

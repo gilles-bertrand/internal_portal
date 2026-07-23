@@ -12,6 +12,7 @@ import { t, type IntlService } from 'ember-intl';
 import type { TOC } from '@ember/component/template-only';
 import type FlashMessageService from 'ember-cli-flash/services/flash-messages';
 import type CurrentUserService from '@libs/users-front/services/current-user';
+import type AbilityService from '@libs/shared-front/services/ability';
 import type RegistryExportService from '#src/services/registry-export.ts';
 import type { AccessRecord } from '#src/schemas/access-records.ts';
 import { scrollToListTopOnPager } from '#src/utils/scroll-to-top.ts';
@@ -44,6 +45,7 @@ class AccessRecordTable extends Component<object> {
   @service declare router: RouterService;
   @service declare intl: IntlService;
   @service declare currentUser: CurrentUserService;
+  @service declare ability: AbilityService;
   @service declare registryExport: RegistryExportService;
   @service declare flashMessages: FlashMessageService;
 
@@ -51,6 +53,13 @@ class AccessRecordTable extends Component<object> {
 
   get isDpo(): boolean {
     return this.currentUser.user?.roleName === 'dpo';
+  }
+
+  // Bouton de création gardé par l'ability (source de vérité unique) : un rôle
+  // en lecture seule (ex. tech_admin) ne doit pas le voir. La route create est
+  // par ailleurs gardée par requireAbilityOrRedirect('create', 'AccessRecord').
+  get canCreate(): boolean {
+    return this.ability.can('create', 'AccessRecord');
   }
 
   get tableParams(): TableParams {
@@ -160,10 +169,13 @@ class AccessRecordTable extends Component<object> {
               data-test-export-button
             />
           {{/if}}
-          <TpkButton
-            @label={{t "access-records.table.actions.addRecord"}}
-            @onClick={{this.onAddRecord}}
-          />
+          {{#if this.canCreate}}
+            <TpkButton
+              @label={{t "access-records.table.actions.addRecord"}}
+              @onClick={{this.onAddRecord}}
+              data-test-add-record-button
+            />
+          {{/if}}
         </div>
       </div>
       <TableGenericPrefab

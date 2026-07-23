@@ -14,9 +14,17 @@ Couverture actuelle : parcours de connexion, navigation vers le registre inciden
 
 `@apps/e2e/tests/permissions.spec.ts` verrouille le comportement utilisateur observable des correctifs de permissions CASL sur les registres AccessRecord/Incident, en plus de la couverture unitaire/intégration/acceptance déjà existante.
 
-### tech_admin bloqué sur Access Records et Incidents
+### tech_admin accède au registre d'accès
 
-Connecté en tech_admin, les liens sidebar "Access registry" et "Incident registry" sont absents, et une navigation directe par URL vers `/access-records` ou `/incidents` redirige vers `/` (route `dashboard`), conformément à [[backend/permissions#Redirection bloquante dans beforeModel]].
+Connecté en tech_admin, le registre d'accès est accessible sur les couches front et back — tech_admin possède `read AccessRecord` ([[backend/permissions#Seed des 4 rôles avec permissions équivalentes au comportement actuel]]).
+
+Le lien sidebar "Access registry" est visible et mène à la page (deep link direct compris, sans redirection), et l'API `GET /api/v1/access-records` répond 200 avec le vrai jeton. L'accès étant en **lecture seule**, le bouton de création est masqué et la route `/access-records/create` redirige vers la home. Le rejet 403 de la création côté API (par rôle) est couvert par la matrice d'intégration backend (avec payload valide).
+
+### tech_admin reste banni des incidents (3 couches)
+
+Le registre des incidents reste interdit à tech_admin, vérifié sur les 3 couches.
+
+Lien sidebar "Incident registry" absent, navigation directe vers `/incidents` redirigée vers `/`, et appel API direct `GET /api/v1/incidents` rejeté en 403 même avec un jeton valide — la garde serveur est obligatoire indépendamment de l'UI.
 
 ### encoder voit et accède à Access Records
 

@@ -120,6 +120,54 @@ describe('access-record-table', function () {
   );
 
   renderingTest(
+    "Masque le bouton de création quand l'ability n'accorde pas create AccessRecord (ex. tech_admin lecture seule)",
+    async function ({ context }) {
+      initializeTestApp(context.owner, 'fr-fr');
+      stubRouter(context.owner);
+
+      const currentUser = context.owner.lookup(
+        'service:current-user'
+      ) as CurrentUserService;
+      currentUser.user = {
+        roleName: 'tech_admin',
+      } as CurrentUserService['user'];
+
+      const ability = context.owner.lookup('service:ability');
+      ability.load([{ action: 'read', subject: 'AccessRecord' }]);
+
+      await render(<template><AccessRecordTable /></template>);
+
+      expect(
+        document.querySelector('[data-test-add-record-button]')
+      ).toBeNull();
+    }
+  );
+
+  renderingTest(
+    "Affiche le bouton de création quand l'ability accorde create AccessRecord (encoder)",
+    async function ({ context }) {
+      initializeTestApp(context.owner, 'fr-fr');
+      stubRouter(context.owner);
+
+      const currentUser = context.owner.lookup(
+        'service:current-user'
+      ) as CurrentUserService;
+      currentUser.user = {
+        roleName: 'encoder',
+      } as CurrentUserService['user'];
+
+      const ability = context.owner.lookup('service:ability');
+      ability.load([{ action: 'create', subject: 'AccessRecord' }]);
+
+      await render(<template><AccessRecordTable /></template>);
+
+      expect(
+        document.querySelector('[data-test-add-record-button]')
+      ).not.toBeNull();
+    }
+  );
+
+  renderingTest(
     'Affiche les colonnes Accessor reference et Source system',
     async function ({ context }) {
       initializeTestApp(context.owner, 'fr-fr');

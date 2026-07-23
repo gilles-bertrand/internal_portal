@@ -134,7 +134,7 @@ test("DPO ne peut pas créer (403)", async () => {
   expect(response.statusCode).toBe(403);
 });
 
-test("tech_admin → 403 sur tout le registre", async () => {
+test("tech_admin ne peut pas créer (403) — accès en lecture seule", async () => {
   const response = await module.fastifyInstance.inject({
     method: "POST",
     url: "/access-records",

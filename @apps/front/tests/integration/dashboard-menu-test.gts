@@ -82,6 +82,26 @@ describe('Dashboard sidebar menu', () => {
   );
 
   renderingTest(
+    'shows Access registry but hides Incident registry for a tech_admin ability',
+    async ({ context }) => {
+      const ability = setup(context);
+      // Matrice réelle de tech_admin : gère User/Role, lit le registre d'accès,
+      // mais reste banni des incidents (manage Incident inversé).
+      ability.load([
+        { action: 'manage', subject: 'User' },
+        { action: 'manage', subject: 'Role' },
+        { action: 'read', subject: 'AccessRecord' },
+        { action: 'manage', subject: 'Incident', inverted: true },
+      ]);
+
+      await render(<template><DashboardTemplate /></template>);
+
+      expect(document.body.textContent).toContain('Access registry');
+      expect(document.body.textContent).not.toContain('Incident registry');
+    }
+  );
+
+  renderingTest(
     'shows Access registry and Incident registry for an encoder ability',
     async ({ context }) => {
       const ability = setup(context);

@@ -4,11 +4,11 @@ Règles métier spécifiques au registre d'accès (`@libs/access-registry-backen
 
 ## RBAC : séparation des rôles
 
-Quatre rôles (`encoder`, `dpo`, `auditor`, `tech_admin`) avec des permissions strictement disjointes sur le registre d'accès — modélise une séparation des devoirs typique RGPD.
+Quatre rôles (`encoder`, `dpo`, `auditor`, `tech_admin`) avec des permissions différenciées sur le registre d'accès — modélise une séparation des devoirs typique RGPD.
 
 Piloté par CASL via `request.ability`, plus par comparaison de string — cf. [[permissions#Attachement de request.ability au chargement de l'utilisateur]].
 
-`tech_admin` est explicitement interdit sur tout le module registre via un hook `preHandler` global ([[@libs/access-registry-backend/src/init.ts#Module]]) — même authentifié, ce rôle n'a pas accès au contenu du registre : décision de sécurité volontaire, pas un oubli de scope.
+`tech_admin` accède au registre d'accès **en lecture** (règle `read AccessRecord`) : list/get/export/stats/audit-events (200), mais ne peut ni créer, ni vérifier l'intégrité, ni purger. Le registre des **incidents** lui reste interdit (`manage Incident` inversé).
 
 `encoder` est seul autorisé à créer un enregistrement ([[@libs/access-registry-backend/src/routes/create.route.ts#CreateRoute]]) ; en lecture, il ne voit que ses propres enregistrements (`encodedBy = user.id`) — un encoder ne peut jamais parcourir tout le registre. `dpo` et `auditor` voient tout le registre en lecture. `auditor` et `dpo` sont seuls autorisés à appeler `verify-integrity`. `dpo` seul peut déclencher `retention/run` (purge).
 
@@ -16,13 +16,13 @@ Piloté par CASL via `request.ability`, plus par comparaison de string — cf. [
 
 Le hook `preHandler` global du module ne peut pas être un simple `requirePermission("read", "AccessRecord")` — `encoder` n'a que `create` (pas `read` non conditionné) sur ce subject, ce qui le bloquerait à tort sur `CreateRoute`.
 
-À la place, [[@libs/access-registry-backend/src/init.ts#Module]] détecte spécifiquement la règle `cannot("manage", "AccessRecord")` seedée pour `tech_admin` via `request.ability.rulesFor("manage", "AccessRecord").some(rule => rule.inverted)` — précis (ne matche que tech_admin) sans dépendre du nom du rôle. Chaque route affine ensuite avec son propre `requirePermission(action, subject)`.
+À la place, [[@libs/access-registry-backend/src/init.ts#Module]] rejette tout rôle portant un `cannot("manage", "AccessRecord")` via `request.ability.rulesFor("manage", "AccessRecord").some(rule => rule.inverted)` — défense générique (sans dépendre du nom du rôle). Depuis que `tech_admin` a `read AccessRecord` (et non plus `manage` inversé), **aucun rôle seedé ne déclenche ce guard** ; il reste comme garde-fou pour un futur rôle interdit. Chaque route affine ensuite avec son propre `requirePermission(action, subject)`.
 
 ## Guards manquants comblés sur list/export/stats/audit-events
 
-Seul `get.route.ts` (et create/verify-integrity/retention-run) portait un `requirePermission` explicite — `list`/`export`/`stats`/`audit-events` n'avaient aucun guard propre, protégés seulement par le hook de groupe qui ne bloque que `tech_admin`.
+Seul `get.route.ts` (et create/verify-integrity/retention-run) portait un `requirePermission` explicite — `list`/`export`/`stats`/`audit-events` n'avaient aucun guard propre, protégés seulement par le hook de groupe.
 
-Un futur rôle custom sans droit `read AccessRecord` aurait donc pu lister/exporter/consulter les stats et le méta-journal du registre. Corrigé en ajoutant `preHandler: [requirePermission("read", "AccessRecord")]` à ces quatre routes, identique au pattern de `get.route.ts` — `encoder`/`dpo`/`auditor` gardent leur accès (règle `read AccessRecord`, conditionnée ou non, satisfait le check de type), seul `tech_admin` reste bloqué (déjà via le hook de groupe). Testé par la matrice `describe.each` de [[@libs/access-registry-backend/tests/integration/permission-separation.test.ts]] et [[@libs/access-registry-backend/tests/integration/permission-separation-reads.test.ts]] (scindé en deux fichiers pour rester sous la limite de lignes lint).
+Un futur rôle custom sans droit `read AccessRecord` aurait donc pu lister/exporter/consulter les stats et le méta-journal du registre. Corrigé en ajoutant `preHandler: [requirePermission("read", "AccessRecord")]` à ces quatre routes, identique au pattern de `get.route.ts` — `encoder`/`dpo`/`auditor`/`tech_admin` gardent leur accès (règle `read AccessRecord`, conditionnée ou non, satisfait le check de type). Testé par la matrice `describe.each` de [[@libs/access-registry-backend/tests/integration/permission-separation.test.ts]] et [[@libs/access-registry-backend/tests/integration/permission-separation-reads.test.ts]] (scindé en deux fichiers pour rester sous la limite de lignes lint).
 
 ## Vérification row-level via subject() sur get.route.ts
 
@@ -88,4 +88,4 @@ La route charge l'utilisateur via `em.getRepository(UserEntity)` (obtenu depuis 
 
 [[@libs/access-registry-backend/src/routes/eligible-accessors.route.ts#EligibleAccessorsRoute]] expose `GET /eligible-accessors` : la liste des utilisateurs habilités à créer un enregistrement, destinée à peupler la select `accessorRef` du formulaire (le champ n'est plus un texte libre).
 
-`GET /users` étant gardé `manage:User` (inaccessible à un encodeur), cet endpoint dédié est gardé `create:AccessRecord` et ne renvoie que `{ id, name }`. Les habilités sont dérivés des règles CASL en base : rôles avec une règle non-inversée `create`/`manage` sur `AccessRecord` (ou `all`), moins les rôles portant un `cannot manage AccessRecord` (ex. `tech_admin`). C'est une approximation suffisante pour une liste de suggestions — l'autorisation réelle reste appliquée par `requirePermission` sur le `POST`. Testé par [[@libs/access-registry-backend/tests/integration/eligible-accessors.route.test.ts]].
+`GET /users` étant gardé `manage:User` (inaccessible à un encodeur), cet endpoint dédié est gardé `create:AccessRecord` et ne renvoie que `{ id, name }`. Les habilités sont dérivés des règles CASL en base : rôles avec une règle non-inversée `create`/`manage` sur `AccessRecord` (ou `all`), moins les rôles portant un `cannot manage AccessRecord`. `tech_admin` n'y figure pas : il n'a que `read AccessRecord` (ni `create`/`manage`), donc filtré d'office. C'est une approximation suffisante pour une liste de suggestions — l'autorisation réelle reste appliquée par `requirePermission` sur le `POST`. Testé par [[@libs/access-registry-backend/tests/integration/eligible-accessors.route.test.ts]].

@@ -54,18 +54,64 @@ const sampleIncident = {
     seq: 1,
     prevHash: '0'.repeat(64),
     hash: 'a'.repeat(64),
+    revision: 1,
+    supersededById: null,
+    updatedBy: null,
+    updatedAt: null,
+    deletedAt: null,
+    deletedBy: null,
+  },
+};
+
+const deletedIncident = {
+  ...sampleIncident,
+  id: 'inc-2',
+  attributes: {
+    ...sampleIncident.attributes,
+    reference: 'INC-2026-0002-IPBW',
+    seq: 2,
+    deletedAt: '2026-03-01T09:00:00.000Z',
+    deletedBy: 'dpo-1',
   },
 };
 
 export default [
-  http.get('/api/v1/incidents', () =>
-    HttpResponse.json({ data: [sampleIncident], meta: { total: 1 } })
-  ),
+  http.get('/api/v1/incidents', ({ request }) => {
+    const url = new URL(request.url);
+    const includeDeleted = url.searchParams.get('filter[includeDeleted]');
+    const data =
+      includeDeleted === 'true'
+        ? [sampleIncident, deletedIncident]
+        : [sampleIncident];
+    return HttpResponse.json({ data, meta: { total: data.length } });
+  }),
   http.get('/api/v1/incidents/:id', ({ params }) =>
     HttpResponse.json({ data: { ...sampleIncident, id: params.id } })
   ),
   http.post('/api/v1/incidents', () =>
     HttpResponse.json({ data: sampleIncident })
+  ),
+  // Édition = nouvelle version (revision 2) côté backend.
+  http.put('/api/v1/incidents/:id', ({ params }) =>
+    HttpResponse.json({
+      data: {
+        ...sampleIncident,
+        id: `${String(params.id)}-v2`,
+        attributes: { ...sampleIncident.attributes, revision: 2 },
+      },
+    })
+  ),
+  http.delete('/api/v1/incidents/:id', ({ params }) =>
+    HttpResponse.json({ data: { id: params.id, type: 'incidents' } })
+  ),
+  http.post('/api/v1/incidents/:id/restore', ({ params }) =>
+    HttpResponse.json({
+      data: {
+        ...sampleIncident,
+        id: params.id,
+        attributes: { ...sampleIncident.attributes, deletedAt: null },
+      },
+    })
   ),
   http.post('/api/v1/incidents/export', () =>
     HttpResponse.json({

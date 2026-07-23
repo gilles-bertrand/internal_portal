@@ -30,6 +30,7 @@ export function initialize(owner: Owner) {
 export function forRouter(this: DSL) {
   this.route('incidents', function () {
     this.route('create');
+    this.route('edit', { path: '/:incident_id/edit' });
     this.route('show', { path: '/:incident_id' });
   });
 }

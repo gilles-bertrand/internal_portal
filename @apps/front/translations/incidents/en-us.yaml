@@ -6,6 +6,22 @@ table:
     status: Status
     reportDate: Report date
     art9: Art. 9
+    state: State
+  actions:
+    edit: Edit
+    delete: Delete
+    restore: Restore
+  confirmDelete:
+    question: 'Delete incident {reference}? It will be hidden and can be restored by the DPO.'
+    confirm: Delete
+    cancel: Cancel
+  showDeleted: Show deleted
+  deletedBadge: Deleted
+  notAllowed: You cannot manage this incident.
+  deleteSuccess: Incident deleted.
+  deleteError: Deletion failed. Please try again.
+  restoreSuccess: Incident restored.
+  restoreError: Restore failed. Please try again.
 filters:
   status: Status
   art9: Special category (art. 9)
@@ -23,8 +39,11 @@ export:
 pages:
   list:
     title: Incident registry
+  edit:
+    title: Edit incident
 form:
   title: New incident report
+  updateSuccess: New incident version saved
   steps:
     header: Header (§1–§2)
     context: Context & dates

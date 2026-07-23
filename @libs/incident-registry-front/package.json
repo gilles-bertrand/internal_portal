@@ -144,12 +144,14 @@
     "app-js": {
       "./components/forms/incident-form.js": "./dist/_app_/components/forms/incident-form.js",
       "./routes/dashboard/incidents/create.js": "./dist/_app_/routes/dashboard/incidents/create.js",
+      "./routes/dashboard/incidents/edit.js": "./dist/_app_/routes/dashboard/incidents/edit.js",
       "./routes/dashboard/incidents/index.js": "./dist/_app_/routes/dashboard/incidents/index.js",
       "./routes/dashboard/incidents/show.js": "./dist/_app_/routes/dashboard/incidents/show.js",
       "./schemas/incidents.js": "./dist/_app_/schemas/incidents.js",
-      "./services/incident.js": "./dist/_app_/services/incident.js",
       "./services/incident-export.js": "./dist/_app_/services/incident-export.js",
+      "./services/incident.js": "./dist/_app_/services/incident.js",
       "./templates/dashboard/incidents/create.js": "./dist/_app_/templates/dashboard/incidents/create.js",
+      "./templates/dashboard/incidents/edit.js": "./dist/_app_/templates/dashboard/incidents/edit.js",
       "./templates/dashboard/incidents/index.js": "./dist/_app_/templates/dashboard/incidents/index.js",
       "./templates/dashboard/incidents/show.js": "./dist/_app_/templates/dashboard/incidents/show.js"
     }

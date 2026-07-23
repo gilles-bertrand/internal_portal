@@ -29,6 +29,10 @@ import IncidentAccessLogsEditor from '#src/components/forms/incident-access-logs
 interface IncidentFormArgs {
   changeset: IncidentChangeset;
   validationSchema: ReturnType<typeof createIncidentValidationSchema>;
+  // 'create' (défaut) ou 'edit'. En édition, le submit appelle
+  // `incident.update(incidentId, …)` (nouvelle version côté backend).
+  mode?: 'create' | 'edit';
+  incidentId?: string;
 }
 
 const CLASSIFICATIONS = ['CONFIDENTIEL', 'INTERNE', 'PUBLIC'] as const;
@@ -324,15 +328,25 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
     }
   }
 
+  get isEditMode(): boolean {
+    return this.args.mode === 'edit';
+  }
+
   onSubmit = async (
     data: ValidatedIncident,
     c: ImmerChangeset<ValidatedIncident>
   ) => {
     const normalized = this.normalizePayload(data);
+    const incidentId = this.args.incidentId;
     await this.handleSave.handleSave({
-      saveAction: () => this.incident.create(normalized),
+      saveAction: () =>
+        this.isEditMode && incidentId
+          ? this.incident.update(incidentId, normalized)
+          : this.incident.create(normalized),
       changeset: c,
-      successMessage: 'incidents.form.success',
+      successMessage: this.isEditMode
+        ? 'incidents.form.updateSuccess'
+        : 'incidents.form.success',
       transitionOnSuccess: 'dashboard.incidents',
     });
   };

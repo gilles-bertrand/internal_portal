@@ -74,6 +74,13 @@ const IncidentSchema = withDefaults({
     { name: 'seq', kind: 'attribute' },
     { name: 'prevHash', kind: 'attribute' },
     { name: 'hash', kind: 'attribute' },
+    // Lifecycle (versioning + soft-delete) — cf. backend spec 01
+    { name: 'revision', kind: 'attribute' },
+    { name: 'supersededById', kind: 'attribute' },
+    { name: 'updatedBy', kind: 'attribute' },
+    { name: 'updatedAt', kind: 'attribute' },
+    { name: 'deletedAt', kind: 'attribute' },
+    { name: 'deletedBy', kind: 'attribute' },
   ],
 });
 
@@ -130,5 +137,11 @@ export type Incident = WithLegacy<{
   seq: number;
   prevHash: string;
   hash: string;
+  revision: number;
+  supersededById: string | null;
+  updatedBy: string | null;
+  updatedAt: string | null;
+  deletedAt: string | null;
+  deletedBy: string | null;
   [Type]: 'incidents';
 }>;

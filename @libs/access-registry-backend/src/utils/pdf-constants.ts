@@ -17,14 +17,16 @@ export const COLORS = {
   rowAlt: "#f1f5f9",
 };
 
-export const TABLE_COLUMNS = [
-  { key: "seq", label: "#", width: 26 },
-  { key: "accessedAt", label: "Date", width: 68 },
-  { key: "dataSubjectRef", label: "Personne", width: 72 },
-  { key: "accessType", label: "Type", width: 58 },
-  { key: "purpose", label: "Finalité", width: 68 },
-  { key: "isSpecialCategory", label: "Art.9", width: 32 },
-  { key: "hash", label: "Hash", width: CONTENT_WIDTH - 324 },
+// Colonnes de la liste récapitulative (page 1) : une ligne par enregistrement.
+export const SUMMARY_COLUMNS = [
+  { key: "seq", label: "#", width: 24 },
+  { key: "accessedAt", label: "Date", width: 66 },
+  { key: "dataSubjectRef", label: "Personne", width: 74 },
+  { key: "accessType", label: "Type", width: 56 },
+  { key: "purpose", label: "Finalité", width: 62 },
+  { key: "isSpecialCategory", label: "Art.9", width: 30 },
+  { key: "sourceSystem", label: "Source", width: 72 },
+  { key: "hash", label: "Hash", width: CONTENT_WIDTH - 384 },
 ] as const;
 
 export function formatDate(iso: string): string {

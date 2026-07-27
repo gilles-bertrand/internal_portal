@@ -112,6 +112,45 @@ describe('RegistryExportService', () => {
     expect(revokeObjectURLSpy).toHaveBeenCalledOnce();
   });
 
+  test('downloadReport transmet le sourceSystem dans le corps quand fourni', async function ({
+    context,
+  }) {
+    initializeTestApp(context.owner, 'fr-fr');
+
+    fetchSpy.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          data: {
+            format: 'json',
+            encoding: 'utf-8',
+            content: '{}',
+            manifest: {
+              generatedAt: '2026-06-23T10:00:00.000Z',
+              generatedBy: 'u',
+              count: 0,
+              chainHeadHash: 'h',
+              contentSha256: 's',
+            },
+            signature: 'sig',
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      )
+    );
+
+    const svc = context.owner.lookup(
+      'service:registry-export'
+    ) as RegistryExportService;
+
+    await svc.downloadReport('json', 'crm');
+
+    const fetchArgs = fetchSpy.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(fetchArgs[1].body as string)).toEqual({
+      format: 'json',
+      sourceSystem: 'crm',
+    });
+  });
+
   test('downloadReport throw si la requete echoue', async function ({
     context,
   }) {

@@ -21,9 +21,12 @@ export default class DashboardTemplate extends Component {
 
   @tracked sidebarCollapsed = false;
 
+  // Chaque langue est nommée DANS sa propre langue (endonyme) : « Anglais »
+  // n'a de sens que pour un francophone, et le sélecteur doit rester lisible
+  // quelle que soit la locale active.
   languages: Language[] = [
     { code: 'fr-fr', label: 'Français' },
-    { code: 'en-us', label: 'Anglais' },
+    { code: 'en-us', label: 'English' },
   ];
 
   @action

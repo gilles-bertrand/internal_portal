@@ -59,6 +59,22 @@ test("GET /legal-bases expose le flag isArticle9", async () => {
   expect(art9).toBeDefined();
 });
 
+// @lat: [[backend/access-registry#Référentiels bilingues (label / labelEn)]]
+test("les référentiels exposent les deux libellés (FR + EN)", async () => {
+  const response = await module.fastifyInstance.inject({
+    method: "GET",
+    url: "/purposes",
+    headers: { authorization: module.generateBearerToken("encoder-id", "encoder") },
+  });
+
+  expect(response.statusCode).toBe(200);
+  const support = response
+    .json()
+    .data.find((p: { attributes: { code: string } }) => p.attributes.code === "support");
+  expect(support.attributes.label).toBe("Support client");
+  expect(support.attributes.labelEn).toBe("Customer support");
+});
+
 test("référentiels nécessitent une authentification (401)", async () => {
   const response = await module.fastifyInstance.inject({
     method: "GET",

@@ -74,47 +74,64 @@ async function seedUsers(orm: MikroORM) {
   ]);
 }
 
+// Copie test des seeds bilingues de @apps/backend/src/seeders/seed-data/referentials.ts
+// (la lib ne peut pas dépendre de l'app) — garder les deux alignés.
+const DATA_CATEGORY_SEEDS = [
+  { id: "dc-identity", code: "identity", label: "Identité", labelEn: "Identity" },
+  { id: "dc-contact", code: "contact", label: "Contact", labelEn: "Contact details" },
+  { id: "dc-financial", code: "financial", label: "Financier", labelEn: "Financial" },
+  { id: "dc-health", code: "health", label: "Santé", labelEn: "Health" },
+];
+
+const PURPOSE_SEEDS = [
+  { id: "p-support", code: "support", label: "Support client", labelEn: "Customer support" },
+  { id: "p-billing", code: "billing", label: "Facturation", labelEn: "Billing" },
+  { id: "p-legal", code: "legal", label: "Obligation légale", labelEn: "Legal obligation" },
+];
+
+const LEGAL_BASIS_SEEDS = [
+  {
+    id: "lb-6-1-b",
+    code: "art6.1b",
+    label: "Exécution d'un contrat (art. 6.1.b)",
+    labelEn: "Performance of a contract (art. 6.1.b)",
+    isArticle9: false,
+  },
+  {
+    id: "lb-6-1-c",
+    code: "art6.1c",
+    label: "Obligation légale (art. 6.1.c)",
+    labelEn: "Legal obligation (art. 6.1.c)",
+    isArticle9: false,
+  },
+  {
+    id: "lb-9-2-h",
+    code: "art9.2h",
+    label: "Médecine préventive (art. 9.2.h)",
+    labelEn: "Preventive medicine (art. 9.2.h)",
+    isArticle9: true,
+  },
+  {
+    id: "lb-9-2-a",
+    code: "art9.2a",
+    label: "Consentement explicite (art. 9.2.a)",
+    labelEn: "Explicit consent (art. 9.2.a)",
+    isArticle9: true,
+  },
+];
+
 async function seedReferentials(orm: MikroORM) {
   await (
     orm.em.getRepository(DataCategoryEntity).insert as unknown as (data: unknown) => Promise<void>
-  )([
-    { id: "dc-identity", code: "identity", label: "Identité" },
-    { id: "dc-contact", code: "contact", label: "Contact" },
-    { id: "dc-financial", code: "financial", label: "Financier" },
-    { id: "dc-health", code: "health", label: "Santé" },
-  ]);
+  )(DATA_CATEGORY_SEEDS);
 
   await (orm.em.getRepository(PurposeEntity).insert as unknown as (data: unknown) => Promise<void>)(
-    [
-      { id: "p-support", code: "support", label: "Support client" },
-      { id: "p-billing", code: "billing", label: "Facturation" },
-      { id: "p-legal", code: "legal", label: "Obligation légale" },
-    ],
+    PURPOSE_SEEDS,
   );
 
   await (
     orm.em.getRepository(LegalBasisEntity).insert as unknown as (data: unknown) => Promise<void>
-  )([
-    {
-      id: "lb-6-1-b",
-      code: "art6.1b",
-      label: "Exécution d'un contrat (art. 6.1.b)",
-      isArticle9: false,
-    },
-    { id: "lb-6-1-c", code: "art6.1c", label: "Obligation légale (art. 6.1.c)", isArticle9: false },
-    {
-      id: "lb-9-2-h",
-      code: "art9.2h",
-      label: "Médecine préventive (art. 9.2.h)",
-      isArticle9: true,
-    },
-    {
-      id: "lb-9-2-a",
-      code: "art9.2a",
-      label: "Consentement explicite (art. 9.2.a)",
-      isArticle9: true,
-    },
-  ]);
+  )(LEGAL_BASIS_SEEDS);
 }
 
 export async function setup() {

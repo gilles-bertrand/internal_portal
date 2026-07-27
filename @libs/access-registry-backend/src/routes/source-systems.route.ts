@@ -93,7 +93,9 @@ export class CreateSourceSystemRoute implements Route {
           return reply.send({ data: jsonApiSerializeSourceSystem(existing) });
         }
 
-        const entity = { id: randomUUID(), code, label };
+        // labelEn null : l'utilisateur ne saisit qu'un libellé, affiché tel quel
+        // dans les deux locales (cf. SourceSystemEntity).
+        const entity = { id: randomUUID(), code, label, labelEn: null };
         try {
           await repository.insert(entity);
         } catch (error) {

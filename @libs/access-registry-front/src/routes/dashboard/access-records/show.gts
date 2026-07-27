@@ -9,6 +9,7 @@ import { requireAbilityOrRedirect } from '@libs/shared-front/utils/require-abili
 import type FlashMessageService from 'ember-cli-flash/services/flash-messages';
 import type IntlService from 'ember-intl/services/intl';
 import type { AccessRecord } from '#src/schemas/access-records.ts';
+import type ReferentialsService from '#src/services/referentials.ts';
 
 export type AccessRecordsShowRouteSignature = {
   model: Awaited<ReturnType<AccessRecordsShowRoute['model']>>;
@@ -21,6 +22,7 @@ export default class AccessRecordsShowRoute extends Route {
   @service declare router: RouterService;
   @service declare flashMessages: FlashMessageService;
   @service declare intl: IntlService;
+  @service declare referentials: ReferentialsService;
 
   beforeModel() {
     return requireAbilityOrRedirect('read', 'AccessRecord', {
@@ -33,10 +35,17 @@ export default class AccessRecordsShowRoute extends Route {
 
   // Le backend applique déjà la règle row-level (un encoder ne lit que ses
   // propres enregistrements) : une consultation non autorisée renvoie 403/404.
+  //
+  // Les référentiels sont chargés en parallèle du record : l'enregistrement ne
+  // stocke que des codes (purpose, legalBasis, dataCategories, sourceSystem),
+  // que la vue détail retraduit en libellés via le service.
   async model(params: { access_record_id: string }) {
-    const result = await this.store.request<ReactiveDataDocument<AccessRecord>>(
-      findRecord<AccessRecord>('access-records', params.access_record_id)
-    );
+    const [result] = await Promise.all([
+      this.store.request<ReactiveDataDocument<AccessRecord>>(
+        findRecord<AccessRecord>('access-records', params.access_record_id)
+      ),
+      this.referentials.load(),
+    ]);
     return result.content.data;
   }
 }

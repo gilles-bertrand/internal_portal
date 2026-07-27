@@ -1,8 +1,10 @@
 import { hashPassword, UserEntity } from "@libs/users-backend";
 import { PermissionRuleEntity, RoleEntity, type RoleEntityType } from "@libs/permissions-backend";
+import { DataCategoryEntity, LegalBasisEntity, PurposeEntity } from "@libs/access-registry-backend";
 import type { EntityManager } from "@mikro-orm/core";
 import { Seeder } from "@mikro-orm/seeder";
 import { randomUUID } from "crypto";
+import { DATA_CATEGORY_SEEDS, LEGAL_BASIS_SEEDS, PURPOSE_SEEDS } from "./seed-data/referentials.js";
 
 interface RuleSeed {
   action: string;
@@ -25,6 +27,7 @@ export class E2ESeeder extends Seeder {
   async run(em: EntityManager) {
     const hashedPassword = await hashPassword("123456789");
     const roles = await this.seedRolesAndPermissions(em);
+    this.seedReferentials(em);
 
     // Login user for e2e tests
     em.create(UserEntity, {
@@ -157,6 +160,23 @@ export class E2ESeeder extends Seeder {
         inverted: rule.inverted ?? false,
         order: rule.order ?? 0,
       });
+    }
+  }
+
+  // Référentiels du registre d'accès (catégories de données, finalités, bases
+  // légales). Sans eux, les selects du formulaire d'accès sont vides ; partageant
+  // la même base que le dev, un run e2e ne doit pas laisser la base sans
+  // référentiels. Les données viennent de seed-data/referentials.ts, partagé
+  // avec le seeder de dev pour que les deux ne divergent plus.
+  private seedReferentials(em: EntityManager) {
+    for (const seed of DATA_CATEGORY_SEEDS) {
+      em.create(DataCategoryEntity, seed);
+    }
+    for (const seed of PURPOSE_SEEDS) {
+      em.create(PurposeEntity, seed);
+    }
+    for (const seed of LEGAL_BASIS_SEEDS) {
+      em.create(LegalBasisEntity, seed);
     }
   }
 }

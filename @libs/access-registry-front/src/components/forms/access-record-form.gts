@@ -7,6 +7,7 @@ import TpkForm from '@triptyk/ember-input-validation/components/tpk-form';
 import { service } from '@ember/service';
 import type AccessRecordService from '#src/services/access-record.ts';
 import type SourceSystemService from '#src/services/source-system.ts';
+import type ReferentialsService from '#src/services/referentials.ts';
 import type { AccessRecordChangeset } from '#src/changesets/access-record.ts';
 import {
   createAccessRecordValidationSchema,
@@ -20,7 +21,15 @@ import { LinkTo } from '@ember/routing';
 import type ImmerChangeset from 'ember-immer-changeset';
 import HandleSaveService from '@libs/shared-front/services/handle-save';
 import ArrowLeftIcon from '@libs/shared-front/assets/icons/arrow-left';
-import { ACCESS_TYPES } from '#src/utils/access-record-options.ts';
+import {
+  ACCESS_TYPES,
+  accessTypeLabelKey,
+  type AccessType,
+} from '#src/utils/access-record-options.ts';
+import {
+  localizedLabel,
+  type BilingualReferential,
+} from '#src/utils/referential-label.ts';
 import type { Purpose } from '#src/schemas/purposes.ts';
 import type { LegalBasis } from '#src/schemas/legal-bases.ts';
 import type { DataCategory } from '#src/schemas/data-categories.ts';
@@ -40,10 +49,10 @@ interface AccessRecordFormArgs {
 // @lat: [[frontend/access-record-options#Référentiels dynamiques vs enum statique]]
 // Option shape for the referential-backed selects (legalBasis, dataCategories,
 // purpose): `value` is the stable `code` returned by the backend referential,
-// `label` its display text (already resolved server-side — no i18n needed,
-// unlike the Approach-B slugs used previously). The custom `toString` is
-// required because TpkValidationSelectPrefab renders each option via
-// `String(option)`.
+// `label` its display text, resolved from the record's bilingual labels for the
+// active locale — see [[frontend/access-record-options#Libellés bilingues résolus côté frontend]].
+// The custom `toString` is required because TpkValidationSelectPrefab renders
+// each option via `String(option)`.
 interface ReferentialOption {
   value: string;
   label: string;
@@ -106,6 +115,7 @@ function selectedOptionComponent(
 export default class AccessRecordForm extends Component<AccessRecordFormArgs> {
   @service declare accessRecord: AccessRecordService;
   @service('source-system') declare sourceSystem: SourceSystemService;
+  @service declare referentials: ReferentialsService;
   @service declare router: RouterService;
   @service declare flashMessages: FlashMessageService;
   @service declare intl: IntlService;
@@ -146,18 +156,42 @@ export default class AccessRecordForm extends Component<AccessRecordFormArgs> {
     );
   };
 
-  // accessType — Approach A: value = displayed label (already French words),
-  // so plain string options are passed straight through (like the sister
-  // incident-form). The prefab stores the selected string in the changeset.
-  // No backend referential exists for this field (unlike purpose/legalBasis/
-  // dataCategories), so it stays a static frontend enum.
-  get accessTypeOptions(): string[] {
-    return [...ACCESS_TYPES];
+  // accessType — no backend referential exists for this field (unlike
+  // purpose/legalBasis/dataCategories), so it stays a static frontend enum, but
+  // its options are translated like the others: the changeset keeps the stable
+  // code, the select displays the localised label.
+  @cached
+  get accessTypeOptions(): ReferentialOption[] {
+    return ACCESS_TYPES.map((value) =>
+      referentialOption(value, this.intl.t(accessTypeLabelKey(value)))
+    );
   }
 
   @cached
+  get accessTypeSelectedItemComponent(): ComponentLike<SelectedItemSignature> {
+    return selectedOptionComponent(() => this.accessTypeOptions);
+  }
+
+  setAccessType = (option: unknown) => {
+    // Cast : les options sont construites depuis ACCESS_TYPES, donc la valeur
+    // choisie appartient nécessairement à l'union attendue par le changeset.
+    const value = (option as ReferentialOption | null)?.value as
+      | AccessType
+      | undefined;
+    this.args.changeset.set('accessType', value);
+  };
+
+  @cached
   get purposeOptions(): ReferentialOption[] {
-    return this.args.purposes.map((p) => referentialOption(p.code, p.label));
+    return this.args.purposes.map((p) =>
+      referentialOption(p.code, this.localized(p))
+    );
+  }
+
+  // Libellé du référentiel dans la locale active (fallback français), recalculé
+  // quand l'utilisateur change de langue puisque `intl.primaryLocale` est suivi.
+  private localized(referential: BilingualReferential): string {
+    return localizedLabel(referential, this.intl.primaryLocale);
   }
 
   @cached
@@ -172,7 +206,9 @@ export default class AccessRecordForm extends Component<AccessRecordFormArgs> {
 
   @cached
   get legalBasisOptions(): ReferentialOption[] {
-    return this.args.legalBases.map((b) => referentialOption(b.code, b.label));
+    return this.args.legalBases.map((b) =>
+      referentialOption(b.code, this.localized(b))
+    );
   }
 
   @cached
@@ -188,7 +224,7 @@ export default class AccessRecordForm extends Component<AccessRecordFormArgs> {
   @cached
   get dataCategoryOptions(): ReferentialOption[] {
     return this.args.dataCategories.map((c) =>
-      referentialOption(c.code, c.label)
+      referentialOption(c.code, this.localized(c))
     );
   }
 
@@ -208,7 +244,7 @@ export default class AccessRecordForm extends Component<AccessRecordFormArgs> {
   // les systèmes ajoutés via « + Ajouter » sont fusionnés aux options chargées.
   get sourceSystemOptions(): ReferentialOption[] {
     const fromBackend = this.args.sourceSystems.map((s) =>
-      referentialOption(s.code, s.label)
+      referentialOption(s.code, this.localized(s))
     );
     return [...fromBackend, ...this.addedSourceSystems];
   }
@@ -254,6 +290,9 @@ export default class AccessRecordForm extends Component<AccessRecordFormArgs> {
         ];
       }
       this.args.changeset.set('sourceSystem', created.code);
+      // Le cache du service alimente le tableau et la vue détail : sans
+      // invalidation, le nouveau système y resterait affiché sous son code.
+      this.referentials.invalidate();
       this.isAddingSourceSystem = false;
       this.newSourceSystemLabel = '';
     } catch {
@@ -353,6 +392,8 @@ export default class AccessRecordForm extends Component<AccessRecordFormArgs> {
           @label={{t "access-records.forms.accessRecord.labels.accessType"}}
           @validationField="accessType"
           @options={{this.accessTypeOptions}}
+          @onChange={{this.setAccessType}}
+          @selectedItemComponent={{this.accessTypeSelectedItemComponent}}
           @placeholder={{t
             "access-records.forms.accessRecord.placeholders.select"
           }}

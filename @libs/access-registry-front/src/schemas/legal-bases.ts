@@ -9,6 +9,7 @@ const LegalBasisSchema = withDefaults({
   fields: [
     { name: 'code', kind: 'attribute' },
     { name: 'label', kind: 'attribute' },
+    { name: 'labelEn', kind: 'attribute' },
     { name: 'isArticle9', kind: 'attribute' },
   ],
 });
@@ -18,6 +19,7 @@ export default LegalBasisSchema;
 export type LegalBasis = WithLegacy<{
   code: string;
   label: string;
+  labelEn: string | null;
   isArticle9: boolean;
   [Type]: 'legal-bases';
 }>;

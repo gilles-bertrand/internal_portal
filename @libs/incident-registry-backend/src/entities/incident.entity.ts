@@ -6,7 +6,17 @@ export const IncidentEntity = defineEntity({
   properties: {
     id: p.string().primary(),
     seq: p.integer().unique(),
-    reference: p.string().unique(),
+    // reference n'est plus unique : plusieurs versions d'un même incident la
+    // partagent (édition = nouvelle version append). L'unicité de la chaîne
+    // reste portée par `seq`.
+    reference: p.string(),
+    // Lifecycle (NON canonique — exclu de incidentCanonicalFields, n'affecte pas le hash).
+    revision: p.integer().default(1),
+    supersededById: p.string().nullable(),
+    updatedBy: p.string().nullable(),
+    updatedAt: p.string().nullable(),
+    deletedAt: p.string().nullable(),
+    deletedBy: p.string().nullable(),
     reportDate: p.string(),
     version: p.string(),
     classification: p.string(),

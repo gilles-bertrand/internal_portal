@@ -17,6 +17,11 @@ export:
   error: 'Export failed. Please try again.'
   success: 'Registry exported successfully.'
   inProgress: 'Exporting…'
+  scope:
+    title: 'Export scope'
+    all: 'All source systems'
+    confirm: 'Export'
+    cancel: 'Cancel'
 
 forms:
   accessRecord:
@@ -56,12 +61,32 @@ forms:
       sourceSystemRequired: 'Source system is required.'
       justificationRequired: 'Justification is required.'
 
+options:
+  accessType:
+    consultation: 'Consultation'
+    modification: 'Modification'
+    export: 'Export'
+    transmission: 'Disclosure'
+
 detail:
   metadata: 'Metadata'
   encodedBy: 'Encoded by'
   encodedAt: 'Encoded at'
   retentionUntil: 'Retention until'
   seq: 'Sequence number'
+  empty: 'Not provided'
+  readOnly: 'Read-only — tamper-evident registry'
+  sequenceBadge: 'No. {seq}'
+  subtitle: 'Access on {date}'
+  sections:
+    access: 'Access context'
+    qualification: 'GDPR qualification'
+    justification: 'Justification'
+    traceability: 'Traceability'
+  integrity:
+    hash: 'Integrity fingerprint'
+    prevHash: 'Previous fingerprint'
+    genesis: 'First record in the chain'
 
 pages:
   list:

@@ -30,6 +30,7 @@ export const PERMISSION_RULE_SEED: PermissionRuleSeed[] = [
   { role: "auditor", action: "read", subject: "Incident" },
   { role: "tech_admin", action: "manage", subject: "User" },
   { role: "tech_admin", action: "manage", subject: "Role" },
-  { role: "tech_admin", action: "manage", subject: "AccessRecord", inverted: true, order: 10 },
+  // tech_admin accède au registre d'accès en lecture (list/get/export/stats/audit-events).
+  { role: "tech_admin", action: "read", subject: "AccessRecord" },
   { role: "tech_admin", action: "manage", subject: "Incident", inverted: true, order: 10 },
 ];

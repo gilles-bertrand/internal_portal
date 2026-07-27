@@ -96,6 +96,13 @@ export const SerializedIncidentSchema = makeJsonApiDocumentSchema(
     seq: z.number().int(),
     prevHash: string(),
     hash: string(),
+    // Lifecycle (optionnels) : versioning + soft-delete.
+    revision: number().int().optional(),
+    supersededById: nullable(string()).optional(),
+    updatedBy: nullable(string()).optional(),
+    updatedAt: nullable(string()).optional(),
+    deletedAt: nullable(string()).optional(),
+    deletedBy: nullable(string()).optional(),
   }),
 );
 
@@ -161,6 +168,12 @@ export function jsonApiSerializeIncident(record: IncidentEntityType): Serialized
       seq: record.seq,
       prevHash: record.prevHash,
       hash: record.hash,
+      revision: record.revision,
+      supersededById: record.supersededById ?? null,
+      updatedBy: record.updatedBy ?? null,
+      updatedAt: record.updatedAt ?? null,
+      deletedAt: record.deletedAt ?? null,
+      deletedBy: record.deletedBy ?? null,
     },
   };
 }

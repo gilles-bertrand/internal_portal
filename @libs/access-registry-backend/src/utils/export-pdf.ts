@@ -1,7 +1,8 @@
 import PDFDocument from "pdfkit";
 import type { AccessRecordEntityType } from "#src/entities/access-record.entity.js";
 import { COLORS, MARGIN, CONTENT_WIDTH, PAGE, formatDate } from "#src/utils/pdf-constants.js";
-import { drawRecordsTable } from "#src/utils/pdf-table.js";
+import { drawSummaryTable } from "#src/utils/pdf-table.js";
+import { drawRecordsDetail } from "#src/utils/pdf-detail-render.js";
 
 export type PdfAttestation = {
   generatedAt: string;
@@ -13,10 +14,6 @@ export type PdfAttestation = {
   integrityReason?: string;
 };
 
-function countSpecial(records: AccessRecordEntityType[]): number {
-  return records.filter((record) => record.isSpecialCategory).length;
-}
-
 function drawPageFooter(
   doc: InstanceType<typeof PDFDocument>,
   pageIndex: number,
@@ -24,6 +21,12 @@ function drawPageFooter(
   generatedAt: string,
 ) {
   const y = PAGE.height - MARGIN.bottom + 18;
+  // Le footer s'écrit SOUS la marge basse : le line-wrapper de pdfkit (activé par
+  // `width`) y voit un dépassement de maxY et déclenchait un addPage() par footer
+  // — pages fantômes ne contenant que « Page X / Y ». Marge neutralisée le temps
+  // du dessin.
+  const savedBottomMargin = doc.page.margins.bottom;
+  doc.page.margins.bottom = 0;
   doc
     .save()
     .strokeColor(COLORS.border)
@@ -41,6 +44,7 @@ function drawPageFooter(
       align: "right",
       lineBreak: false,
     });
+  doc.page.margins.bottom = savedBottomMargin;
 }
 
 function drawHeader(doc: InstanceType<typeof PDFDocument>, attestation: PdfAttestation) {
@@ -180,9 +184,16 @@ export function buildPdf(
     doc.on("error", reject);
 
     drawHeader(doc, attestation);
-    drawStatCards(doc, attestation, countSpecial(records));
+    drawStatCards(doc, attestation, records.filter((r) => r.isSpecialCategory).length);
     drawIntegrityCard(doc, attestation);
-    drawRecordsTable(doc, records);
+    // Page 1 : liste récapitulative. Le détail complet commence sur une nouvelle
+    // page pour rester lisible (une fiche par enregistrement).
+    drawSummaryTable(doc, records);
+    if (records.length > 0) {
+      doc.addPage();
+      doc.y = MARGIN.top;
+      drawRecordsDetail(doc, records);
+    }
     applyFooters(doc, attestation.generatedAt);
     doc.end();
   });

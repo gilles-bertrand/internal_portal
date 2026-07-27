@@ -40,8 +40,9 @@ interface RoleExpectations {
 
 // @lat: [[backend/permissions#Matrice de couverture obligatoire]]
 // Complète permission-separation.test.ts (create/list/get) avec les routes module-wide
-// export/stats/audit-events/verify-integrity/retention — même principe : tech_admin est
-// bloqué au niveau module donc 403 partout.
+// export/stats/audit-events/verify-integrity/retention. tech_admin a `read AccessRecord` :
+// export/stats/audit-events (gardés par `read AccessRecord`) → 200 ; verify-integrity
+// (`read AccessRecordIntegrity`) et retention (`manage AccessRecordRetention`) → 403.
 const ROLE_EXPECTATIONS: RoleExpectations[] = [
   {
     roleName: "encoder",
@@ -73,9 +74,9 @@ const ROLE_EXPECTATIONS: RoleExpectations[] = [
   {
     roleName: "tech_admin",
     userId: "admin-id",
-    export: 403,
-    stats: 403,
-    auditEvents: 403,
+    export: 200,
+    stats: 200,
+    auditEvents: 200,
     verifyIntegrity: 403,
     retentionRun: 403,
   },

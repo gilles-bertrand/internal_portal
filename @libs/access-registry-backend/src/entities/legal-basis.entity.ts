@@ -7,6 +7,8 @@ export const LegalBasisEntity = defineEntity({
     id: p.string().primary(),
     code: p.string().unique(),
     label: p.string(),
+    // Cf. PurposeEntity : libellé anglais optionnel, fallback frontend sur `label`.
+    labelEn: p.string().nullable(),
     isArticle9: p.boolean().default(false),
   },
 });

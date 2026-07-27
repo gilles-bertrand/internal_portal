@@ -9,6 +9,7 @@ const PurposeSchema = withDefaults({
   fields: [
     { name: 'code', kind: 'attribute' },
     { name: 'label', kind: 'attribute' },
+    { name: 'labelEn', kind: 'attribute' },
   ],
 });
 
@@ -17,5 +18,6 @@ export default PurposeSchema;
 export type Purpose = WithLegacy<{
   code: string;
   label: string;
+  labelEn: string | null;
   [Type]: 'purposes';
 }>;

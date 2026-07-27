@@ -2,7 +2,7 @@ import type { SourceSystem } from '#src/schemas/source-systems.ts';
 import Service from '@ember/service';
 import { service } from '@ember/service';
 import { cacheKeyFor, type Store } from '@warp-drive/core';
-import { createRecord } from '@warp-drive/utilities/json-api';
+import { createRecord, query } from '@warp-drive/utilities/json-api';
 import type { ReactiveDataDocument } from '@warp-drive/core/reactive';
 
 // Création d'un système source dans le référentiel backend (POST /source-systems).
@@ -11,6 +11,15 @@ import type { ReactiveDataDocument } from '@warp-drive/core/reactive';
 // options de la select.
 export default class SourceSystemService extends Service {
   @service declare store: Store;
+
+  // Liste les source systems du référentiel (GET /source-systems) — alimente le
+  // sélecteur de périmètre de l'export.
+  public async list(): Promise<SourceSystem[]> {
+    const response = await this.store.request<
+      ReactiveDataDocument<SourceSystem[]>
+    >(query<SourceSystem>('source-systems'));
+    return [...response.content.data];
+  }
 
   public async create(label: string): Promise<SourceSystem> {
     const record = this.store.createRecord<SourceSystem>('source-systems', {

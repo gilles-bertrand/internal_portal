@@ -103,7 +103,10 @@ export class AppendService {
       const reference = buildReference(year, annualSeq, input.clientCode);
 
       const id = randomUUID();
-      const partialRecord = {
+      // contentRecord = source canonique (hors champs lifecycle) : ce sur quoi
+      // le hash est calculé. Les champs lifecycle sont ajoutés ensuite et ne
+      // participent PAS au hash (cf. incidentCanonicalFields).
+      const contentRecord = {
         id,
         seq,
         reference,
@@ -112,13 +115,95 @@ export class AppendService {
         ...input,
       };
 
-      const canonical = canonicalSerialize(partialRecord as unknown as Record<string, unknown>);
+      const canonical = canonicalSerialize(contentRecord as unknown as Record<string, unknown>);
       const hash = computeRecordHash(prevHash, canonical);
 
-      const record: IncidentEntityType = { ...partialRecord, hash };
+      const record: IncidentEntityType = {
+        ...contentRecord,
+        hash,
+        revision: 1,
+        supersededById: null,
+        updatedBy: null,
+        updatedAt: null,
+        deletedAt: null,
+        deletedBy: null,
+      };
       await tx.getRepository(IncidentEntity).insert(record);
 
       return record;
     });
+  }
+
+  // @lat: [[backend/incident-registry#Édition = nouvelle version (append)]]
+  // Édite un incident en AJOUTANT une nouvelle version chaînée (l'original reste
+  // immuable). Même `reference`, `revision + 1`, identité d'origine préservée
+  // (`encodedBy`/`encodedAt`). L'ancienne version est marquée `supersededById`
+  // (champ non canonique → la chaîne de hash reste valide).
+  public async appendNewVersion(
+    previous: IncidentEntityType,
+    input: NewIncidentInput,
+    editorId: string,
+  ): Promise<IncidentEntityType> {
+    return this.em.transactional(async (tx) => {
+      await tx.execute(`SELECT pg_advisory_xact_lock(${ADVISORY_LOCK_KEY})`);
+
+      const current = await tx.findOne(IncidentEntity, { id: previous.id });
+      if (!current || current.supersededById !== null || current.deletedAt != null) {
+        throw new Error("NOT_CURRENT_VERSION");
+      }
+
+      const [last] = await tx.findAll(IncidentEntity, {
+        orderBy: { seq: "DESC" },
+        limit: 1,
+      });
+      const prevHash = last?.hash ?? GENESIS_HASH;
+      const seq = (last?.seq ?? 0) + 1;
+      const id = randomUUID();
+      const now = new Date().toISOString();
+
+      const contentRecord = {
+        id,
+        seq,
+        reference: current.reference,
+        encodedAt: current.encodedAt,
+        prevHash,
+        ...input,
+        // Préserve l'auteur d'origine (identité + permission "édite les siens").
+        encodedBy: current.encodedBy,
+      };
+
+      const canonical = canonicalSerialize(contentRecord as unknown as Record<string, unknown>);
+      const hash = computeRecordHash(prevHash, canonical);
+
+      const record: IncidentEntityType = {
+        ...contentRecord,
+        hash,
+        revision: current.revision + 1,
+        supersededById: null,
+        updatedBy: editorId,
+        updatedAt: now,
+        deletedAt: null,
+        deletedBy: null,
+      };
+      await tx.getRepository(IncidentEntity).insert(record);
+
+      // Champ non canonique → n'affecte pas le hash de l'ancienne ligne.
+      await tx.nativeUpdate(IncidentEntity, { id: current.id }, { supersededById: id });
+
+      return record;
+    });
+  }
+
+  // Soft-delete : pose deletedAt/deletedBy (non canoniques) — pas de DELETE physique.
+  public async softDelete(id: string, byUserId: string): Promise<void> {
+    await this.em.nativeUpdate(
+      IncidentEntity,
+      { id },
+      { deletedAt: new Date().toISOString(), deletedBy: byUserId },
+    );
+  }
+
+  public async restore(id: string): Promise<void> {
+    await this.em.nativeUpdate(IncidentEntity, { id }, { deletedAt: null, deletedBy: null });
   }
 }

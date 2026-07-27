@@ -30,14 +30,22 @@ const EXPORT_ENDPOINT = '/api/v1/access-records/export';
 export default class RegistryExportService extends Service {
   @service declare session: SessionService;
 
-  public async downloadReport(format: ExportFormat = 'pdf'): Promise<void> {
+  // sourceSystem : code d'un source system pour restreindre l'export à ses
+  // accès, ou null/undefined pour exporter tout le registre.
+  public async downloadReport(
+    format: ExportFormat = 'pdf',
+    sourceSystem?: string | null
+  ): Promise<void> {
+    const body: { format: ExportFormat; sourceSystem?: string } = { format };
+    if (sourceSystem) body.sourceSystem = sourceSystem;
+
     const response = await fetch(EXPORT_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: this.authorizationHeader(),
       },
-      body: JSON.stringify({ format }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {

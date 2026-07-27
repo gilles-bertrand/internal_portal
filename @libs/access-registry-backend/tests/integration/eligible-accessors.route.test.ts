@@ -48,7 +48,7 @@ test("les rôles sans droit de création (dpo/auditor) ne sont pas listés", asy
 });
 
 // @lat: [[backend/access-registry#Liste des accédants habilités (accessorRef)]]
-test("tech_admin (cannot manage AccessRecord) n'est pas listé", async () => {
+test("tech_admin (lecture seule, sans create/manage) n'est pas listé", async () => {
   const response = await module.fastifyInstance.inject({
     method: "GET",
     url: "/eligible-accessors",

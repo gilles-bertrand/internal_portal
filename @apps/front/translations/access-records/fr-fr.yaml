@@ -17,6 +17,11 @@ export:
   error: "Échec de l'export. Réessayez."
   success: 'Registre exporté avec succès.'
   inProgress: 'Export en cours…'
+  scope:
+    title: "Périmètre de l'export"
+    all: 'Tous les source systems'
+    confirm: 'Exporter'
+    cancel: 'Annuler'
 
 forms:
   accessRecord:
@@ -56,12 +61,32 @@ forms:
       sourceSystemRequired: 'Le système source est requis.'
       justificationRequired: 'La justification est requise.'
 
+options:
+  accessType:
+    consultation: 'Consultation'
+    modification: 'Modification'
+    export: 'Export'
+    transmission: 'Transmission'
+
 detail:
   metadata: 'Métadonnées'
   encodedBy: 'Encodé par'
   encodedAt: "Date d'encodage"
   retentionUntil: "Conservation jusqu'au"
   seq: 'Numéro de séquence'
+  empty: 'Non renseigné'
+  readOnly: 'Lecture seule — registre inaltérable'
+  sequenceBadge: 'N° {seq}'
+  subtitle: 'Accès du {date}'
+  sections:
+    access: "Contexte de l'accès"
+    qualification: 'Qualification RGPD'
+    justification: 'Justification'
+    traceability: 'Traçabilité'
+  integrity:
+    hash: "Empreinte d'intégrité"
+    prevHash: 'Empreinte précédente'
+    genesis: 'Premier enregistrement de la chaîne'
 
 pages:
   list:

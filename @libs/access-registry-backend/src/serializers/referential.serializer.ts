@@ -6,24 +6,31 @@ import type { PurposeEntityType } from "#src/entities/purpose.entity.js";
 import type { LegalBasisEntityType } from "#src/entities/legal-basis.entity.js";
 import type { SourceSystemEntityType } from "#src/entities/source-system.entity.js";
 
+// @lat: [[backend/access-registry#Référentiels bilingues (label / labelEn)]]
+// Les référentiels exposent les DEUX libellés plutôt qu'un seul résolu côté
+// serveur via Accept-Language : le sélecteur de langue du dashboard change la
+// locale sans rechargement, donc un libellé figé au fetch resterait dans
+// l'ancienne langue. Le frontend choisit à l'affichage.
+const bilingualLabel = { code: string(), label: string(), labelEn: string().nullable() };
+
 export const SerializedDataCategorySchema = makeJsonApiDocumentSchema(
   "data-categories",
-  object({ code: string(), label: string() }),
+  object({ ...bilingualLabel }),
 );
 
 export const SerializedPurposeSchema = makeJsonApiDocumentSchema(
   "purposes",
-  object({ code: string(), label: string() }),
+  object({ ...bilingualLabel }),
 );
 
 export const SerializedLegalBasisSchema = makeJsonApiDocumentSchema(
   "legal-bases",
-  object({ code: string(), label: string(), isArticle9: boolean() }),
+  object({ ...bilingualLabel, isArticle9: boolean() }),
 );
 
 export const SerializedSourceSystemSchema = makeJsonApiDocumentSchema(
   "source-systems",
-  object({ code: string(), label: string() }),
+  object({ ...bilingualLabel }),
 );
 
 export function jsonApiSerializeDataCategory(
@@ -32,14 +39,18 @@ export function jsonApiSerializeDataCategory(
   return {
     id: e.id,
     type: "data-categories" as const,
-    attributes: { code: e.code, label: e.label },
+    attributes: { code: e.code, label: e.label, labelEn: e.labelEn ?? null },
   };
 }
 
 export function jsonApiSerializePurpose(
   e: PurposeEntityType,
 ): z.infer<typeof SerializedPurposeSchema> {
-  return { id: e.id, type: "purposes" as const, attributes: { code: e.code, label: e.label } };
+  return {
+    id: e.id,
+    type: "purposes" as const,
+    attributes: { code: e.code, label: e.label, labelEn: e.labelEn ?? null },
+  };
 }
 
 export function jsonApiSerializeLegalBasis(
@@ -48,7 +59,12 @@ export function jsonApiSerializeLegalBasis(
   return {
     id: e.id,
     type: "legal-bases" as const,
-    attributes: { code: e.code, label: e.label, isArticle9: e.isArticle9 },
+    attributes: {
+      code: e.code,
+      label: e.label,
+      labelEn: e.labelEn ?? null,
+      isArticle9: e.isArticle9,
+    },
   };
 }
 
@@ -58,6 +74,6 @@ export function jsonApiSerializeSourceSystem(
   return {
     id: e.id,
     type: "source-systems" as const,
-    attributes: { code: e.code, label: e.label },
+    attributes: { code: e.code, label: e.label, labelEn: e.labelEn ?? null },
   };
 }

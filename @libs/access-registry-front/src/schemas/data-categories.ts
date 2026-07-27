@@ -9,6 +9,7 @@ const DataCategorySchema = withDefaults({
   fields: [
     { name: 'code', kind: 'attribute' },
     { name: 'label', kind: 'attribute' },
+    { name: 'labelEn', kind: 'attribute' },
   ],
 });
 
@@ -17,5 +18,6 @@ export default DataCategorySchema;
 export type DataCategory = WithLegacy<{
   code: string;
   label: string;
+  labelEn: string | null;
   [Type]: 'data-categories';
 }>;

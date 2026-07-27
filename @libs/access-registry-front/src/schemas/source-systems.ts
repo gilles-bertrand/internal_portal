@@ -9,6 +9,7 @@ const SourceSystemSchema = withDefaults({
   fields: [
     { name: 'code', kind: 'attribute' },
     { name: 'label', kind: 'attribute' },
+    { name: 'labelEn', kind: 'attribute' },
   ],
 });
 
@@ -17,5 +18,6 @@ export default SourceSystemSchema;
 export type SourceSystem = WithLegacy<{
   code: string;
   label: string;
+  labelEn: string | null;
   [Type]: 'source-systems';
 }>;

@@ -51,8 +51,9 @@ interface RoleExpectations {
 }
 
 // @lat: [[backend/permissions#Matrice de couverture obligatoire]]
-// Miroir de la matrice de permissions réellement seedée (cf. permission-rule-seed.ts) —
-// tech_admin est bloqué au niveau module (cf. init.ts) donc 403 partout. L'écriture/lecture
+// Miroir de la matrice de permissions réellement seedée (cf. permission-rule-seed.ts).
+// tech_admin a désormais `read AccessRecord` (accès au registre en lecture) : il liste et
+// consulte tous les enregistrements (200) mais ne peut pas créer (403). L'écriture/lecture
 // des routes plus larges (export/stats/audit-events/verify-integrity/retention) est couverte
 // par permission-separation-reads.test.ts pour garder ce fichier sous la limite de lignes.
 const ROLE_EXPECTATIONS: RoleExpectations[] = [
@@ -63,9 +64,9 @@ const ROLE_EXPECTATIONS: RoleExpectations[] = [
     roleName: "tech_admin",
     userId: "admin-id",
     create: 403,
-    list: 403,
-    getOwn: 403,
-    getOther: 403,
+    list: 200,
+    getOwn: 200,
+    getOther: 200,
   },
 ];
 

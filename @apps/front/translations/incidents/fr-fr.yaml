@@ -6,6 +6,22 @@ table:
     status: Statut
     reportDate: Date rapport
     art9: Art. 9
+    state: État
+  actions:
+    edit: Éditer
+    delete: Supprimer
+    restore: Restaurer
+  confirmDelete:
+    question: "Supprimer l'incident {reference} ? Il sera masqué et restaurable par le DPO."
+    confirm: Supprimer
+    cancel: Annuler
+  showDeleted: Afficher les supprimés
+  deletedBadge: Supprimé
+  notAllowed: Vous ne pouvez pas gérer cet incident.
+  deleteSuccess: Incident supprimé.
+  deleteError: Échec de la suppression. Réessayez.
+  restoreSuccess: Incident restauré.
+  restoreError: Échec de la restauration. Réessayez.
 filters:
   status: Statut
   art9: Données sensibles (art. 9)
@@ -23,8 +39,11 @@ export:
 pages:
   list:
     title: Registre d'incidents
+  edit:
+    title: Éditer l'incident
 form:
   title: Nouveau rapport d'incident
+  updateSuccess: Nouvelle version de l'incident enregistrée
   steps:
     header: En-tête (§1–§2)
     context: Contexte & dates

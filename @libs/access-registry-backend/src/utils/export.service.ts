@@ -149,9 +149,17 @@ export class ExportService {
     format: ExportFormat,
     generatedBy: string,
     generatedAt: string,
+    // Enregistrements servant à l'attestation d'intégrité. Par défaut = ceux
+    // exportés ; mais pour un export filtré (sous-ensemble non contigu), on passe
+    // la chaîne COMPLÈTE du registre : l'intégrité certifie l'état du registre,
+    // pas du sous-ensemble (un subset n'est pas une chaîne contiguë valide).
+    integrityRecords: AccessRecordEntityType[] = records,
   ): Promise<ExportResult> {
-    const integrity = verifyAccessRecordChain(records);
-    const chainHeadHash = records.length > 0 ? records[records.length - 1]!.hash : GENESIS_HASH;
+    const integrity = verifyAccessRecordChain(integrityRecords);
+    const chainHeadHash =
+      integrityRecords.length > 0
+        ? integrityRecords[integrityRecords.length - 1]!.hash
+        : GENESIS_HASH;
     const manifestBase = buildManifestBase(
       integrity,
       chainHeadHash,

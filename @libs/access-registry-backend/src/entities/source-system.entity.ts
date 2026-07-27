@@ -7,6 +7,10 @@ export const SourceSystemEntity = defineEntity({
     id: p.string().primary(),
     code: p.string().unique(),
     label: p.string(),
+    // Cf. PurposeEntity. Toujours null pour les systèmes créés depuis le
+    // formulaire (« + Ajouter un système ») : l'utilisateur ne saisit qu'un
+    // libellé, affiché tel quel dans les deux locales.
+    labelEn: p.string().nullable(),
   },
 });
 

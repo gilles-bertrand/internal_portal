@@ -41,6 +41,18 @@ export class ListRoute implements Route {
 
         const where: Record<string, unknown> = {};
 
+        // N'afficher que la version courante de chaque incident (les versions
+        // remplacées par une édition restent en base mais sont masquées).
+        where["supersededById"] = null;
+
+        // Exclure les soft-supprimés, sauf si un DPO demande explicitement à les
+        // inclure (filter[includeDeleted]=true + droit `restore Incident`).
+        const includeDeleted =
+          q["filter[includeDeleted]"] === "true" && request.ability!.can("restore", "Incident");
+        if (!includeDeleted) {
+          where["deletedAt"] = null;
+        }
+
         if (q["filter[status]"]) where["status"] = q["filter[status]"];
         if (q["filter[clientCode]"]) where["clientCode"] = q["filter[clientCode]"];
         if (q["filter[specialCategoryData]"]) {

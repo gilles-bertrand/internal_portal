@@ -1355,6 +1355,9 @@ importers:
 
   '@libs/incident-registry-backend':
     dependencies:
+      '@casl/ability':
+        specifier: ^7.0.1
+        version: 7.0.1
       '@libs/audit-log-backend':
         specifier: workspace:*
         version: link:../audit-log-backend

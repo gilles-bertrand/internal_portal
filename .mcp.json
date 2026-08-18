@@ -50,6 +50,50 @@
       "args": [
         "mcp"
       ]
+    },
+    "AgentsRoom-MCP": {
+      "command": "node",
+      "args": [
+        "/Applications/AgentsRoom.app/Contents/Resources/app-mcp-server.cjs"
+      ],
+      "env": {
+        "AR_PROJECT_ID": "proj-1787046069295-e7t8r9",
+        "AR_PROJECT_PATH": "/Users/gilles/www/internal_portal",
+        "AR_API_BASE_URL": "https://agentsroom.dev",
+        "AR_SETTINGS_FILE": "/Users/gilles/.agentsroom/settings.json",
+        "AR_BRIDGE_FILE": "/Users/gilles/.agentsroom/browser-bridge.json"
+      }
+    },
+    "AgentsRoom-Test-Runner": {
+      "command": "node",
+      "args": [
+        "/Applications/AgentsRoom.app/Contents/Resources/test-runner-mcp-server.cjs"
+      ],
+      "env": {
+        "AR_BROWSER_BRIDGE_FILE": "/Users/gilles/.agentsroom/browser-bridge.json",
+        "AR_BROWSER_PROJECT_ID": "proj-1787046069295-e7t8r9",
+        "AR_PROJECT_PATH": "/Users/gilles/www/internal_portal"
+      }
+    },
+    "AgentsRoom-QA-Tester": {
+      "command": "node",
+      "args": [
+        "/Applications/AgentsRoom.app/Contents/Resources/qa-tester-mcp-server.cjs"
+      ],
+      "env": {
+        "AR_BROWSER_BRIDGE_FILE": "/Users/gilles/.agentsroom/browser-bridge.json",
+        "AR_BROWSER_PROJECT_ID": "proj-1787046069295-e7t8r9"
+      }
+    },
+    "AgentsRoom-Browser": {
+      "command": "node",
+      "args": [
+        "/Applications/AgentsRoom.app/Contents/Resources/browser-mcp-server.cjs"
+      ],
+      "env": {
+        "AR_BROWSER_BRIDGE_FILE": "/Users/gilles/.agentsroom/browser-bridge.json",
+        "AR_BROWSER_PROJECT_ID": "proj-1787046069295-e7t8r9"
+      }
     }
   }
 }

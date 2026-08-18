@@ -22,6 +22,9 @@ export async function getTestContext() {
     SMTP_SECURE: false,
     EMAIL_FROM_NAME: "Test App",
     EMAIL_FROM_ADDRESS: "noreply@test.com",
+    // Les tests d'intégration tournent sur leur propre testcontainer : jamais
+    // de bascule vers la base e2e.
+    E2E: false,
   } satisfies AppConfiguration;
 
   return {

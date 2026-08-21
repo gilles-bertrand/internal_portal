@@ -1,6 +1,10 @@
 import type { EntityManager } from "@mikro-orm/postgresql";
 import { randomUUID } from "node:crypto";
-import { canonicalSerialize, computeRecordHash, GENESIS_HASH } from "@libs/backend-shared";
+import { computeRecordHash, GENESIS_HASH } from "@libs/backend-shared";
+import {
+  CURRENT_INCIDENT_CANONICAL_VERSION,
+  incidentCanonicalString,
+} from "#src/utils/incident-canonical.js";
 import { IncidentEntity } from "#src/entities/incident.entity.js";
 import type { IncidentEntityType } from "#src/entities/incident.entity.js";
 
@@ -103,31 +107,32 @@ export class AppendService {
       const reference = buildReference(year, annualSeq, input.clientCode);
 
       const id = randomUUID();
-      // contentRecord = source canonique (hors champs lifecycle) : ce sur quoi
-      // le hash est calculé. Les champs lifecycle sont ajoutés ensuite et ne
-      // participent PAS au hash (cf. incidentCanonicalFields).
-      const contentRecord = {
+      // La ligne complète est construite d'abord, puis PROJETÉE sur son jeu de
+      // champs canoniques : le hash est calculé sur la projection, jamais sur un
+      // objet ad hoc. C'est ce qui garantit que l'écriture et la vérification
+      // hachent exactement la même chose (cf. incidentCanonicalString).
+      // Le `satisfies` fait échouer le type-check si une colonne de l'entité est
+      // oubliée ici — deuxième garde-fou lors d'un ajout de colonne.
+      const row = {
         id,
         seq,
         reference,
         encodedAt,
         prevHash,
         ...input,
-      };
-
-      const canonical = canonicalSerialize(contentRecord as unknown as Record<string, unknown>);
-      const hash = computeRecordHash(prevHash, canonical);
-
-      const record: IncidentEntityType = {
-        ...contentRecord,
-        hash,
+        canonicalVersion: CURRENT_INCIDENT_CANONICAL_VERSION,
         revision: 1,
         supersededById: null,
         updatedBy: null,
         updatedAt: null,
         deletedAt: null,
         deletedBy: null,
-      };
+      } satisfies Omit<IncidentEntityType, "hash">;
+
+      const canonical = incidentCanonicalString(row, CURRENT_INCIDENT_CANONICAL_VERSION);
+      const hash = computeRecordHash(prevHash, canonical);
+
+      const record: IncidentEntityType = { ...row, hash };
       await tx.getRepository(IncidentEntity).insert(record);
 
       return record;
@@ -161,7 +166,10 @@ export class AppendService {
       const id = randomUUID();
       const now = new Date().toISOString();
 
-      const contentRecord = {
+      // Une nouvelle version est une nouvelle ligne : elle est estampillée à la
+      // version canonique COURANTE, même si la ligne éditée était en v1. La
+      // chaîne devient mixte, ce que verifyIncidentChain gère par construction.
+      const row = {
         id,
         seq,
         reference: current.reference,
@@ -170,21 +178,19 @@ export class AppendService {
         ...input,
         // Préserve l'auteur d'origine (identité + permission "édite les siens").
         encodedBy: current.encodedBy,
-      };
-
-      const canonical = canonicalSerialize(contentRecord as unknown as Record<string, unknown>);
-      const hash = computeRecordHash(prevHash, canonical);
-
-      const record: IncidentEntityType = {
-        ...contentRecord,
-        hash,
+        canonicalVersion: CURRENT_INCIDENT_CANONICAL_VERSION,
         revision: current.revision + 1,
         supersededById: null,
         updatedBy: editorId,
         updatedAt: now,
         deletedAt: null,
         deletedBy: null,
-      };
+      } satisfies Omit<IncidentEntityType, "hash">;
+
+      const canonical = incidentCanonicalString(row, CURRENT_INCIDENT_CANONICAL_VERSION);
+      const hash = computeRecordHash(prevHash, canonical);
+
+      const record: IncidentEntityType = { ...row, hash };
       await tx.getRepository(IncidentEntity).insert(record);
 
       // Champ non canonique → n'affecte pas le hash de l'ancienne ligne.

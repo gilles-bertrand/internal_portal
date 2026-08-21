@@ -48,7 +48,7 @@ Le bandeau "CONFIDENTIEL" apposé sur chaque page est codé en dur, indépendamm
 
 Éditer un incident n'écrase jamais la ligne existante : on **ajoute une nouvelle version chaînée** (même `reference`, `revision + 1`) ; l'original reste immuable.
 
-[[@libs/incident-registry-backend/src/utils/append.service.ts#AppendService]]`#appendNewVersion` préserve l'identité d'origine (`encodedBy`/`encodedAt`) et enregistre l'éditeur dans `updatedBy`/`updatedAt`. `reference` n'est donc plus contrainte unique (plusieurs versions la partagent) ; l'unicité de la chaîne reste portée par `seq`. La **version courante** d'une référence est celle dont `supersededById` est `null` ; les colonnes lifecycle (`revision`, `supersededById`, `updatedBy`, `updatedAt`, `deletedAt`, `deletedBy`) sont **hors** de [[@libs/incident-registry-backend/src/utils/integrity.ts#incidentCanonicalFields]] → elles n'affectent pas le hash et `verifyIncidentChain` reste valide. `PUT /incidents/:id` ([[@libs/incident-registry-backend/src/routes/update.route.ts#UpdateRoute]]) garde `update Incident` (row-level `encodedBy=$user.id` pour l'encoder, inconditionnel pour le dpo) et refuse d'éditer une version non courante ou supprimée (409).
+[[@libs/incident-registry-backend/src/utils/append.service.ts#AppendService]]`#appendNewVersion` préserve l'identité d'origine (`encodedBy`/`encodedAt`) et enregistre l'éditeur dans `updatedBy`/`updatedAt`. `reference` n'est donc plus contrainte unique (plusieurs versions la partagent) ; l'unicité de la chaîne reste portée par `seq`. La **version courante** d'une référence est celle dont `supersededById` est `null` ; les colonnes lifecycle (`revision`, `supersededById`, `updatedBy`, `updatedAt`, `deletedAt`, `deletedBy`) sont **hors** de [[@libs/incident-registry-backend/src/utils/incident-canonical.ts#INCIDENT_CANONICAL_VERSIONS]] → elles n'affectent pas le hash et `verifyIncidentChain` reste valide. `PUT /incidents/:id` ([[@libs/incident-registry-backend/src/routes/update.route.ts#UpdateRoute]]) garde `update Incident` (row-level `encodedBy=$user.id` pour l'encoder, inconditionnel pour le dpo) et refuse d'éditer une version non courante ou supprimée (409).
 
 > Contrainte : la table `incident` est append-only pour son **contenu** uniquement. Le trigger `incident_no_mutation` (fonction `forbid_incident_content_mutation`, [[@apps/backend/src/cli/append-only.sql.ts#APPEND_ONLY_DDL]]) autorise en `UPDATE` seulement les colonnes lifecycle (`revision`, `superseded_by_id`, `updated_by`, `updated_at`, `deleted_at`, `deleted_by`) et lève une exception dès qu'une colonne de contenu change ; `DELETE`/`TRUNCATE` restent interdits (`incident_no_delete`/`incident_no_truncate`, fonction `forbid_mutation`). Ce trigger est désormais posé **en prod** (schema-fresh) comme en test ([[@libs/incident-registry-backend/tests/utils/append-only-test.sql.ts#APPEND_ONLY_DDL_TEST]]) — il manquait côté prod. Le hash n'étant calculé que sur les champs canoniques, la mutation lifecycle ne casse pas [[hash-chain-integrity]].
 
@@ -67,3 +67,29 @@ Actions tracées propres à ce module : `INCIDENT_CREATED`, `INCIDENT_VIEWED` (g
 Les actions de cycle de vie `INCIDENT_UPDATED`, `INCIDENT_DELETED`, `INCIDENT_RESTORED` sont journalisées dans `audit_event` (table immuable, trigger-protégée) — c'est le socle de traçabilité « qui a modifié/supprimé ».
 
 Le nom d'utilisateur affiché (`encodedByName`) est résolu à la volée depuis `@libs/users-backend` par [[@libs/incident-registry-backend/src/utils/incident-enrichment.ts#serializeIncidentsWithUserNames]] — pas stocké en base, recalculé à chaque requête de liste. Même pattern dupliqué à l'identique côté access-registry.
+
+## Champs canoniques versionnés
+
+Les champs entrant dans le hash d'un incident sont déclarés par version dans [[@libs/incident-registry-backend/src/utils/incident-canonical.ts#INCIDENT_CANONICAL_VERSIONS]], et chaque ligne porte sa `canonicalVersion`. Le mécanisme et sa justification sont décrits dans [[hash-chain-integrity#Jeu de champs canoniques versionné]].
+
+Deux versions existent : la **v1** (figée, les 48 champs hachés avant l'introduction du versionnage, sans `canonicalVersion`) et la **v2** (courante, v1 + `canonicalVersion`), estampillée par [[@libs/incident-registry-backend/src/utils/append.service.ts#AppendService#append]] et par `appendNewVersion`.
+
+Les colonnes délibérément hors chaîne restent les six colonnes lifecycle (`revision`, `supersededById`, `updatedBy`, `updatedAt`, `deletedAt`, `deletedBy`), plus `hash`/`prevHash`. `canonicalVersion` n'en fait PAS partie : elle est du contenu.
+
+### Ajouter un champ canonique (procédure CNIL 1–9)
+
+Un champ réglementaire supplémentaire se déclare en un seul endroit, et deux tests refusent l'oubli.
+
+1. Ajouter la colonne à [[@libs/incident-registry-backend/src/entities/incident.entity.ts#IncidentEntity]].
+2. Ajouter son nom à la fin du tableau `V2_FIELDS` de `incident-canonical.ts` (l'ordre est indifférent : `canonicalSerialize` trie les clés).
+3. Ajouter le champ au schéma Zod `IncidentAttributesSchema` et à `toNewIncidentInput`, comme n'importe quel autre attribut.
+
+Ne rien toucher d'autre : l'`AppendService` hache la projection, `verifyIncidentChain` la recalcule, et le trigger `incident_no_mutation` protège automatiquement toute nouvelle colonne de contenu (il diffe `to_jsonb(OLD)` moins les colonnes lifecycle).
+
+Le test d'exhaustivité échoue si l'étape 2 est oubliée ; le `satisfies Omit<IncidentEntityType, "hash">` de l'`AppendService` échoue au type-check si la ligne construite n'énumère pas la nouvelle colonne. Si des lignes v2 existent déjà en production, il faut ouvrir une v3 au lieu d'étendre la v2.
+
+### Isolation des tests d'intégration
+
+Les fichiers de `tests/integration/` partagent un unique conteneur Postgres et supposent chacun posséder une table `incident` vide, or `seq` est UNIQUE. Ils sont donc sérialisés par `fileParallelism: false` dans `vitest.config.mts`.
+
+L'isolation par `aroundEach` (`em.begin()` / `em.rollback()`) ne vaut qu'à l'intérieur d'un fichier : entre deux forks concurrents, deux insertions de `seq = 1` se percutent et l'une reçoit un 500. Symptôme observé avant le correctif : un échec qui se déplaçait de fichier en fichier selon l'ordonnancement.

@@ -1,8 +1,8 @@
 import Component from '@glimmer/component';
 import { action } from '@ember/object';
-import { tracked } from '@glimmer/tracking';
+import { cached, tracked } from '@glimmer/tracking';
 import TpkForm from '@triptyk/ember-input-validation/components/tpk-form';
-import TpkInput from '@triptyk/ember-input/components/tpk-input';
+import { RowInput } from '#src/components/forms/incident-row-fields.gts';
 import { service } from '@ember/service';
 import type IncidentService from '#src/services/incident.ts';
 import type { IncidentChangeset } from '#src/changesets/incident.ts';
@@ -10,9 +10,36 @@ import {
   createIncidentValidationSchema,
   INCIDENT_FORM_STEPS,
   type IncidentFormStep,
+  stepForField,
+  stepIndex,
   validateIncidentStep,
   type ValidatedIncident,
 } from '#src/components/forms/incident-validation.ts';
+import { normalizeIncidentPayload } from '#src/components/forms/incident-payload.ts';
+import {
+  firstInvalidStep,
+  invalidFieldLabels,
+  issuesToStepFields,
+} from '#src/components/forms/incident-step-errors.ts';
+import ArrowLeftIcon from '@libs/shared-front/assets/icons/arrow-left';
+import {
+  classificationLabelKey,
+  environmentLabelKey,
+  INCIDENT_CLASSIFICATIONS,
+  INCIDENT_ENVIRONMENTS,
+  INCIDENT_SEVERITIES,
+  INCIDENT_STATUSES,
+  labelledOption,
+  optionLabel,
+  severityLabelKey,
+  statusLabelKey,
+  type LabelledOption,
+} from '#src/utils/incident-options.ts';
+import {
+  codeOf,
+  selectedOptionComponent,
+} from '#src/components/forms/incident-select-label.gts';
+import type { ZodIssue } from 'zod';
 import type FlashMessageService from 'ember-cli-flash/services/flash-messages';
 import { t, type IntlService } from 'ember-intl';
 import { LinkTo } from '@ember/routing';
@@ -35,10 +62,16 @@ interface IncidentFormArgs {
   incidentId?: string;
 }
 
-const CLASSIFICATIONS = ['CONFIDENTIEL', 'INTERNE', 'PUBLIC'] as const;
-const STATUSES = ['open', 'in_progress', 'resolved', 'closed'] as const;
-const ENVIRONMENTS = ['production', 'staging', 'development'] as const;
-const SEVERITIES = ['low', 'medium', 'high', 'critical'] as const;
+// Changing step swaps the whole panel: without this the browser keeps the
+// scroll offset of the previous (often much longer) step and the user lands
+// mid-form, on no field in particular.
+function scrollWizardToTop(): void {
+  requestAnimationFrame(() => {
+    document
+      .querySelector('[data-test-incident-form]')
+      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  });
+}
 
 export default class IncidentForm extends Component<IncidentFormArgs> {
   @service declare incident: IncidentService;
@@ -49,20 +82,59 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
   @tracked currentStepIndex = 0;
   @tracked stepErrorMessage = '';
 
-  get classificationOptions(): string[] {
-    return [...CLASSIFICATIONS];
+  // Furthest step the user has validated: the step indicator only lets them
+  // jump back to a step they already passed, so clicking it can never skip a
+  // step's validation. In edit mode every field is pre-filled from an existing
+  // incident, so the whole wizard is navigable from the start — forcing a DPO
+  // to walk 8 steps again to fix one typo would be absurd.
+  @tracked furthestStepIndex =
+    this.args.mode === 'edit' ? INCIDENT_FORM_STEPS.length - 1 : 0;
+
+  // Stored value = the stable code, displayed value = its translation.
+  // `@cached` keeps the option objects identity-stable across re-renders, which
+  // power-select needs to match `@selected` against an element of `@options`.
+  @cached
+  get classificationOptions(): LabelledOption[] {
+    return INCIDENT_CLASSIFICATIONS.map((code) =>
+      labelledOption(code, optionLabel(code, classificationLabelKey, this.intl))
+    );
   }
 
-  get statusOptions(): string[] {
-    return [...STATUSES];
+  @cached
+  get statusOptions(): LabelledOption[] {
+    return INCIDENT_STATUSES.map((code) =>
+      labelledOption(code, optionLabel(code, statusLabelKey, this.intl))
+    );
   }
 
-  get environmentOptions(): string[] {
-    return [...ENVIRONMENTS];
+  @cached
+  get environmentOptions(): LabelledOption[] {
+    return INCIDENT_ENVIRONMENTS.map((code) =>
+      labelledOption(code, optionLabel(code, environmentLabelKey, this.intl))
+    );
   }
 
-  get severityOptions(): string[] {
-    return [...SEVERITIES];
+  @cached
+  get severityOptions(): LabelledOption[] {
+    return INCIDENT_SEVERITIES.map((code) =>
+      labelledOption(code, optionLabel(code, severityLabelKey, this.intl))
+    );
+  }
+
+  // Renders the label (not the code) inside each select's trigger.
+  classificationSelectedItem = selectedOptionComponent(
+    () => this.classificationOptions
+  );
+  statusSelectedItem = selectedOptionComponent(() => this.statusOptions);
+  environmentSelectedItem = selectedOptionComponent(
+    () => this.environmentOptions
+  );
+  severitySelectedItem = selectedOptionComponent(() => this.severityOptions);
+
+  // power-select emits the option object; only its code is persisted.
+  @action
+  setOptionField(field: string, selection: unknown) {
+    this.args.changeset.set(field, codeOf(selection));
   }
 
   get currentStep(): IncidentFormStep {
@@ -132,31 +204,11 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
     return Object.fromEntries(keys.map((key) => [key, cs.get(key)]));
   }
 
+  // Les conversions vivent dans `incident-payload.ts` : elles sont pures, et
+  // seules des fonctions pures peuvent être testées sans rendre les 8 étapes.
+  // Le POURQUOI de leur existence est documenté là-bas.
   private normalizePayload(data: ValidatedIncident): ValidatedIncident {
-    return {
-      ...data,
-      incidentEndAt: data.incidentEndAt || null,
-      resolvedAt: data.resolvedAt || null,
-      resolutionDurationMinutes: data.resolutionDurationMinutes ?? null,
-      technicalLeadId: data.technicalLeadId || null,
-      apdNotificationRequired: data.apdNotificationRequired ?? null,
-      severityOperational: data.severityOperational || null,
-      severityCompliance: data.severityCompliance || null,
-      severityOverall: data.severityOverall || null,
-      affectedPersonsCount: data.affectedPersonsCount ?? null,
-      affectedPatientsCount: data.affectedPatientsCount ?? null,
-      descriptionSections: data.descriptionSections?.length
-        ? data.descriptionSections
-        : undefined,
-      communicationPlan: data.communicationPlan?.length
-        ? data.communicationPlan
-        : undefined,
-      accessLogs: data.accessLogs?.length ? data.accessLogs : null,
-      contributingFactors: data.contributingFactors ?? [],
-      correctiveActions: data.correctiveActions ?? [],
-      preventiveMeasures: data.preventiveMeasures ?? [],
-      timelineEvents: data.timelineEvents ?? [],
-    };
+    return normalizeIncidentPayload(data);
   }
 
   get timelineEvents() {
@@ -221,11 +273,27 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
     );
   }
 
-  get stepItems(): { label: string; complete: boolean }[] {
+  get stepItems(): {
+    index: number;
+    label: string;
+    complete: boolean;
+    current: boolean;
+    reachable: boolean;
+  }[] {
     return this.stepLabels.map((label, index) => ({
+      index,
       label,
       complete: index <= this.currentStepIndex,
+      current: index === this.currentStepIndex,
+      reachable: index <= this.furthestStepIndex,
     }));
+  }
+
+  get stepProgress(): string {
+    return this.intl.t('incidents.form.stepProgress', {
+      current: this.currentStepIndex + 1,
+      total: INCIDENT_FORM_STEPS.length,
+    });
   }
 
   get showStepHeader(): boolean {
@@ -290,9 +358,45 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
       name: '',
       date: '',
     };
+    // `<input type="date">` remonte un Date via `valueAsDate` : sans
+    // normalisation la signature stockerait « Thu Aug 20 2026 00:00:00 GMT… ».
+    const normalized =
+      value instanceof Date
+        ? value.toISOString().slice(0, 10)
+        : String(value ?? '');
     this.args.changeset.set(which, {
       ...current,
-      [field]: String(value ?? ''),
+      [field]: normalized,
+    });
+  }
+
+  // Push one changeset error per failing field so each input shows its own
+  // inline message, exactly as TpkForm does on submit. Before this the step
+  // only got a single alert concatenating Zod's raw English messages
+  // ("Invalid input: expected string, received undefined · …") with no way to
+  // tell WHICH of the twelve fields on the step was at fault.
+  private applyStepIssues(issues: ZodIssue[]): void {
+    for (const { path, message } of issuesToStepFields(issues)) {
+      this.args.changeset.removeError(path);
+      this.args.changeset.addError({
+        key: path,
+        message,
+        value: undefined,
+        originalValue: '',
+      });
+    }
+  }
+
+  // Libellé humain d'une étape. `fieldLabel` ne convient pas ici : il résout
+  // `incidents.form.<step>`, clé qui n'existe pas — la bannière affichait donc
+  // le code brut (« impact ») au lieu de « Impact (§4) ».
+  private stepLabel(step: IncidentFormStep): string {
+    return this.intl.t(`incidents.form.steps.${step}`);
+  }
+
+  private describeInvalidFields(issues: ZodIssue[]): string {
+    return this.intl.t('incidents.form.errors.requiredFields', {
+      fields: invalidFieldLabels(issues, this.intl).join(', '),
     });
   }
 
@@ -301,7 +405,19 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
     this.stepErrorMessage = '';
     if (this.currentStepIndex > 0) {
       this.currentStepIndex -= 1;
+      scrollWizardToTop();
     }
+  }
+
+  // Jump straight to an already-validated step from the indicator.
+  @action
+  goToStep(index: number) {
+    if (index === this.currentStepIndex || index > this.furthestStepIndex) {
+      return;
+    }
+    this.stepErrorMessage = '';
+    this.currentStepIndex = index;
+    scrollWizardToTop();
   }
 
   @action
@@ -314,11 +430,17 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
         this.intl
       );
       if (!result.ok) {
-        this.stepErrorMessage = result.issues.map((i) => i.message).join(' · ');
+        this.applyStepIssues(result.issues);
+        this.stepErrorMessage = this.describeInvalidFields(result.issues);
         return;
       }
       if (this.currentStepIndex < INCIDENT_FORM_STEPS.length - 1) {
         this.currentStepIndex += 1;
+        this.furthestStepIndex = Math.max(
+          this.furthestStepIndex,
+          this.currentStepIndex
+        );
+        scrollWizardToTop();
       }
     } catch (error) {
       console.error('validateIncidentStep failed', error);
@@ -326,6 +448,42 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
         'incidents.form.errors.stepValidation'
       );
     }
+  }
+
+  // Runs on the submit button's click, BEFORE the form's own submit handler.
+  //
+  // TpkForm validates the whole schema and, when it fails, aborts the submit
+  // silently — on a wizard the offending field almost always belongs to a step
+  // that is not rendered, so the user clicks "Save incident" and nothing
+  // happens at all, with no message anywhere. We walk the steps ourselves and
+  // bring them back to the first one that actually blocks; TpkForm then fills
+  // in the inline field errors on that now-visible step.
+  @action
+  checkStepsBeforeSubmit() {
+    let failing;
+    try {
+      failing = firstInvalidStep(this.snapshotChangeset(), this.intl);
+    } catch (error) {
+      console.error('validateIncidentStep failed', error);
+      this.stepErrorMessage = this.intl.t(
+        'incidents.form.errors.stepValidation'
+      );
+      return;
+    }
+    if (!failing) {
+      this.stepErrorMessage = '';
+      return;
+    }
+    const jumped = failing.index !== this.currentStepIndex;
+    this.applyStepIssues(failing.issues);
+    this.stepErrorMessage = jumped
+      ? this.intl.t('incidents.form.errors.otherStepInvalid', {
+          step: this.stepLabel(failing.step),
+        })
+      : this.describeInvalidFields(failing.issues);
+    this.currentStepIndex = failing.index;
+    this.furthestStepIndex = Math.max(this.furthestStepIndex, failing.index);
+    scrollWizardToTop();
   }
 
   get isEditMode(): boolean {
@@ -349,7 +507,49 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
         : 'incidents.form.success',
       transitionOnSuccess: 'dashboard.incidents',
     });
+    this.revealServerFieldErrors(c);
   };
+
+  // Filet de sécurité pour les refus VENANT DU SERVEUR.
+  //
+  // `HandleSaveService` classe toute erreur JSON:API portant un pointer
+  // `/data/attributes/...` en erreur de CHAMP : elle est poussée dans le
+  // changeset et, volontairement, ne produit AUCUN flash. Sur un wizard le
+  // champ visé appartient presque toujours à une étape non rendue — un 400
+  // `MISSING_IMPACT_FIELDS` pointe `severityOverall` (étape 4) alors qu'on
+  // soumet depuis l'étape 8 — donc l'erreur existait sans être affichable
+  // nulle part : « enregistrer » ne faisait visiblement rien, et l'incident
+  // n'était pas créé.
+  //
+  // On ramène l'utilisateur sur la première étape concernée, où TpkForm rend
+  // déjà l'erreur inline du champ. Aligner la validation front sur les règles
+  // métier du backend reste la vraie défense (voir `refineArt9Impact`) ; ceci
+  // couvre toute règle serveur que le front ne reproduit pas encore.
+  private revealServerFieldErrors(c: ImmerChangeset<ValidatedIncident>): void {
+    const indices: number[] = [];
+    for (const changesetError of c.errors) {
+      // Tolère les deux séparateurs : le wizard pousse des clés pointées
+      // (`correctiveActions.0.title`) et une erreur serveur peut arriver avec
+      // un reste de pointer JSON:API si un module contourne HandleSaveService.
+      const root = String(changesetError.key).split(/[./]/)[0] ?? '';
+      const step = stepForField(root);
+      if (step) {
+        indices.push(stepIndex(step));
+      }
+    }
+    if (!indices.length) {
+      return;
+    }
+    const target = Math.min(...indices);
+    const step = INCIDENT_FORM_STEPS[target];
+    this.stepErrorMessage = this.intl.t(
+      'incidents.form.errors.serverFieldError',
+      { step: step ? this.stepLabel(step) : '' }
+    );
+    this.currentStepIndex = target;
+    this.furthestStepIndex = Math.max(this.furthestStepIndex, target);
+    scrollWizardToTop();
+  }
 
   <template>
     <TpkForm
@@ -359,20 +559,52 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
       data-test-incident-form
       as |F|
     >
-      <ul class="steps steps-horizontal w-full mb-6 overflow-x-auto">
-        {{#each this.stepItems as |step index|}}
+      {{! `min-w-28` per step + horizontal scroll: DaisyUI's .step is 4rem
+      wide, so the longer labels ("Communication & conclusion (§8–§9)") used to
+      overlap their neighbour and render as unreadable overlapping text. }}
+      <ol class="steps steps-horizontal w-full mb-2 overflow-x-auto">
+        {{#each this.stepItems as |step|}}
           <li
-            class="step {{if step.complete 'step-primary'}}"
-            data-test-incident-step={{index}}
+            class="step min-w-28 {{if step.complete 'step-primary'}}"
+            data-test-incident-step={{step.index}}
+            aria-current={{if step.current "step"}}
           >
-            {{step.label}}
+            {{#if step.reachable}}
+              {{! Only validated steps are clickable, so navigating back and
+              forth through the indicator can never skip a step's gate. }}
+              <button
+                type="button"
+                class="btn btn-ghost btn-xs h-auto min-h-0 whitespace-normal px-1 py-1 font-normal
+                  {{if step.current 'font-semibold'}}"
+                {{on "click" (fn this.goToStep step.index)}}
+                data-test-incident-step-link={{step.index}}
+              >
+                {{step.label}}
+              </button>
+            {{else}}
+              <span class="whitespace-normal px-1 text-base-content/60">
+                {{step.label}}
+              </span>
+            {{/if}}
           </li>
         {{/each}}
-      </ul>
+      </ol>
+      <p
+        class="mb-4 text-sm text-base-content/70"
+        aria-live="polite"
+        data-test-incident-step-progress
+      >
+        {{this.stepProgress}}
+      </p>
 
       {{#if this.stepErrorMessage}}
+        {{! Explicit utilities rather than DaisyUI's `alert alert-error`: that
+        component class renders with no background and no color here (the app's
+        Tailwind build does not emit it), so the banner was an invisible blank
+        block above the step. }}
         <div
-          class="alert alert-error mb-4 text-sm"
+          class="mb-4 rounded border border-error/40 bg-error/10 px-3 py-2 text-sm text-error"
+          role="alert"
           data-test-incident-step-error
         >
           {{this.stepErrorMessage}}
@@ -430,6 +662,8 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
             @label={{t "incidents.form.classification"}}
             @validationField="classification"
             @options={{this.classificationOptions}}
+            @onChange={{fn this.setOptionField "classification"}}
+            @selectedItemComponent={{this.classificationSelectedItem}}
             @placeholder={{t "incidents.form.placeholders.select"}}
             class="col-span-12 md:col-span-4"
           />
@@ -437,6 +671,8 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
             @label={{t "incidents.form.status"}}
             @validationField="status"
             @options={{this.statusOptions}}
+            @onChange={{fn this.setOptionField "status"}}
+            @selectedItemComponent={{this.statusSelectedItem}}
             @placeholder={{t "incidents.form.placeholders.select"}}
             class="col-span-12 md:col-span-4"
           />
@@ -444,6 +680,8 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
             @label={{t "incidents.form.environment"}}
             @validationField="environment"
             @options={{this.environmentOptions}}
+            @onChange={{fn this.setOptionField "environment"}}
+            @selectedItemComponent={{this.environmentSelectedItem}}
             @placeholder={{t "incidents.form.placeholders.select"}}
             class="col-span-12 md:col-span-6"
           />
@@ -573,6 +811,8 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
             @label={{t "incidents.form.severityOperational"}}
             @validationField="severityOperational"
             @options={{this.severityOptions}}
+            @onChange={{fn this.setOptionField "severityOperational"}}
+            @selectedItemComponent={{this.severitySelectedItem}}
             @placeholder={{t "incidents.form.placeholders.select"}}
             class="col-span-12 md:col-span-4"
           />
@@ -580,6 +820,8 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
             @label={{t "incidents.form.severityCompliance"}}
             @validationField="severityCompliance"
             @options={{this.severityOptions}}
+            @onChange={{fn this.setOptionField "severityCompliance"}}
+            @selectedItemComponent={{this.severitySelectedItem}}
             @placeholder={{t "incidents.form.placeholders.select"}}
             class="col-span-12 md:col-span-4"
           />
@@ -587,6 +829,8 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
             @label={{t "incidents.form.severityOverall"}}
             @validationField="severityOverall"
             @options={{this.severityOptions}}
+            @onChange={{fn this.setOptionField "severityOverall"}}
+            @selectedItemComponent={{this.severitySelectedItem}}
             @placeholder={{t "incidents.form.placeholders.select"}}
             class="col-span-12 md:col-span-4"
           />
@@ -681,34 +925,43 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
               @onChange={{fn this.setArrayField "accessLogs"}}
             />
           </div>
+          {{! RowInput, pas <TpkInput /> auto-fermant : TpkInput est contextuel
+          et ne rend rien sans bloc — ces quatre champs de signature étaient
+          absents du DOM (voir incident-row-fields.gts). }}
           <div class="col-span-12 md:col-span-6">
-            <TpkInput
+            <RowInput
               @label={{t "incidents.form.issuerSignatureName"}}
               @value={{this.issuerSignature.name}}
               @onChange={{fn this.updateSignature "issuerSignature" "name"}}
+              data-test-issuer-signature-name
             />
           </div>
           <div class="col-span-12 md:col-span-6">
-            <TpkInput
+            <RowInput
               @label={{t "incidents.form.issuerSignatureDate"}}
               @value={{this.issuerSignature.date}}
+              @type="date"
               @placeholder={{t "incidents.form.placeholders.signatureDate"}}
               @onChange={{fn this.updateSignature "issuerSignature" "date"}}
+              data-test-issuer-signature-date
             />
           </div>
           <div class="col-span-12 md:col-span-6">
-            <TpkInput
+            <RowInput
               @label={{t "incidents.form.recipientSignatureName"}}
               @value={{this.recipientSignature.name}}
               @onChange={{fn this.updateSignature "recipientSignature" "name"}}
+              data-test-recipient-signature-name
             />
           </div>
           <div class="col-span-12 md:col-span-6">
-            <TpkInput
+            <RowInput
               @label={{t "incidents.form.recipientSignatureDate"}}
               @value={{this.recipientSignature.date}}
+              @type="date"
               @placeholder={{t "incidents.form.placeholders.signatureDate"}}
               @onChange={{fn this.updateSignature "recipientSignature" "date"}}
+              data-test-recipient-signature-date
             />
           </div>
         {{/if}}
@@ -736,9 +989,14 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
               </button>
             {{/unless}}
             {{#if this.isLastStep}}
+              {{! The click handler pre-flights every step and jumps to the
+              first invalid one; TpkForm's own submit handler then aborts and
+              fills in that step's inline field errors. Without it, an invalid
+              field on an earlier step makes this button do nothing visible. }}
               <button
                 type="submit"
                 class="btn btn-primary"
+                {{on "click" this.checkStepsBeforeSubmit}}
                 data-test-incident-submit
               >
                 {{t "incidents.form.submit"}}
@@ -747,8 +1005,9 @@ export default class IncidentForm extends Component<IncidentFormArgs> {
           </div>
           <LinkTo
             @route="dashboard.incidents"
-            class="text-sm text-primary underline"
+            class="inline-flex items-center gap-1 text-sm text-primary underline"
           >
+            <ArrowLeftIcon class="size-4" />
             {{t "incidents.form.cancel"}}
           </LinkTo>
         </div>

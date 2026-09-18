@@ -45,6 +45,7 @@ export function incidentToDraft(incident: Incident): DraftIncident {
     title: string;
     detail?: string;
     body?: string;
+    items?: string[];
   }[];
 
   return {
@@ -86,9 +87,14 @@ export function incidentToDraft(incident: Incident): DraftIncident {
     timelineEvents:
       (incident.timelineEvents as DraftIncident['timelineEvents']) ?? [],
     accessLogs: (incident.accessLogs as DraftIncident['accessLogs']) ?? [],
+    // `items` est recopié bien qu'aucun écran ne l'édite : un bloc à puces créé
+    // par API ou par seed doit survivre à un aller-retour d'édition. Sans lui,
+    // éditer l'incident écrivait une nouvelle version amputée de ses listes —
+    // définitivement, la table étant append-only.
     descriptionSections: sections.map((s) => ({
       title: s.title,
       detail: s.detail ?? s.body ?? '',
+      ...(s.items === undefined ? {} : { items: s.items }),
     })),
     issuerSignature: signature(incident.issuerSignature),
     recipientSignature: signature(incident.recipientSignature),

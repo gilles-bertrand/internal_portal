@@ -52,4 +52,77 @@ describe('createIncidentValidationSchema', () => {
       false
     );
   });
+
+  // @lat: [[frontend/incident-registry-contract-gaps#Validation art. 9 alignée sur le backend]]
+  //
+  // Le backend (`validateIncidentBusinessRules`) exige, quand
+  // `specialCategoryData` est vrai : `severityOverall` ET
+  // `severityCompliance`, PLUS au moins un compteur de personnes concernées.
+  // Le front ne contrôlait rien de tout cela : le wizard laissait passer les
+  // huit étapes, l'API répondait 400 `MISSING_IMPACT_FIELDS` sur un champ de
+  // l'étape 4 et, ce champ n'étant pas rendu depuis l'étape 8, l'utilisateur
+  // ne voyait RIEN et l'incident n'était pas créé.
+  describe('règles art. 9 (alignées sur le backend)', () => {
+    const ART9 = {
+      ...BASE_VALID,
+      specialCategoryData: true,
+      severityOverall: 'high' as const,
+      severityCompliance: 'high' as const,
+      affectedPersonsCount: 1240,
+    };
+
+    function issuePaths(input: unknown): string[] {
+      const result = schema.safeParse(input);
+      return result.success
+        ? []
+        : result.error.issues.map((i) => i.path.join('.'));
+    }
+
+    test('accepte un incident art. 9 complet', () => {
+      expect(schema.safeParse(ART9).success).toBe(true);
+    });
+
+    test('exige severityOverall', () => {
+      expect(issuePaths({ ...ART9, severityOverall: null })).toContain(
+        'severityOverall'
+      );
+    });
+
+    test('exige severityCompliance', () => {
+      expect(issuePaths({ ...ART9, severityCompliance: null })).toContain(
+        'severityCompliance'
+      );
+    });
+
+    test('exige au moins un compteur de personnes concernées', () => {
+      expect(
+        issuePaths({
+          ...ART9,
+          affectedPersonsCount: null,
+          affectedPatientsCount: null,
+        })
+      ).toContain('affectedPersonsCount');
+    });
+
+    test('accepte un compteur à 0, comme le backend', () => {
+      expect(
+        schema.safeParse({
+          ...ART9,
+          affectedPersonsCount: null,
+          affectedPatientsCount: 0,
+        }).success
+      ).toBe(true);
+    });
+
+    test("n'applique aucune de ces règles hors art. 9", () => {
+      expect(
+        schema.safeParse({
+          ...BASE_VALID,
+          specialCategoryData: false,
+          severityOverall: null,
+          severityCompliance: null,
+        }).success
+      ).toBe(true);
+    });
+  });
 });

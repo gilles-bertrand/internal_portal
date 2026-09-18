@@ -46,7 +46,9 @@ export default class IncidentsCreateRouteTemplate extends Component<IncidentsCre
   }
 
   <template>
-    <h1 class="text-3xl font-semibold mb-6">{{t "incidents.form.title"}}</h1>
+    <h1 class="mb-4 text-2xl font-semibold" data-test-incident-form-title>{{t
+        "incidents.pages.create.title"
+      }}</h1>
     <IncidentForm
       @changeset={{this.changeset}}
       @validationSchema={{this.validationSchema}}

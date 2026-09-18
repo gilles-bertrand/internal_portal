@@ -28,6 +28,22 @@ function isFieldError(e: JsonApiError): boolean {
   );
 }
 
+// Clé de changeset correspondant à un pointer JSON:API de champ.
+//
+// Le pointer est segmenté par des slashes (`/data/attributes/correctiveActions/0/completedAt`)
+// alors que les changesets — et donc les inputs de TpkForm — indexent par
+// chemin POINTÉ (`correctiveActions.0.completedAt`). La clé était construite en
+// retirant seulement le préfixe, donc elle gardait ses slashes : elle ne
+// correspondait à aucun champ, et l'erreur renvoyée par le serveur restait
+// invisible à l'écran, sur tous les formulaires du produit.
+export function pointerToChangesetKey(pointer: string): string {
+  return pointer
+    .replace(FIELD_POINTER_RE, '')
+    .split('/')
+    .filter(Boolean)
+    .join('.');
+}
+
 // @lat: [[frontend/shared-front]]
 export default class HandleSaveService extends Service {
   @service declare flashMessages: FlashMessageService;
@@ -120,9 +136,7 @@ export default class HandleSaveService extends Service {
     for (const e of fieldErrors) {
       changeset.addError({
         message: e.detail ?? genericJsonApiErrorMessage(this.intl),
-        key: e
-          .source!.pointer!.replace(FIELD_POINTER_RE, '')
-          .replace(/^\/+/, ''),
+        key: pointerToChangesetKey(e.source!.pointer!),
         value: undefined,
         originalValue: undefined,
       });

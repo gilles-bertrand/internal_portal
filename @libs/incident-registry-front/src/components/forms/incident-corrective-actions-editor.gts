@@ -2,7 +2,7 @@ import Component from '@glimmer/component';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import TpkButton from '@triptyk/ember-input/components/prefabs/tpk-prefab-button';
-import TpkInput from '@triptyk/ember-input/components/tpk-input';
+import { RowInput } from '#src/components/forms/incident-row-fields.gts';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { t } from 'ember-intl';
@@ -29,12 +29,20 @@ export default class IncidentCorrectiveActionsEditor extends Component<Args> {
     completedAt: '',
   };
 
+  @tracked hint = '';
+
+  // `completedAt` arrive d'un `<input type="date">` (donc un Date via
+  // `valueAsDate`) et doit repartir en `yyyy-MM-dd`.
   @action
   updateField(
     field: keyof CorrectiveActionDraft,
     value: string | number | Date | null
   ) {
-    const strValue = String(value ?? '');
+    this.hint = '';
+    const strValue =
+      value instanceof Date
+        ? value.toISOString().slice(0, 10)
+        : String(value ?? '');
     this.draft = {
       ...this.draft,
       [field]: field === 'order' ? Number(strValue) || 1 : strValue,
@@ -43,7 +51,10 @@ export default class IncidentCorrectiveActionsEditor extends Component<Args> {
 
   @action
   addItem() {
-    if (!this.draft.title.trim() || !this.draft.detail.trim()) return;
+    if (!this.draft.title.trim() || !this.draft.detail.trim()) {
+      this.hint = 'incomplete';
+      return;
+    }
     const nextOrder = (this.args.items?.length ?? 0) + 1;
     this.args.onChange([
       ...(this.args.items ?? []),
@@ -62,6 +73,7 @@ export default class IncidentCorrectiveActionsEditor extends Component<Args> {
       detail: '',
       completedAt: '',
     };
+    this.hint = '';
   }
 
   @action
@@ -72,51 +84,76 @@ export default class IncidentCorrectiveActionsEditor extends Component<Args> {
   }
 
   <template>
-    <fieldset class="fieldset border border-base-300 p-4">
+    <fieldset
+      class="fieldset border border-base-300 p-4"
+      data-test-incident-corrective-actions
+    >
       <legend class="fieldset-legend">{{t
           "incidents.form.sections.correctiveActions"
         }}</legend>
       <div class="grid grid-cols-12 gap-2 mb-3">
         <div class="col-span-12 md:col-span-2">
-          <TpkInput
-            @label=""
+          <RowInput
+            @label={{t "incidents.form.rowLabels.actionPhase"}}
             @value={{this.draft.phase}}
             @placeholder={{t "incidents.form.placeholders.actionPhase"}}
             @onChange={{fn this.updateField "phase"}}
+            data-test-action-phase
           />
         </div>
         <div class="col-span-12 md:col-span-1">
-          <TpkInput
-            @label=""
+          <RowInput
+            @label={{t "incidents.form.rowLabels.actionOrder"}}
             @value={{this.draft.order}}
             @type="number"
             @placeholder="#"
             @onChange={{fn this.updateField "order"}}
+            data-test-action-order
           />
         </div>
         <div class="col-span-12 md:col-span-3">
-          <TpkInput
-            @label=""
+          <RowInput
+            @label={{t "incidents.form.rowLabels.actionTitle"}}
             @value={{this.draft.title}}
             @placeholder={{t "incidents.form.placeholders.actionTitle"}}
             @onChange={{fn this.updateField "title"}}
+            data-test-action-title
           />
         </div>
         <div class="col-span-12 md:col-span-4">
-          <TpkInput
-            @label=""
+          <RowInput
+            @label={{t "incidents.form.rowLabels.actionDetail"}}
             @value={{this.draft.detail}}
             @placeholder={{t "incidents.form.placeholders.actionDetail"}}
             @onChange={{fn this.updateField "detail"}}
+            data-test-action-detail
           />
         </div>
-        <div class="col-span-12 md:col-span-2 flex items-end">
+        <div class="col-span-12 md:col-span-2">
+          {{! §7 du rapport et art. 33(5) RGPD : une mesure correctrice se
+          documente avec sa date de réalisation. Le champ existait dans le
+          brouillon et dans le modèle backend mais n'avait aucun input. }}
+          <RowInput
+            @label={{t "incidents.form.rowLabels.actionCompletedAt"}}
+            @value={{this.draft.completedAt}}
+            @type="date"
+            @placeholder={{t "incidents.form.placeholders.actionCompletedAt"}}
+            @onChange={{fn this.updateField "completedAt"}}
+            data-test-action-completed-at
+          />
+        </div>
+        <div class="col-span-12 flex justify-end">
           <TpkButton
             @label={{t "incidents.form.actions.addLine"}}
             @onClick={{this.addItem}}
           />
         </div>
       </div>
+      {{#if this.hint}}
+        <p class="mb-2 text-sm text-error" role="alert" data-test-row-hint>
+          {{t "incidents.form.errors.incompleteRow"}}
+        </p>
+      {{/if}}
       {{#if @items.length}}
         <ul class="space-y-2 text-sm">
           {{#each @items as |item index|}}
@@ -128,6 +165,7 @@ export default class IncidentCorrectiveActionsEditor extends Component<Args> {
                 #{{item.order}}
                 {{item.title}}:
                 {{item.detail}}
+                {{#if item.completedAt}}({{item.completedAt}}){{/if}}
               </span>
               <button
                 type="button"

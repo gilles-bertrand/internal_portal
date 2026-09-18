@@ -18,16 +18,22 @@ export const COLORS = {
 };
 
 // Colonnes de la liste récapitulative (page 1) : une ligne par enregistrement.
+// Largeurs calibrées sur la mesure réelle du contenu le plus large attendu (une
+// date `jj/mm/aaaa hh:mm` fait 58,4 pt en Helvetica 7,5 — l'ancienne colonne de
+// 66 pt, padding déduit, la coupait sur deux lignes).
 export const SUMMARY_COLUMNS = [
   { key: "seq", label: "#", width: 24 },
-  { key: "accessedAt", label: "Date", width: 66 },
-  { key: "dataSubjectRef", label: "Personne", width: 74 },
-  { key: "accessType", label: "Type", width: 56 },
-  { key: "purpose", label: "Finalité", width: 62 },
+  { key: "accessedAt", label: "Date", width: 76 },
+  { key: "dataSubjectRef", label: "Personne", width: 92 },
+  { key: "accessType", label: "Type", width: 60 },
+  { key: "purpose", label: "Finalité", width: 58 },
   { key: "isSpecialCategory", label: "Art.9", width: 30 },
   { key: "sourceSystem", label: "Source", width: 72 },
-  { key: "hash", label: "Hash", width: CONTENT_WIDTH - 384 },
+  { key: "hash", label: "Hash", width: CONTENT_WIDTH - 412 },
 ] as const;
+
+/** Padding horizontal interne d'une cellule du récapitulatif. */
+export const SUMMARY_CELL_PADDING = 8;
 
 export function formatDate(iso: string): string {
   const date = new Date(iso);
@@ -38,11 +44,4 @@ export function formatDate(iso: string): string {
     dateStyle: "short",
     timeStyle: "short",
   });
-}
-
-export function truncate(value: string, max: number): string {
-  if (value.length <= max) {
-    return value;
-  }
-  return `${value.slice(0, max - 1)}…`;
 }

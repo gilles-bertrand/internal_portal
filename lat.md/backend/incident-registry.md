@@ -44,6 +44,18 @@ Les données réelles de ce type de champ (contexte légal, description d'incide
 
 Le bandeau "CONFIDENTIEL" apposé sur chaque page est codé en dur, indépendamment de la valeur réelle du champ `classification` — pas conditionné par `classification === 'CONFIDENTIEL'`, état constaté plutôt que garanti stable. Deux formats d'export existent : registre complet (json/csv/pdf) et export unitaire détaillé ([[@libs/incident-registry-backend/src/routes/export-one.route.ts#ExportOneRoute]]) ; le manifeste signé HMAC réutilise le mécanisme générique déjà documenté pour access-registry ([[access-registry#Export signé multi-format (JSON/CSV/PDF)]]).
 
+## Export PDF : lignes de table mesurées
+
+Aucune hauteur de ligne n'est écrite en dur dans les deux gabarits PDF du module : chaque cellule est **mesurée** avant d'être posée, parce que `lineBreak: false` ne protège pas du repli de texte dans pdfkit.
+
+Le piège et le remède sont communs aux deux registres, documentés une fois dans [[access-registry#Export PDF : mise en page mesurée]] : `lineBreak: false` empêche seulement pdfkit de déduire la largeur de la marge, mais dès qu'une `width` explicite est passée à `text()`, le line-wrapper s'active et replie le texte. Les outils partagés vivent dans `@libs/backend-shared` ([[@libs/backend-shared/src/pdf/text.ts#fitText]], [[@libs/backend-shared/src/pdf/text.ts#drawSingleLine]], [[@libs/backend-shared/src/pdf/text.ts#measureHeight]]).
+
+Corrections appliquées ici : [[@libs/incident-registry-backend/src/utils/export-incident-pdf.ts#drawKeyValueTable]] et [[@libs/incident-registry-backend/src/utils/export-incident-pdf.ts#drawDataTable]] calculent la hauteur de chaque ligne sur son contenu (la ligne d'une table de données prend la hauteur de sa cellule la plus haute) au lieu des 18 / 20 pt figés qui faisaient écrire un email ou un libellé de fichier par-dessus la ligne suivante — visible en production sur l'annexe « Détail des accès » du rapport OCM. [[@libs/incident-registry-backend/src/utils/export-incident-pdf.ts#drawSignatureBlock]] mesure de même la hauteur de son cadre, et passe la `width` **dès le premier** `text()` de chaque champ : pdfkit crée son line-wrapper à cet appel et le réutilise pour la suite `continued`, si bien qu'une fonction longue débordait de sa colonne. Côté journal ([[@libs/incident-registry-backend/src/utils/export-registry-pdf.ts#buildRegistryPdf]]), les cellules sont tronquées à la mesure et les largeurs de colonnes recalibrées (`Statut` tronquait « Résolu (Phase 1) », `Rapport` était limite pour une date `jj/mm/aaaa hh:mm`) ; une valeur absente rend un tiret au lieu de faire planter l'export sur `value.length`.
+
+⚠️ Pages fantômes : les deux gabarits posaient leur pied de page **sous la marge basse** avec une `width` (nécessaire à l'alignement), ce que le line-wrapper voyait comme un dépassement de `maxY` — il ajoutait une page par pied posé. Le registre rendait 2 pages pour 2 incidents et le rapport unitaire 6 pages pour 3, chaque page réelle étant suivie d'une page vide portant son numéro. `drawPageFooter` / `drawReportFooters` neutralisent `doc.page.margins.bottom` le temps du dessin. Régressions couvertes par [[@libs/incident-registry-backend/tests/unit/export-pdf.test.ts]] (comptage des `/Type /Page` du buffer).
+
+La mention « CONFIDENTIEL » de la page 1 se pose sur le bandeau de titre bleu foncé, où le rouge était illisible : elle y passe en blanc, et reste rouge sur les pages suivantes.
+
 ## Édition = nouvelle version (append)
 
 Éditer un incident n'écrase jamais la ligne existante : on **ajoute une nouvelle version chaînée** (même `reference`, `revision + 1`) ; l'original reste immuable.

@@ -9,7 +9,9 @@ export interface ChainLink {
 }
 
 export function computeRecordHash(prevHash: string, canonical: string): string {
-  return createHash("sha256").update(prevHash + "||" + canonical).digest("hex");
+  return createHash("sha256")
+    .update(prevHash + "||" + canonical)
+    .digest("hex");
 }
 
 export function verifyChain(links: ChainLink[]): { brokenAt: number; reason: string } | null {

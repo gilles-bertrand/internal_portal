@@ -9,6 +9,7 @@ const sampleIncident: IncidentEntityType = {
   id: "inc-1",
   seq: 1,
   reference: "INC-2026-0001-IPBW",
+  canonicalVersion: 2,
   revision: 1,
   supersededById: null,
   updatedBy: null,

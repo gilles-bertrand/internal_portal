@@ -1,4 +1,5 @@
-import { canonicalSerialize, verifyChain } from "@libs/backend-shared";
+import { verifyChain } from "@libs/backend-shared";
+import { canonicalVersionOf, incidentCanonicalString } from "#src/utils/incident-canonical.js";
 import type { IncidentEntityType } from "#src/entities/incident.entity.js";
 
 export interface IntegrityCheckResult {
@@ -8,64 +9,24 @@ export interface IntegrityCheckResult {
   reason?: string;
 }
 
-function incidentCanonicalFields(record: IncidentEntityType): Record<string, unknown> {
-  return {
-    id: record.id,
-    seq: record.seq,
-    reference: record.reference,
-    reportDate: record.reportDate,
-    version: record.version,
-    classification: record.classification,
-    status: record.status,
-    applicationName: record.applicationName,
-    applicationDetail: record.applicationDetail,
-    environment: record.environment,
-    clientCode: record.clientCode,
-    clientName: record.clientName,
-    reportedBy: record.reportedBy,
-    encodedBy: record.encodedBy,
-    encodedAt: record.encodedAt,
-    recipientName: record.recipientName,
-    recipientOrg: record.recipientOrg,
-    legalContext: record.legalContext,
-    serviceName: record.serviceName,
-    deployedVersion: record.deployedVersion,
-    incidentStartAt: record.incidentStartAt,
-    incidentEndAt: record.incidentEndAt,
-    detectedAt: record.detectedAt,
-    resolvedAt: record.resolvedAt,
-    resolutionDurationMinutes: record.resolutionDurationMinutes,
-    technicalLeadId: record.technicalLeadId,
-    description: record.description,
-    descriptionSections: record.descriptionSections,
-    personalDataImpacted: record.personalDataImpacted,
-    specialCategoryData: record.specialCategoryData,
-    apdNotificationRequired: record.apdNotificationRequired,
-    impactSummary: record.impactSummary,
-    impactDetails: record.impactDetails,
-    severityOperational: record.severityOperational,
-    severityCompliance: record.severityCompliance,
-    severityOverall: record.severityOverall,
-    affectedPersonsCount: record.affectedPersonsCount,
-    affectedPatientsCount: record.affectedPatientsCount,
-    immediateCause: record.immediateCause,
-    contributingFactors: record.contributingFactors,
-    correctiveActions: record.correctiveActions,
-    preventiveMeasures: record.preventiveMeasures,
-    communicationPlan: record.communicationPlan,
-    conclusion: record.conclusion,
-    timelineEvents: record.timelineEvents,
-    accessLogs: record.accessLogs,
-    issuerSignature: record.issuerSignature,
-    recipientSignature: record.recipientSignature,
-  };
-}
-
+/**
+ * Rejoue la chaîne d'incidents. Chaque ligne est vérifiée avec le jeu de champs
+ * canoniques EN VIGUEUR AU MOMENT DE SON ÉCRITURE, lu sur la ligne elle-même :
+ * une chaîne mixte (lignes v1 antérieures au versionnage + lignes v2) se
+ * vérifie donc sans re-hachage, ce que les triggers append-only interdisent de
+ * toute façon.
+ *
+ * `records` DOIT être la chaîne complète, triée par `seq` croissant : un
+ * sous-ensemble filtré n'est pas une chaîne (le premier maillon ne référencerait
+ * pas GENESIS_HASH). Voir lat.md/backend/hash-chain-integrity.md.
+ *
+ * @lat: [[backend/hash-chain-integrity#Jeu de champs canoniques versionné]]
+ */
 export function verifyIncidentChain(records: IncidentEntityType[]): IntegrityCheckResult {
   const links = records.map((record) => ({
     hash: record.hash,
     prevHash: record.prevHash,
-    canonical: canonicalSerialize(incidentCanonicalFields(record)),
+    canonical: incidentCanonicalString(record, canonicalVersionOf(record)),
   }));
 
   const broken = verifyChain(links);

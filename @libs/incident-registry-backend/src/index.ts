@@ -13,6 +13,8 @@ export * from "#src/routes/export-one.route.js";
 export * from "#src/serializers/incident.serializer.js";
 export * from "#src/utils/export.service.js";
 export * from "#src/utils/append.service.js";
+export * from "#src/utils/incident-canonical.js";
+export * from "#src/utils/integrity.js";
 export * from "#src/utils/audit-logger.type.js";
 export * from "#src/init.js";
 export * from "#src/context.js";

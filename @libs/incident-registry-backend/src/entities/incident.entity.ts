@@ -10,7 +10,17 @@ export const IncidentEntity = defineEntity({
     // partagent (édition = nouvelle version append). L'unicité de la chaîne
     // reste portée par `seq`.
     reference: p.string(),
-    // Lifecycle (NON canonique — exclu de incidentCanonicalFields, n'affecte pas le hash).
+    // Version du jeu de champs canoniques sous lequel cette ligne a été hachée.
+    // CONTENU, pas lifecycle : elle ne change jamais après l'écriture, elle est
+    // dans le jeu canonique depuis la v2, et elle est délibérément ABSENTE du
+    // tableau `lifecycle` de `forbid_incident_content_mutation()` pour que
+    // Postgres refuse tout UPDATE dessus.
+    // Défaut 1 : les lignes écrites avant le versionnage se vérifient en v1.
+    // @lat: [[backend/hash-chain-integrity#Jeu de champs canoniques versionné]]
+    canonicalVersion: p.integer().default(1),
+    // Lifecycle : hors de TOUT jeu canonique (voir NON_CANONICAL_INCIDENT_FIELDS),
+    // car ces colonnes changent légitimement après l'écriture. Ce sont exactement
+    // les 6 colonnes que le trigger `incident_no_mutation` autorise à muter.
     revision: p.integer().default(1),
     supersededById: p.string().nullable(),
     updatedBy: p.string().nullable(),

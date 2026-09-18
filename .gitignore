@@ -19,3 +19,8 @@ test-results
 lat.md/.cache/vectors.db
 lat.md/.cache/
 .agentsroom/fork-context-*.txt
+
+# Worktrees d'agents : checkouts locaux et jetables, jamais versionnés.
+# Un worktree suivi devient un gitlink (mode 160000) pointant une branche que
+# personne d'autre n'a, et qui bouge à chaque commit de l'agent.
+.worktrees/

@@ -39,10 +39,13 @@ export:
 pages:
   list:
     title: Incident registry
+  create:
+    title: New incident report
   edit:
     title: Edit incident
+  show:
+    title: Incident detail
 form:
-  title: New incident report
   updateSuccess: New incident version saved
   steps:
     header: Header (§1–§2)
@@ -100,6 +103,7 @@ form:
   contributingFactors: Contributing factors
   preventiveMeasures: Preventive measures
   conclusion: Conclusion (§9)
+  communicationPlan: Communication plan
   issuerSignatureName: Issuer signature
   issuerSignatureDate: Issuer signature date
   recipientSignatureName: Recipient signature
@@ -107,8 +111,38 @@ form:
   submit: Save incident
   cancel: Back to registry
   success: Incident saved successfully
+  validation:
+    required: '{field} is required.'
+    invalidDate: '{field} must be a valid date.'
+    art9Impact: 'Article 9 data is impacted: an impact summary is required.'
+    art9SeverityOverall: 'Overall severity is required when article 9 data is impacted.'
+    art9SeverityCompliance: 'Compliance severity is required when article 9 data is impacted.'
+    art9AffectedCount: 'Article 9 data is impacted: fill in at least one affected count.'
+    resolvedBeforeDetected: 'The resolution date cannot precede the detection date.'
+    endBeforeStart: 'The incident end date cannot precede its start date.'
   errors:
+    serverFieldError: 'The server rejected the report because of a field on step "{step}". You have been taken there.'
+    incompleteRow: 'Fill in every required cell of the line before adding it.'
     stepValidation: Step validation failed. Please try again.
+    requiredFields: 'Please complete these fields before continuing: {fields}'
+    otherStepInvalid: 'Required fields are missing on step "{step}". You have been taken there.'
+  stepProgress: 'Step {current} of {total}'
+  rowLabels:
+    sectionTitle: Block title
+    sectionDetail: Block content
+    timelineDate: Date
+    timelineTime: Time
+    timelineEvent: Event
+    actionPhase: Phase
+    actionOrder: Order
+    actionTitle: Title
+    actionDetail: Detail
+    actionCompletedAt: Completed at
+    logDate: Date
+    logUser: User
+    logEmail: Email
+    logFiles: Files
+    logCount: Count
   placeholders:
     select: Select…
     clientCode: 'e.g. IPBW'
@@ -136,15 +170,62 @@ form:
     actionPhase: 'Phase (optional)'
     actionTitle: 'Action title'
     actionDetail: 'Action detail'
+    actionCompletedAt: 'e.g. 2026-02-20'
     logDate: 'Date'
     logUser: 'User'
     logEmail: 'Email'
     logFiles: 'Files'
+    logCount: '#'
     signatureDate: 'e.g. 2026-02-20'
     affectedPersonsCount: 'e.g. 50'
     affectedPatientsCount: 'e.g. 12'
 detail:
+  empty: Not provided
+  subtitle: 'Reported on {date}'
+  readOnly: Read only
+  sequenceBadge: 'No. {seq}'
+  revisionBadge: 'Revision {revision}'
+  deletedBadge: Deleted
+  back: Back to registry
+  sections:
+    identification: Identification
+    context: Context & dates
+    qualification: GDPR qualification
+    impact: Impact
+    description: Description
+    measures: Causes & measures
+    closing: Communication & conclusion
+    signatures: Signatures
+    traceability: Traceability
   legal: Legal context
   description: Description
   impact: Impact
   conclusion: Conclusion
+  encodedBy: Encoded by
+  encodedAt: Encoded at
+  updatedBy: Updated by
+  updatedAt: Updated at
+  seq: Sequence number
+  integrity:
+    hash: Integrity hash
+    prevHash: Previous hash
+    genesis: First record in the chain
+options:
+  status:
+    open: Open
+    in_progress: In progress
+    resolved: Resolved
+    closed: Closed
+  classification:
+    CONFIDENTIEL: Confidential
+    INTERNE: Internal
+    PUBLIC: Public
+  environment:
+    production: Production
+    staging: Staging
+    development: Development
+  severity:
+    low: Low
+    medium: Medium
+    high: High
+    critical: Critical

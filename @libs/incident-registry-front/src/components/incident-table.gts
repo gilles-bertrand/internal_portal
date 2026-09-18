@@ -1,6 +1,6 @@
 import type RouterService from '@ember/routing/router-service';
 import { service } from '@ember/service';
-import { tracked } from '@glimmer/tracking';
+import { cached, tracked } from '@glimmer/tracking';
 import Component from '@glimmer/component';
 import TableGenericPrefab, {
   type TableParams,
@@ -9,6 +9,7 @@ import type { TableApi } from '@triptyk/ember-ui/components/tpk-table-generic/ta
 import TpkButton from '@triptyk/ember-input/components/prefabs/tpk-prefab-button';
 import TpkConfirmModalPrefab from '@triptyk/ember-ui/components/prefabs/tpk-confirm-modal-prefab';
 import TpkSelect from '@triptyk/ember-input/components/tpk-select';
+import { hash } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { t, type IntlService } from 'ember-intl';
 import type { TOC } from '@ember/component/template-only';
@@ -22,8 +23,114 @@ import EditIcon from '#src/assets/icons/edit.gts';
 import DeleteIcon from '#src/assets/icons/delete.gts';
 import RestoreIcon from '#src/assets/icons/restore.gts';
 import { scrollToListTopOnPager } from '#src/utils/scroll-to-top.ts';
+import {
+  INCIDENT_STATUSES,
+  labelledOption,
+  optionLabel,
+  statusLabelKey,
+  type LabelledOption,
+} from '#src/utils/incident-options.ts';
 
 type SvgIcon = TOC<{ Element: SVGSVGElement }>;
+
+// power-select rend la sélection telle qu'on la lui rend : selon le moment,
+// c'est l'objet option ou (transitoirement, avant normalisation par nos
+// onChange) la chaîne du code. Même garde défensive que
+// access-record-form.gts#codeOf.
+function codeOf(selected: unknown): string {
+  if (typeof selected === 'string') {
+    return selected;
+  }
+  if (selected && typeof selected === 'object' && 'value' in selected) {
+    return String(selected.value);
+  }
+  return '';
+}
+
+// @lat: [[frontend/access-record-options#Libellés bilingues résolus côté frontend]]
+// TableGenericPrefab passe chaque valeur par `String(value)` : sans cellule
+// dédiée, la liste affiche le code brut (`in_progress`), `true`/`false`, une
+// date ISO complète et — pire — le texte littéral « null » pour deletedAt.
+// Une classe nommée par colonne (et non une fabrique) car un décorateur
+// `@service` est interdit dans une expression de classe (TS1206).
+export class StatusCell extends Component<{
+  Args: { row: Incident };
+}> {
+  @service declare intl: IntlService;
+
+  get label(): string {
+    const value = this.args.row.status;
+    return value ? optionLabel(value, statusLabelKey, this.intl) : '';
+  }
+
+  <template>
+    {{#if this.label}}
+      <span class="badge badge-neutral badge-sm">{{this.label}}</span>
+    {{/if}}
+  </template>
+}
+
+// Cellule « données sensibles » (art. 9 RGPD). L'implémentation de référence
+// (access-record-table.gts) affiche une icône bouclier-alerte ambre, mais cet
+// asset vit dans @libs/access-registry-front dont incident-registry-front NE
+// dépend pas : on reste sur des badges DaisyUI plutôt que d'ajouter un couplage
+// inter-libs pour une icône.
+export class SpecialCategoryCell extends Component<{
+  Args: { row: Incident };
+}> {
+  get isSensitive(): boolean {
+    return this.args.row.specialCategoryData === true;
+  }
+
+  <template>
+    {{#if this.isSensitive}}
+      <span class="badge badge-warning badge-sm">{{t
+          "incidents.filters.yes"
+        }}</span>
+    {{else}}
+      <span class="text-base-content/60">{{t "incidents.filters.no"}}</span>
+    {{/if}}
+  </template>
+}
+
+// reportDate est stockée en ISO : on la formate dans la locale active plutôt
+// que d'afficher « 2026-02-20T00:00:00.000Z » dans la liste.
+export class ReportDateCell extends Component<{
+  Args: { row: Incident };
+}> {
+  @service declare intl: IntlService;
+
+  get label(): string {
+    const raw = this.args.row.reportDate;
+    if (!raw) {
+      return '';
+    }
+    return new Date(raw).toLocaleDateString(this.intl.primaryLocale, {
+      dateStyle: 'medium',
+    });
+  }
+
+  <template>{{this.label}}</template>
+}
+
+// Colonne « état » : un badge sur les lignes soft-supprimées, RIEN sinon —
+// c'est ce vide qui remplace le « null » littéral affiché jusqu'ici sur toutes
+// les lignes vivantes.
+export class DeletedStateCell extends Component<{
+  Args: { row: Incident };
+}> {
+  get isDeleted(): boolean {
+    return Boolean(this.args.row.deletedAt);
+  }
+
+  <template>
+    {{#if this.isDeleted}}
+      <span class="badge badge-error badge-sm">{{t
+          "incidents.table.deletedBadge"
+        }}</span>
+    {{/if}}
+  </template>
+}
 
 class IncidentTable extends Component<object> {
   @service declare router: RouterService;
@@ -42,11 +149,43 @@ class IncidentTable extends Component<object> {
 
   private tableApi: TableApi | null = null;
 
-  statusFilterOptions = ['open', 'in_progress', 'resolved', 'closed'];
-  specialFilterOptions = ['true', 'false'];
+  // Options des filtres : `LabelledOption` (et non le code nu) sinon
+  // power-select affiche « in_progress » / « true » dans le menu. `@cached`
+  // garantit une identité d'objet stable entre deux rendus, condition pour que
+  // `@selected` retrouve bien son option dans `@options`.
+  @cached
+  get statusFilterOptions(): LabelledOption[] {
+    return INCIDENT_STATUSES.map((status) =>
+      labelledOption(status, optionLabel(status, statusLabelKey, this.intl))
+    );
+  }
 
-  get isEncoder(): boolean {
-    return this.currentUser.user?.roleName === 'encoder';
+  // Le filtre backend attend la chaîne « true »/« false » : la valeur reste le
+  // code, seul le libellé est traduit.
+  @cached
+  get specialFilterOptions(): LabelledOption[] {
+    return [
+      labelledOption('true', this.intl.t('incidents.filters.yes')),
+      labelledOption('false', this.intl.t('incidents.filters.no')),
+    ];
+  }
+
+  get selectedStatusOption(): LabelledOption | undefined {
+    return this.statusFilterOptions.find((o) => o.value === this.filterStatus);
+  }
+
+  get selectedSpecialOption(): LabelledOption | undefined {
+    return this.specialFilterOptions.find(
+      (o) => o.value === this.filterSpecial
+    );
+  }
+
+  // Bouton de création gardé par l'ability (source de vérité unique) plutôt que
+  // par `roleName === 'encoder'` : le test sur le rôle masquait le bouton à tout
+  // rôle non-encoder autorisé à créer, alors que la route create — gardée par
+  // l'ability — le laissait passer.
+  get canCreate(): boolean {
+    return this.ability.can('create', 'Incident');
   }
 
   get canUpdate(): boolean {
@@ -60,6 +199,17 @@ class IncidentTable extends Component<object> {
   // `restore` n'est seedé que pour le DPO → sert aussi de proxy « est DPO ».
   get canRestore(): boolean {
     return this.ability.can('restore', 'Incident');
+  }
+
+  // Export du registre COMPLET. Les règles CASL n'ont pas d'action `export`
+  // dédiée : côté backend POST /incidents/export ne demande que `read`
+  // (export.route.ts), donc on garde sur `read` — et PAS sur le proxy DPO
+  // utilisé par access-record-table.gts. L'export d'incidents est ouvert à
+  // l'encodeur et à l'auditeur côté serveur : masquer le bouton leur
+  // retirerait une capacité réelle, ce qui serait un alignement UX cosmétique
+  // au prix d'une régression fonctionnelle.
+  get canExportRegistry(): boolean {
+    return this.ability.can('read', 'Incident');
   }
 
   get isModalOpen(): boolean {
@@ -133,16 +283,19 @@ class IncidentTable extends Component<object> {
         field: 'status',
         headerName: this.intl.t('incidents.table.headers.status'),
         sortable: true,
+        component: 'status',
       },
       {
         field: 'reportDate',
         headerName: this.intl.t('incidents.table.headers.reportDate'),
         sortable: true,
+        component: 'reportDate',
       },
       {
         field: 'specialCategoryData',
         headerName: this.intl.t('incidents.table.headers.art9'),
         sortable: true,
+        component: 'specialCategoryData',
       },
     ];
 
@@ -153,6 +306,7 @@ class IncidentTable extends Component<object> {
         field: 'deletedAt',
         headerName: this.intl.t('incidents.table.headers.state'),
         sortable: false,
+        component: 'deletedAt',
       });
     }
 
@@ -248,12 +402,14 @@ class IncidentTable extends Component<object> {
     }
   };
 
+  // power-select renvoie l'option (ou la chaîne au clear) : on ne stocke que le
+  // code, seul format accepté par le filtre backend.
   onChangeStatus = (value: unknown) => {
-    this.filterStatus = (value as string | null) ?? '';
+    this.filterStatus = codeOf(value);
   };
 
   onChangeSpecial = (value: unknown) => {
-    this.filterSpecial = (value as string | null) ?? '';
+    this.filterSpecial = codeOf(value);
   };
 
   <template>
@@ -264,45 +420,52 @@ class IncidentTable extends Component<object> {
             "incidents.pages.list.title"
           }}</h1>
         <div class="flex items-center gap-2">
-          <TpkButton
-            @label={{if
-              this.exporting
-              (t "incidents.export.inProgress")
-              (t "incidents.actions.exportRegistry")
-            }}
-            @onClick={{this.onExportRegistry}}
-            class="btn-primary"
-          />
-          {{#if this.isEncoder}}
+          {{#if this.canExportRegistry}}
+            <TpkButton
+              @label={{if
+                this.exporting
+                (t "incidents.export.inProgress")
+                (t "incidents.actions.exportRegistry")
+              }}
+              @onClick={{this.onExportRegistry}}
+              class="btn-primary"
+              data-test-export-button
+            />
+          {{/if}}
+          {{#if this.canCreate}}
             <TpkButton
               @label={{t "incidents.actions.create"}}
               @onClick={{this.onAddIncident}}
+              data-test-add-record-button
             />
           {{/if}}
         </div>
       </div>
 
       <div class="flex flex-wrap items-end gap-4 my-4">
-        <label class="flex flex-col gap-1 text-sm">
+        {{! Un <div> et non un <label> : TpkSelect rend déjà son propre
+        <label for=…> depuis @label — imbriquer les deux faisait annoncer le
+        libellé deux fois par les lecteurs d'écran. }}
+        <div class="flex flex-col gap-1 text-sm">
           <TpkSelect
             @label={{t "incidents.filters.status"}}
             @options={{this.statusFilterOptions}}
-            @selected={{if this.filterStatus this.filterStatus}}
+            @selected={{this.selectedStatusOption}}
             @onChange={{this.onChangeStatus}}
             @placeholder={{t "incidents.filters.all"}}
             @allowClear={{true}}
           />
-        </label>
-        <label class="flex flex-col gap-1 text-sm">
+        </div>
+        <div class="flex flex-col gap-1 text-sm">
           <TpkSelect
             @label={{t "incidents.filters.art9"}}
             @options={{this.specialFilterOptions}}
-            @selected={{if this.filterSpecial this.filterSpecial}}
+            @selected={{this.selectedSpecialOption}}
             @onChange={{this.onChangeSpecial}}
             @placeholder={{t "incidents.filters.all"}}
             @allowClear={{true}}
           />
-        </label>
+        </div>
         {{#if this.canRestore}}
           <label class="flex items-center gap-2 text-sm cursor-pointer">
             <input
@@ -317,7 +480,15 @@ class IncidentTable extends Component<object> {
         {{/if}}
       </div>
 
-      <TableGenericPrefab @tableParams={{this.tableParams}} />
+      <TableGenericPrefab
+        @tableParams={{this.tableParams}}
+        @columnsComponent={{hash
+          status=(component StatusCell)
+          reportDate=(component ReportDateCell)
+          specialCategoryData=(component SpecialCategoryCell)
+          deletedAt=(component DeletedStateCell)
+        }}
+      />
 
       <TpkConfirmModalPrefab
         @onClose={{this.onCloseModal}}

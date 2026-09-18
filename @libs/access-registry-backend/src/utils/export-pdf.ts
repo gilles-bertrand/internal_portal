@@ -3,6 +3,7 @@ import type { AccessRecordEntityType } from "#src/entities/access-record.entity.
 import { COLORS, MARGIN, CONTENT_WIDTH, PAGE, formatDate } from "#src/utils/pdf-constants.js";
 import { drawSummaryTable } from "#src/utils/pdf-table.js";
 import { drawRecordsDetail } from "#src/utils/pdf-detail-render.js";
+import { drawSingleLine, measureHeight } from "@libs/backend-shared";
 
 export type PdfAttestation = {
   generatedAt: string;
@@ -102,16 +103,10 @@ function drawStatCards(
       .roundedRect(x, y, cardWidth, cardHeight, 8)
       .stroke()
       .restore();
-    doc
-      .font("Helvetica")
-      .fontSize(8)
-      .fillColor(COLORS.muted)
-      .text(card.label.toUpperCase(), x + 14, y + 12, { width: cardWidth - 28, lineBreak: false });
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(18)
-      .fillColor(card.tone)
-      .text(card.value, x + 14, y + 28, { width: cardWidth - 28, lineBreak: false });
+    doc.font("Helvetica").fontSize(8).fillColor(COLORS.muted);
+    drawSingleLine(doc, card.label.toUpperCase(), x + 14, y + 12, cardWidth - 28);
+    doc.font("Helvetica-Bold").fontSize(18).fillColor(card.tone);
+    drawSingleLine(doc, card.value, x + 14, y + 28, cardWidth - 28);
   });
 
   doc.y = y + cardHeight + 20;
@@ -119,9 +114,19 @@ function drawStatCards(
 
 function drawIntegrityCard(doc: InstanceType<typeof PDFDocument>, attestation: PdfAttestation) {
   const y = doc.y;
-  const cardHeight = attestation.integrityOk ? 78 : 92;
   const accent = attestation.integrityOk ? COLORS.success : COLORS.danger;
   const bg = attestation.integrityOk ? COLORS.successBg : COLORS.dangerBg;
+
+  const statusText = attestation.integrityOk
+    ? `Chaîne de hash vérifiée — ${attestation.count} enregistrement(s) cohérent(s).`
+    : `Chaîne compromise à l'index ${attestation.integrityBrokenAt ?? "?"} (${attestation.integrityReason ?? "inconnu"}).`;
+
+  // La hauteur du cadre suit le texte : un motif de rupture verbeux se replie sur
+  // plusieurs lignes et débordait d'un cadre à hauteur fixe.
+  const textWidth = CONTENT_WIDTH - 32;
+  doc.font("Helvetica").fontSize(9);
+  const statusHeight = measureHeight(doc, statusText, textWidth);
+  const cardHeight = 14 + 18 + statusHeight + 10 + 12 + 14;
 
   doc.save().roundedRect(MARGIN.left, y, CONTENT_WIDTH, cardHeight, 10).fill(bg).restore();
   doc.save().rect(MARGIN.left, y, 4, cardHeight).fill(accent).restore();
@@ -132,29 +137,22 @@ function drawIntegrityCard(doc: InstanceType<typeof PDFDocument>, attestation: P
     .roundedRect(MARGIN.left, y, CONTENT_WIDTH, cardHeight, 10)
     .stroke()
     .restore();
-  doc
-    .font("Helvetica-Bold")
-    .fontSize(11)
-    .fillColor(COLORS.text)
-    .text("Attestation d'intégrité", MARGIN.left + 16, y + 14, { lineBreak: false });
-
-  const statusText = attestation.integrityOk
-    ? `Chaîne de hash vérifiée — ${attestation.count} enregistrement(s) cohérent(s).`
-    : `Chaîne compromise à l'index ${attestation.integrityBrokenAt ?? "?"} (${attestation.integrityReason ?? "inconnu"}).`;
+  doc.font("Helvetica-Bold").fontSize(11).fillColor(COLORS.text);
+  drawSingleLine(doc, "Attestation d'intégrité", MARGIN.left + 16, y + 14, textWidth);
 
   doc
     .font("Helvetica")
     .fontSize(9)
     .fillColor(accent)
-    .text(statusText, MARGIN.left + 16, y + 32, { width: CONTENT_WIDTH - 32 });
-  doc
-    .font("Courier")
-    .fontSize(7.5)
-    .fillColor(COLORS.muted)
-    .text(`Tête de chaîne : ${attestation.chainHeadHash}`, MARGIN.left + 16, y + cardHeight - 22, {
-      width: CONTENT_WIDTH - 32,
-      lineBreak: false,
-    });
+    .text(statusText, MARGIN.left + 16, y + 32, { width: textWidth });
+  doc.font("Courier").fontSize(7.5).fillColor(COLORS.muted);
+  drawSingleLine(
+    doc,
+    `Tête de chaîne : ${attestation.chainHeadHash}`,
+    MARGIN.left + 16,
+    y + cardHeight - 22,
+    textWidth,
+  );
 
   doc.y = y + cardHeight + 22;
 }

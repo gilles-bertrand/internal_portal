@@ -2,7 +2,7 @@ import Component from '@glimmer/component';
 import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import TpkButton from '@triptyk/ember-input/components/prefabs/tpk-prefab-button';
-import TpkInput from '@triptyk/ember-input/components/tpk-input';
+import { RowInput } from '#src/components/forms/incident-row-fields.gts';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { t } from 'ember-intl';
@@ -12,17 +12,31 @@ interface Args {
   items: string[];
   onChange: (items: string[]) => void;
   placeholder?: string;
+  // Libellé de la cellule. À défaut, le placeholder sert de libellé : pour ces
+  // listes à une colonne il est déjà rédigé comme tel (« Facteur contributif »),
+  // et un `<label>` vide est pire que pas de label pour un lecteur d'écran.
+  itemLabel?: string;
 }
 
 export default class IncidentStringListEditor extends Component<Args> {
   @tracked draft = '';
 
+  @tracked hint = '';
+
+  get itemLabel(): string {
+    return this.args.itemLabel ?? this.args.placeholder ?? this.args.label;
+  }
+
   @action
   addItem() {
     const value = this.draft.trim();
-    if (!value) return;
+    if (!value) {
+      this.hint = 'incomplete';
+      return;
+    }
     this.args.onChange([...(this.args.items ?? []), value]);
     this.draft = '';
+    this.hint = '';
   }
 
   @action
@@ -34,26 +48,38 @@ export default class IncidentStringListEditor extends Component<Args> {
 
   @action
   updateDraft(value: string | number | Date | null) {
+    this.hint = '';
     this.draft = String(value ?? '');
   }
 
   <template>
-    <fieldset class="fieldset border border-base-300 p-4">
+    <fieldset
+      class="fieldset border border-base-300 p-4"
+      data-test-incident-string-list
+    >
       <legend class="fieldset-legend">{{@label}}</legend>
       <div class="flex gap-2 mb-3">
         <div class="w-full">
-          <TpkInput
-            @label=""
+          <RowInput
+            @label={{this.itemLabel}}
             @value={{this.draft}}
             @placeholder={{@placeholder}}
             @onChange={{this.updateDraft}}
+            data-test-string-list-input
           />
         </div>
-        <TpkButton
-          @label={{t "incidents.form.actions.addLine"}}
-          @onClick={{this.addItem}}
-        />
+        <div class="flex items-end">
+          <TpkButton
+            @label={{t "incidents.form.actions.addLine"}}
+            @onClick={{this.addItem}}
+          />
+        </div>
       </div>
+      {{#if this.hint}}
+        <p class="mb-2 text-sm text-error" role="alert" data-test-row-hint>
+          {{t "incidents.form.errors.incompleteRow"}}
+        </p>
+      {{/if}}
       {{#if @items.length}}
         <ul class="space-y-1 text-sm">
           {{#each @items as |item index|}}

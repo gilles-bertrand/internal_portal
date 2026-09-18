@@ -18,3 +18,4 @@ test-results
 # lat.md cache (reindex local, should not be versioned)
 lat.md/.cache/vectors.db
 lat.md/.cache/
+.agentsroom/fork-context-*.txt

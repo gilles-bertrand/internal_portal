@@ -1331,6 +1331,9 @@ importers:
       '@libs/repo-utils':
         specifier: workspace:^
         version: link:../repo-utils
+      '@types/pdfkit':
+        specifier: ^0.17.6
+        version: 0.17.6
       '@typescript/native-preview':
         specifier: 'catalog:'
         version: 7.0.0-dev.20260611.2
@@ -1340,6 +1343,9 @@ importers:
       oxlint:
         specifier: 'catalog:'
         version: 1.69.0(oxlint-tsgolint@0.23.0)
+      pdfkit:
+        specifier: ^0.16.0
+        version: 0.16.0
       tsdown:
         specifier: 'catalog:'
         version: 0.22.2(@typescript/native-preview@7.0.0-dev.20260611.2)(typescript@6.0.3)(unrun@0.2.37)
@@ -7520,6 +7526,7 @@ packages:
 
   crypto-js@4.2.0:
     resolution: {integrity: sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q==}
+    deprecated: Active development of CryptoJS has been discontinued. This library is no longer maintained.
 
   css-functions-list@3.3.3:
     resolution: {integrity: sha512-8HFEBPKhOpJPEPu70wJJetjKta86Gw9+CCyCnB3sui2qQfOvRyqBy4IKLKKAwdMpWb2lHXWk9Wb4Z6AmaUT1Pg==}

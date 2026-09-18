@@ -24,7 +24,7 @@ export default class IncidentsEditRouteTemplate extends Component<IncidentsEditR
   }
 
   <template>
-    <h1 class="text-3xl font-semibold mb-6">{{t
+    <h1 class="mb-4 text-2xl font-semibold" data-test-incident-form-title>{{t
         "incidents.pages.edit.title"
       }}</h1>
     <IncidentForm

@@ -39,10 +39,13 @@ export:
 pages:
   list:
     title: Registre d'incidents
+  create:
+    title: Nouveau rapport d'incident
   edit:
     title: Éditer l'incident
+  show:
+    title: Détail de l'incident
 form:
-  title: Nouveau rapport d'incident
   updateSuccess: Nouvelle version de l'incident enregistrée
   steps:
     header: En-tête (§1–§2)
@@ -100,6 +103,7 @@ form:
   contributingFactors: Facteurs contributifs
   preventiveMeasures: Mesures préventives
   conclusion: Conclusion (§9)
+  communicationPlan: Plan de communication
   issuerSignatureName: Signataire émetteur
   issuerSignatureDate: Date signature émetteur
   recipientSignatureName: Signataire destinataire
@@ -107,8 +111,38 @@ form:
   submit: Enregistrer l'incident
   cancel: Retour au registre
   success: Incident enregistré avec succès
+  validation:
+    required: '{field} est obligatoire.'
+    invalidDate: '{field} doit être une date valide.'
+    art9Impact: "Données de l'article 9 impactées : un résumé d'impact est obligatoire."
+    art9SeverityOverall: "La gravité globale est obligatoire quand des données de l'article 9 sont impactées."
+    art9SeverityCompliance: "La gravité conformité est obligatoire quand des données de l'article 9 sont impactées."
+    art9AffectedCount: "Données de l'article 9 impactées : renseignez au moins un compteur de personnes concernées."
+    resolvedBeforeDetected: 'La date de résolution ne peut pas précéder la date de détection.'
+    endBeforeStart: "La date de fin de l'incident ne peut pas précéder sa date de début."
   errors:
+    serverFieldError: "Le serveur a refusé le rapport à cause d'un champ de l'étape « {step} ». Vous y avez été ramené."
+    incompleteRow: "Renseignez toutes les cellules obligatoires de la ligne avant de l'ajouter."
     stepValidation: Erreur de validation de l'étape. Réessayez.
+    requiredFields: 'Complétez ces champs avant de continuer : {fields}'
+    otherStepInvalid: "Des champs obligatoires manquent à l'étape « {step} ». Vous y avez été ramené."
+  stepProgress: 'Étape {current} sur {total}'
+  rowLabels:
+    sectionTitle: Titre du bloc
+    sectionDetail: Contenu du bloc
+    timelineDate: Date
+    timelineTime: Heure
+    timelineEvent: Événement
+    actionPhase: Phase
+    actionOrder: Ordre
+    actionTitle: Titre
+    actionDetail: Détail
+    actionCompletedAt: Réalisée le
+    logDate: Date
+    logUser: Utilisateur
+    logEmail: E-mail
+    logFiles: Fichiers
+    logCount: Nombre
   placeholders:
     select: Sélectionner…
     clientCode: 'ex : IPBW'
@@ -136,15 +170,62 @@ form:
     actionPhase: 'Phase (optionnel)'
     actionTitle: 'Titre action'
     actionDetail: 'Détail action'
+    actionCompletedAt: 'ex : 2026-02-20'
     logDate: 'Date'
     logUser: 'Utilisateur'
     logEmail: 'E-mail'
     logFiles: 'Fichiers'
+    logCount: '#'
     signatureDate: 'ex : 2026-02-20'
     affectedPersonsCount: 'ex : 50'
     affectedPatientsCount: 'ex : 12'
 detail:
+  empty: Non renseigné
+  subtitle: 'Déclaré le {date}'
+  readOnly: Lecture seule
+  sequenceBadge: 'N° {seq}'
+  revisionBadge: 'Révision {revision}'
+  deletedBadge: Supprimé
+  back: Retour au registre
+  sections:
+    identification: Identification
+    context: Contexte & dates
+    qualification: Qualification RGPD
+    impact: Impact
+    description: Description
+    measures: Causes & mesures
+    closing: Communication & conclusion
+    signatures: Signatures
+    traceability: Traçabilité
   legal: Cadre légal
   description: Description
   impact: Impact
   conclusion: Conclusion
+  encodedBy: Encodé par
+  encodedAt: Date d'encodage
+  updatedBy: Modifié par
+  updatedAt: Date de modification
+  seq: Numéro de séquence
+  integrity:
+    hash: Empreinte d'intégrité
+    prevHash: Empreinte précédente
+    genesis: Premier enregistrement de la chaîne
+options:
+  status:
+    open: Ouvert
+    in_progress: En cours
+    resolved: Résolu
+    closed: Clôturé
+  classification:
+    CONFIDENTIEL: Confidentiel
+    INTERNE: Interne
+    PUBLIC: Public
+  environment:
+    production: Production
+    staging: Pré-production
+    development: Développement
+  severity:
+    low: Faible
+    medium: Moyenne
+    high: Élevée
+    critical: Critique

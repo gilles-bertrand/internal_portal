@@ -20,6 +20,14 @@ L'ancien code supposait `source.pointer` toujours présent, ce qui levait un `Ty
 - Un `AggregateError` mixte (champ + globale) traite chaque catégorie indépendamment.
 - Une erreur non-`AggregateError` (échec réseau, corps non-JSON) déclenche désormais aussi un flash `danger` générique en plus du `errorReporter.report()` — auparavant silencieuse (seul `console.error`).
 
+## Erreur serveur de champ → clé de changeset
+
+[[@libs/shared-front/src/services/handle-save.ts#pointerToChangesetKey]] convertit le pointer JSON:API en chemin **pointé**, parce que c'est ainsi que les changesets — et donc les inputs de `TpkForm` — indexent leurs champs.
+
+Le pointer est segmenté par des slashes (`/data/attributes/correctiveActions/0/completedAt`) alors que le changeset attend `correctiveActions.0.completedAt`. La clé était construite en retirant seulement le préfixe, donc elle gardait ses slashes : elle ne correspondait à aucun champ et l'erreur renvoyée par le serveur restait invisible à l'écran, sur tous les formulaires du produit. Le backend garantit par ailleurs un pointer à un seul slash de tête (voir [[platform#Le handler d'erreur global répond en JSON:API#Le pointer d'erreur ne doit pas être doublé]]).
+
+Sur un formulaire multi-étapes, rattacher la clé ne suffit pas : le champ visé peut appartenir à une étape non rendue. Voir [[incident-registry-wizard#Filet de sécurité sur les refus du serveur]].
+
 ## Priorité de résolution du message (erreurs globales)
 
 [[@libs/shared-front/src/utils/json-api-error-message.ts#resolveJsonApiErrorMessage]] résout le texte affiché dans cet ordre : `shared.handle-save.errors.<code>` → `shared.handle-save.status.<status>` → `detail` brut du backend → `shared.handle-save.generic-error-message`, chaque étape gardée par `intl.exists()`.

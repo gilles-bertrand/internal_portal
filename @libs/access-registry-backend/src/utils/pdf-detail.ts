@@ -7,10 +7,14 @@ export interface DetailRow {
   value: string;
   /** Rendu en police à chasse fixe (hash) et sur toute la largeur. */
   mono?: boolean;
+  /** Texte libre potentiellement long : rendu sur toute la largeur, multi-ligne. */
+  full?: boolean;
 }
 
 // Construit la liste exhaustive (label → valeur) des champs d'un enregistrement
 // d'accès pour la fiche détaillée du PDF — aucun champ masqué, aucune troncature.
+// L'ordre est celui du rendu : d'abord les champs courts (grille 2 colonnes),
+// puis la justification en pleine largeur, puis les hash.
 // @lat: [[backend/access-registry#Export PDF : liste puis détail]]
 export function buildRecordDetailRows(record: AccessRecordEntityType): DetailRow[] {
   const categories = Array.isArray(record.dataCategories)
@@ -35,12 +39,12 @@ export function buildRecordDetailRows(record: AccessRecordEntityType): DetailRow
     { key: "legalBasis", label: "Base légale", value: record.legalBasis },
     { key: "sourceSystem", label: "Système source", value: record.sourceSystem },
     { key: "recipient", label: "Destinataire", value: record.recipient ?? "—" },
-    { key: "justification", label: "Justification", value: record.justification },
     {
       key: "retentionUntil",
       label: "Conservation",
       value: formatDate(record.retentionUntil),
     },
+    { key: "justification", label: "Justification", value: record.justification, full: true },
     { key: "prevHash", label: "Hash précédent", value: record.prevHash, mono: true },
     { key: "hash", label: "Hash", value: record.hash, mono: true },
   ];

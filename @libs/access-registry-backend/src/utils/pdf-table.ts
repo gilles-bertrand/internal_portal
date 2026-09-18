@@ -1,27 +1,41 @@
 import type PDFDocument from "pdfkit";
 import type { AccessRecordEntityType } from "#src/entities/access-record.entity.js";
-import { COLORS, MARGIN, CONTENT_WIDTH, PAGE, SUMMARY_COLUMNS } from "#src/utils/pdf-constants.js";
+import {
+  COLORS,
+  MARGIN,
+  CONTENT_WIDTH,
+  PAGE,
+  SUMMARY_COLUMNS,
+  SUMMARY_CELL_PADDING,
+} from "#src/utils/pdf-constants.js";
 import { buildSummaryCells } from "#src/utils/pdf-summary.js";
+import { drawSingleLine } from "@libs/backend-shared";
 
+// Titre de section. `lineBreak: false` empêche pdfkit d'avancer `doc.y` (il
+// décale `doc.x` à la place) : l'ordonnée suivante est donc posée à la main,
+// sinon le premier bloc de la section se dessine par-dessus le titre.
 export function drawSectionTitle(doc: InstanceType<typeof PDFDocument>, title: string) {
-  doc.font("Helvetica-Bold").fontSize(12).fillColor(COLORS.text).text(title, MARGIN.left, doc.y);
-  doc.moveDown(0.6);
+  const y = doc.y;
+  doc.font("Helvetica-Bold").fontSize(12).fillColor(COLORS.text);
+  drawSingleLine(doc, title, MARGIN.left, y, CONTENT_WIDTH);
+  doc.x = MARGIN.left;
+  doc.y = y + doc.currentLineHeight() + 8;
 }
 
 const SUMMARY_ROW_HEIGHT = 20;
+const HEADER_HEIGHT = 22;
+/** Décalage vertical du texte pour le centrer dans sa ligne (police 7,5 pt). */
+const CELL_TEXT_OFFSET = 6;
 
 function drawSummaryHeader(doc: InstanceType<typeof PDFDocument>, y: number): number {
-  doc.save().rect(MARGIN.left, y, CONTENT_WIDTH, 22).fill(COLORS.primary).restore();
-  let x = MARGIN.left + 8;
+  doc.save().rect(MARGIN.left, y, CONTENT_WIDTH, HEADER_HEIGHT).fill(COLORS.primary).restore();
+  let x = MARGIN.left + SUMMARY_CELL_PADDING;
   for (const column of SUMMARY_COLUMNS) {
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(7.5)
-      .fillColor(COLORS.white)
-      .text(column.label, x, y + 7, { width: column.width - 8, lineBreak: false });
+    doc.font("Helvetica-Bold").fontSize(7.5).fillColor(COLORS.white);
+    drawSingleLine(doc, column.label, x, y + 7, column.width - SUMMARY_CELL_PADDING);
     x += column.width;
   }
-  return y + 22;
+  return y + HEADER_HEIGHT;
 }
 
 function drawSummaryRow(
@@ -34,15 +48,18 @@ function drawSummaryRow(
   doc.save().rect(MARGIN.left, y, CONTENT_WIDTH, SUMMARY_ROW_HEIGHT).fill(bg).restore();
 
   const cells = buildSummaryCells(record);
-  let x = MARGIN.left + 8;
+  let x = MARGIN.left + SUMMARY_CELL_PADDING;
   cells.forEach((value, index) => {
     const column = SUMMARY_COLUMNS[index]!;
     const isArt9Col = column.key === "isSpecialCategory";
     doc
       .font(column.key === "hash" ? "Courier" : "Helvetica")
       .fontSize(7.5)
-      .fillColor(isArt9Col && record.isSpecialCategory ? COLORS.danger : COLORS.text)
-      .text(value, x, y + 6, { width: column.width - 8, lineBreak: false });
+      .fillColor(isArt9Col && record.isSpecialCategory ? COLORS.danger : COLORS.text);
+    // Une ligne du récapitulatif est de hauteur fixe : la cellule est tronquée à
+    // la mesure plutôt que renvoyée à la ligne (sinon la 2ᵉ ligne débordait sous
+    // le filet de séparation).
+    drawSingleLine(doc, value, x, y + CELL_TEXT_OFFSET, column.width - SUMMARY_CELL_PADDING);
     x += column.width;
   });
 
@@ -69,7 +86,9 @@ export function drawSummaryTable(
       .font("Helvetica")
       .fontSize(9)
       .fillColor(COLORS.muted)
-      .text("Aucun enregistrement dans le registre.", MARGIN.left, doc.y + 8);
+      .text("Aucun enregistrement dans le registre.", MARGIN.left, doc.y + 8, {
+        lineBreak: false,
+      });
     doc.y += 28;
     return;
   }

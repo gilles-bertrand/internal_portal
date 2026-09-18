@@ -13,7 +13,9 @@ export default defineConfig({
   ],
   test: {
     setupFiles: ['./tests/test-helper.ts'],
-    include: ['tests/**/*-test.{gjs,gts}'],
+    // `ts`/`js` included too: tests/unit/incident-to-draft-test.ts is a plain
+    // .ts file and was silently skipped by the {gjs,gts}-only glob.
+    include: ['tests/**/*-test.{js,ts,gjs,gts}'],
     maxConcurrency: 1,
     testTimeout: 10000,
     browser: {

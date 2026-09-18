@@ -1,7 +1,18 @@
 import PDFDocument from "pdfkit";
+import { drawSingleLine, measureHeight } from "@libs/backend-shared";
 import type { IncidentEntityType } from "#src/entities/incident.entity.js";
 
-type DescriptionSection = { title: string; body?: string; items?: string[] };
+// `detail` n'est PAS un champ du contrat : c'est le nom que le formulaire
+// envoyait avant son correctif, accepté en silence par le `.passthrough()` du
+// schéma. Les enregistrements écrits pendant cette période portent leur corps
+// de section sous ce nom, et la table étant append-only ils ne peuvent pas être
+// réparés — le rapport officiel doit donc savoir les lire.
+type DescriptionSection = {
+  title: string;
+  body?: string;
+  detail?: string;
+  items?: string[];
+};
 type ImpactDetails = { nature?: string[]; severityIntro?: string; severityPoints?: string[] };
 type Signature = { name: string; role?: string; org?: string; date?: string };
 type CorrectiveAction = {
@@ -113,15 +124,23 @@ function drawNumberedList(doc: InstanceType<typeof PDFDocument>, items: string[]
   }
 }
 
+// Table label→valeur. La hauteur de chaque ligne suit son contenu : une valeur
+// longue (période d'incident, nom d'application, destinataire) se repliait dans
+// une ligne de 18 pt figée et écrivait par-dessus la ligne suivante — pdfkit
+// replie le texte malgré `lineBreak: false` dès qu'une `width` est passée.
+// @lat: [[incident-registry#Export PDF : lignes de table mesurées]]
 function drawKeyValueTable(
   doc: InstanceType<typeof PDFDocument>,
   rows: { label: string; value: string }[],
   labelWidth = 160,
 ) {
   const valueWidth = CONTENT_WIDTH - labelWidth;
-  const rowH = 18;
+  const padding = 5;
 
   for (let i = 0; i < rows.length; i++) {
+    doc.font("Helvetica").fontSize(8.5);
+    const rowH = Math.max(18, measureHeight(doc, rows[i]!.value, valueWidth - 12) + padding * 2);
+
     needsPage(doc, rowH + 2);
     const y = doc.y;
     const bg = i % 2 === 0 ? C.white : C.rowAlt;
@@ -135,19 +154,15 @@ function drawKeyValueTable(
       .stroke()
       .restore();
 
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(8.5)
-      .fillColor(C.text)
-      .text(rows[i]!.label, MARGIN.left + 6, y + 5, { width: labelWidth - 8, lineBreak: false });
+    doc.font("Helvetica-Bold").fontSize(8.5).fillColor(C.text);
+    drawSingleLine(doc, rows[i]!.label, MARGIN.left + 6, y + padding, labelWidth - 8);
 
     doc
       .font("Helvetica")
       .fontSize(8.5)
       .fillColor(C.text)
-      .text(rows[i]!.value, MARGIN.left + labelWidth + 4, y + 5, {
-        width: valueWidth - 8,
-        lineBreak: false,
+      .text(rows[i]!.value, MARGIN.left + labelWidth + 4, y + padding, {
+        width: valueWidth - 12,
       });
 
     doc.y = y + rowH;
@@ -161,35 +176,47 @@ interface DataTableColumn {
   bold?: boolean;
 }
 
+// Table de données (chronologie, logs d'accès). La hauteur d'une ligne est celle
+// de sa cellule la plus haute : les colonnes étroites (email, fichiers accédés,
+// événement) contiennent des valeurs qui se replient, et une hauteur figée de
+// 20 pt les faisait écrire sur la ligne suivante.
+// @lat: [[incident-registry#Export PDF : lignes de table mesurées]]
 function drawDataTable(
   doc: InstanceType<typeof PDFDocument>,
   columns: DataTableColumn[],
   rows: string[][],
 ) {
-  const rowH = 20;
   const headerH = 22;
+  const padding = 6;
 
   const renderHeader = (y: number): number => {
     doc.save().rect(MARGIN.left, y, CONTENT_WIDTH, headerH).fill(C.rowHeader).restore();
-    let x = MARGIN.left + 6;
+    let x = MARGIN.left + padding;
     for (const col of columns) {
-      doc
-        .font("Helvetica-Bold")
-        .fontSize(8.5)
-        .fillColor(C.white)
-        .text(col.label, x, y + 7, { width: col.width - 8, lineBreak: false });
+      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(C.white);
+      drawSingleLine(doc, col.label, x, y + 7, col.width - padding * 2);
       x += col.width;
     }
     return y + headerH;
   };
 
+  const rowHeight = (row: string[]): number => {
+    let tallest = 0;
+    columns.forEach((col, ci) => {
+      doc.font(col.bold ? "Helvetica-Bold" : "Helvetica").fontSize(8.5);
+      tallest = Math.max(tallest, measureHeight(doc, row[ci] ?? "", col.width - padding * 2));
+    });
+    return Math.max(20, tallest + padding * 2);
+  };
+
   let y = renderHeader(doc.y);
 
   for (let ri = 0; ri < rows.length; ri++) {
+    const row = rows[ri]!;
+    const rowH = rowHeight(row);
     if (y + rowH > PAGE.height - MARGIN.bottom) {
       doc.addPage();
-      y = MARGIN.top;
-      y = renderHeader(y);
+      y = renderHeader(MARGIN.top);
     }
     const bg = ri % 2 === 0 ? C.white : C.rowAlt;
     doc.save().rect(MARGIN.left, y, CONTENT_WIDTH, rowH).fill(bg).restore();
@@ -202,21 +229,52 @@ function drawDataTable(
       .stroke()
       .restore();
 
-    let x = MARGIN.left + 6;
-    for (let ci = 0; ci < columns.length; ci++) {
-      const col = columns[ci]!;
-      const val = rows[ri]![ci] ?? "";
+    let x = MARGIN.left + padding;
+    columns.forEach((col, ci) => {
       doc
         .font(col.bold ? "Helvetica-Bold" : "Helvetica")
         .fontSize(8.5)
         .fillColor(C.text)
-        .text(val, x, y + 6, { width: col.width - 8, lineBreak: false });
+        .text(row[ci] ?? "", x, y + padding, { width: col.width - padding * 2 });
       x += col.width;
-    }
+    });
     y += rowH;
   }
   doc.y = y;
   doc.moveDown(0.6);
+}
+
+type SignatureColumn = { sig: Signature; isIssuer: boolean };
+
+/** Largeur de texte utile d'une colonne de signature (padding gauche + droit). */
+const SIGNATURE_TEXT_WIDTH = (colW: number) => colW - 16;
+
+function signatureFields(sig: Signature, isIssuer: boolean): { caption: string; val: string }[] {
+  return [
+    { caption: "Nom", val: sig.name },
+    { caption: "Fonction", val: sig.role ?? "—" },
+    { caption: isIssuer ? "Société" : "Organisation", val: sig.org ?? "—" },
+    { caption: "Date", val: sig.date ? formatDateFr(`${sig.date}T00:00:00.000Z`) : "—" },
+    { caption: "Signature", val: "_________________________" },
+  ];
+}
+
+function signatureBodyHeight(
+  doc: InstanceType<typeof PDFDocument>,
+  cols: SignatureColumn[],
+  colW: number,
+): number {
+  doc.font("Helvetica").fontSize(8.5);
+  let tallest = 0;
+  for (const col of cols) {
+    let height = 16;
+    for (const field of signatureFields(col.sig, col.isIssuer)) {
+      height +=
+        measureHeight(doc, `${field.caption} : ${field.val}`, SIGNATURE_TEXT_WIDTH(colW)) + 2;
+    }
+    tallest = Math.max(tallest, height);
+  }
+  return tallest;
 }
 
 function drawSignatureBlock(
@@ -224,27 +282,27 @@ function drawSignatureBlock(
   issuer: Signature,
   recipient: Signature,
 ) {
-  needsPage(doc, 120);
   const colW = CONTENT_WIDTH / 2 - 6;
   const headerH = 22;
-  const y0 = doc.y;
-
   const cols = [
-    { label: "Émetteur du rapport", sig: issuer, x: MARGIN.left },
-    { label: "Destinataire", sig: recipient, x: MARGIN.left + colW + 12 },
+    { label: "Émetteur du rapport", sig: issuer, x: MARGIN.left, isIssuer: true },
+    { label: "Destinataire", sig: recipient, x: MARGIN.left + colW + 12, isIssuer: false },
   ];
+
+  // La hauteur du bloc suit son contenu : une fonction ou une organisation longue
+  // (« Administrateur chargé de la gestion journalière ») se replie sur deux
+  // lignes et débordait d'un cadre figé à 90 pt.
+  const bodyH = Math.max(90, signatureBodyHeight(doc, cols, colW));
+  needsPage(doc, headerH + bodyH + 10);
+  const y0 = doc.y;
 
   for (const col of cols) {
     doc.save().rect(col.x, y0, colW, headerH).fill(C.rowHeader).restore();
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(9)
-      .fillColor(C.white)
-      .text(col.label, col.x + 8, y0 + 7, { width: colW - 16, lineBreak: false });
+    doc.font("Helvetica-Bold").fontSize(9).fillColor(C.white);
+    drawSingleLine(doc, col.label, col.x + 8, y0 + 7, colW - 16);
   }
 
   const bodyY = y0 + headerH;
-  const bodyH = 90;
 
   for (const col of cols) {
     doc.save().rect(col.x, bodyY, colW, bodyH).fill(C.white).restore();
@@ -257,24 +315,24 @@ function drawSignatureBlock(
       .restore();
 
     let lineY = bodyY + 8;
-    const fields: { key: string; val: string }[] = [
-      { key: "Nom", val: col.sig.name },
-      { key: "Fonction", val: col.sig.role ?? "—" },
-      { key: issuer === col.sig ? "Société" : "Organisation", val: col.sig.org ?? "—" },
-      { key: "Date", val: col.sig.date ? formatDateFr(`${col.sig.date}T00:00:00.000Z`) : "—" },
-      { key: "Signature", val: "_________________________" },
-    ];
-    for (const field of fields) {
+    for (const field of signatureFields(col.sig, col.isIssuer)) {
+      // `width` doit être passé dès le PREMIER appel : pdfkit crée son
+      // line-wrapper à ce moment-là et le réutilise pour la suite `continued`.
+      // Sans lui, le wrapper naissait à la largeur de page et la valeur du
+      // libellé débordait de sa colonne au lieu de se replier dedans.
       doc
         .font("Helvetica-Bold")
         .fontSize(8.5)
         .fillColor(C.text)
-        .text(`${field.key} : `, col.x + 8, lineY, { continued: true });
+        .text(`${field.caption} : `, col.x + 8, lineY, {
+          continued: true,
+          width: SIGNATURE_TEXT_WIDTH(colW),
+        });
       doc
         .font("Helvetica")
         .fontSize(8.5)
         .fillColor(C.text)
-        .text(field.val, { width: colW - 20 });
+        .text(field.val, { width: SIGNATURE_TEXT_WIDTH(colW) });
       lineY = doc.y + 2;
     }
   }
@@ -329,10 +387,13 @@ function drawConfidentialBanners(doc: InstanceType<typeof PDFDocument>) {
   const range = doc.bufferedPageRange();
   for (let i = range.start; i < range.start + range.count; i++) {
     doc.switchToPage(i);
+    // Page 1 : la mention se pose SUR le bandeau de titre bleu foncé, où le rouge
+    // est illisible — elle y passe en blanc. Pages suivantes : fond blanc, rouge.
+    const onTitleBanner = i === range.start;
     doc
       .font("Helvetica-Oblique")
       .fontSize(9)
-      .fillColor(C.confidential)
+      .fillColor(onTitleBanner ? C.white : C.confidential)
       .text("CONFIDENTIEL", MARGIN.left, 14, {
         width: CONTENT_WIDTH,
         align: "right",
@@ -347,6 +408,12 @@ function drawReportFooters(doc: InstanceType<typeof PDFDocument>, incident: Inci
   for (let i = range.start; i < range.start + total; i++) {
     doc.switchToPage(i);
     const y = PAGE.height - MARGIN.bottom + 10;
+    // Le pied de page s'écrit SOUS la marge basse : le line-wrapper de pdfkit
+    // (activé par `width`, nécessaire ici pour le centrage) y voit un dépassement
+    // de maxY et déclenche un addPage() par pied posé — le rapport doublait de
+    // pages, chaque page réelle étant suivie d'une page vide portant son numéro.
+    const savedBottomMargin = doc.page.margins.bottom;
+    doc.page.margins.bottom = 0;
     doc
       .save()
       .lineWidth(0.5)
@@ -365,6 +432,7 @@ function drawReportFooters(doc: InstanceType<typeof PDFDocument>, incident: Inci
         y,
         { width: CONTENT_WIDTH, align: "center", lineBreak: false },
       );
+    doc.page.margins.bottom = savedBottomMargin;
   }
 }
 
@@ -434,7 +502,8 @@ export function buildIncidentPdf(incident: IncidentEntityType): Promise<Buffer> 
     if (descSections?.length) {
       for (const sec of descSections) {
         drawSubSection(doc, sec.title);
-        if (sec.body) drawParagraph(doc, sec.body);
+        const body = sec.body ?? sec.detail;
+        if (body) drawParagraph(doc, body);
         if (sec.items?.length) drawBulletList(doc, sec.items);
       }
     }
@@ -576,11 +645,14 @@ export function buildIncidentPdf(incident: IncidentEntityType): Promise<Buffer> 
       drawDataTable(
         doc,
         [
-          { label: "Date", width: 72 },
-          { label: "Utilisateur", width: 100 },
-          { label: "Email", width: 150 },
+          { label: "Date", width: 68 },
+          { label: "Utilisateur", width: 98 },
+          { label: "Email", width: 146 },
           { label: "Fichiers accédés", width: 130 },
-          { label: "Nb accès", width: CONTENT_WIDTH - 452 },
+          // Reste de la largeur : « Nb accès » fait 38 pt en Helvetica-Bold 8,5,
+          // l'ancienne colonne de 47 pt (padding déduit) tronquait son propre
+          // en-tête.
+          { label: "Nb accès", width: CONTENT_WIDTH - 442 },
         ],
         logRows,
       );

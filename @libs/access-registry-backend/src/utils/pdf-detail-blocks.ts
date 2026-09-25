@@ -14,7 +14,7 @@ export const CARD_PADDING = 14;
 export const TITLE_HEIGHT = 22;
 const COL_GAP = 20;
 const LABEL_GAP = 10;
-/** Label le plus large de la fiche : « PERSONNE CONCERNÉE » = 86 pt en Helvetica-Bold 7. */
+/** Label le plus large de la fiche : « DONNÉE CONCERNÉE » (≈ 80 pt) en Helvetica-Bold 7. */
 const LABEL_WIDTH = 90;
 const ROW_GAP = 5;
 const LABEL_FONT_SIZE = 7;

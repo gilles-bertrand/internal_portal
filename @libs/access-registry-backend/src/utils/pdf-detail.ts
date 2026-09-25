@@ -27,7 +27,7 @@ export function buildRecordDetailRows(record: AccessRecordEntityType): DetailRow
     { key: "encodedAt", label: "Encodé le", value: formatDate(record.encodedAt) },
     { key: "encodedBy", label: "Encodé par", value: record.encodedBy },
     { key: "accessorRef", label: "Accédant", value: record.accessorRef },
-    { key: "dataSubjectRef", label: "Personne concernée", value: record.dataSubjectRef },
+    { key: "dataSubjectRef", label: "Donnée concernée", value: record.dataSubjectRef },
     { key: "dataCategories", label: "Catégories", value: categories || "—" },
     {
       key: "isSpecialCategory",

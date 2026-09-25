@@ -1,7 +1,7 @@
 table:
   headers:
     accessedAt: 'Access date'
-    dataSubjectRef: 'Data subject'
+    dataSubjectRef: 'Data concerned'
     accessType: 'Access type'
     purpose: 'Purpose'
     accessorRef: 'Accessor ref.'
@@ -28,7 +28,7 @@ forms:
     labels:
       accessedAt: 'Access date/time (ISO UTC)'
       accessorRef: 'Accessor reference'
-      dataSubjectRef: 'Data subject reference'
+      dataSubjectRef: 'Reference of the data concerned'
       dataCategories: 'Data categories'
       accessType: 'Access type'
       purpose: 'Purpose of access'
@@ -52,7 +52,7 @@ forms:
     validation:
       accessedAtRequired: 'Access date is required.'
       accessorRefRequired: 'Accessor reference is required.'
-      dataSubjectRefRequired: 'Data subject reference is required.'
+      dataSubjectRefRequired: 'The reference of the data concerned is required.'
       dataCategoriesRequired: 'At least one data category is required.'
       accessTypeRequired: 'Access type is required.'
       accessTypeInvalid: 'Invalid access type.'

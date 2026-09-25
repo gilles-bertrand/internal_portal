@@ -17,6 +17,7 @@ const SUBJECTS = [
   'AccessRecordIntegrity',
   'AccessRecordRetention',
   'IncidentIntegrity',
+  'AuditEvent',
 ] as const;
 
 const ACTIONS = ['create', 'read', 'update', 'delete', 'manage'] as const;

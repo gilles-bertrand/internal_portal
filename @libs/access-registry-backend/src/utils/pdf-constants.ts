@@ -24,7 +24,7 @@ export const COLORS = {
 export const SUMMARY_COLUMNS = [
   { key: "seq", label: "#", width: 24 },
   { key: "accessedAt", label: "Date", width: 76 },
-  { key: "dataSubjectRef", label: "Personne", width: 92 },
+  { key: "dataSubjectRef", label: "Donnée", width: 92 },
   { key: "accessType", label: "Type", width: 60 },
   { key: "purpose", label: "Finalité", width: 58 },
   { key: "isSpecialCategory", label: "Art.9", width: 30 },

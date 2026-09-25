@@ -19,13 +19,14 @@ import {
 import path from "node:path";
 import packageJson from "../../package.json" with { type: "json" };
 import { appRouter } from "./app.router.js";
+import { resolveFeatures } from "#src/configuration.js";
 import type { ApplicationContext } from "./application.context.js";
 import { logger } from "./logger.js";
 import { UserModule, AuthModule, createJwtAuthMiddleware } from "@libs/users-backend";
 import { Module as TodoModule } from "@libs/todos-backend";
 import { Module as AccessRegistryModule } from "@libs/access-registry-backend";
 import { Module as IncidentRegistryModule } from "@libs/incident-registry-backend";
-import { AuditAppendService } from "@libs/audit-log-backend";
+import { AuditAppendService, AuditLogModule } from "@libs/audit-log-backend";
 import { PermissionsModule } from "@libs/permissions-backend";
 
 export type FastifyInstanceType = FastifyInstance<
@@ -205,6 +206,11 @@ export class App {
         { em: this.context.orm.em.fork() },
         createJwtAuthMiddleware(this.context.orm.em.fork(), this.context.configuration.JWT_SECRET),
       ),
+      auditLogModule: AuditLogModule.init({
+        em: this.context.orm.em.fork(),
+        configuration: { jwtSecret: this.context.configuration.JWT_SECRET },
+      }),
+      features: resolveFeatures(this.context.configuration),
     });
   }
 

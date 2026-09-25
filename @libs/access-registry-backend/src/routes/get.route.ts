@@ -15,8 +15,7 @@ import {
 import type { AuditLogger } from "#src/utils/audit-logger.type.js";
 import { requirePermission } from "@libs/permissions-backend";
 import { subject } from "@casl/ability";
-import { UserEntity } from "@libs/users-backend";
-import { userNameFor } from "#src/utils/user-display.js";
+import { UserEntity, userNameFor } from "@libs/users-backend";
 
 export class GetRoute implements Route {
   public constructor(

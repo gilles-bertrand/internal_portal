@@ -142,6 +142,7 @@
     "main": "addon-main.cjs",
     "app-js": {
       "./components/forms/todo-form.js": "./dist/_app_/components/forms/todo-form.js",
+      "./routes/dashboard/todos.js": "./dist/_app_/routes/dashboard/todos.js",
       "./routes/dashboard/todos/create.js": "./dist/_app_/routes/dashboard/todos/create.js",
       "./routes/dashboard/todos/edit.js": "./dist/_app_/routes/dashboard/todos/edit.js",
       "./routes/dashboard/todos/index.js": "./dist/_app_/routes/dashboard/todos/index.js",

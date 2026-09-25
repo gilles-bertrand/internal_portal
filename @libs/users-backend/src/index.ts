@@ -2,6 +2,7 @@ import { RefreshTokenEntity } from "#src/entities/refresh-token.entity.js";
 import { UserEntity } from "#src/entities/user.entity.js";
 
 export * from "#src/entities/user.entity.js";
+export * from "#src/utils/user-display.js";
 export * from "#src/entities/refresh-token.entity.js";
 export * from "#src/routes/create.route.js";
 export * from "#src/routes/delete.route.js";

@@ -7,30 +7,6 @@
         "ember-mcp"
       ]
     },
-    "chrome-devtools": {
-      "command": "npx",
-      "args": [
-        "chrome-devtools-mcp@latest"
-      ]
-    },
-    "gitscrum": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "git@github.com:AmauryD/mcp-server.git"
-      ]
-    },
-    "context7": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "@upstash/context7-mcp",
-        "--api-key",
-        "ctx7sk-8f03faff-b81e-4e2f-9e8b-7caea819ddff"
-      ],
-      "env": {}
-    },
     "playwright": {
       "command": "npx",
       "args": [
@@ -85,14 +61,15 @@
         "AR_BROWSER_PROJECT_ID": "proj-1787046069295-e7t8r9"
       }
     },
-    "AgentsRoom-Browser": {
+    "AgentsRoom-Chrome": {
       "command": "node",
       "args": [
         "/Applications/AgentsRoom.app/Contents/Resources/browser-mcp-server.cjs"
       ],
       "env": {
         "AR_BROWSER_BRIDGE_FILE": "/Users/gilles/.agentsroom/browser-bridge.json",
-        "AR_BROWSER_PROJECT_ID": "proj-1787046069295-e7t8r9"
+        "AR_BROWSER_PROJECT_ID": "proj-1787046069295-e7t8r9",
+        "AR_BROWSER_KIND": "chrome"
       }
     }
   }

@@ -2,9 +2,8 @@ import type { FastifyInstanceTypeForModule } from "#src/init.js";
 import { array, literal, object, string } from "zod";
 import { type Route } from "@libs/backend-shared";
 import type { EntityManager } from "@mikro-orm/postgresql";
-import { UserEntity } from "@libs/users-backend";
+import { UserEntity, userNameFor } from "@libs/users-backend";
 import { PermissionRuleEntity, requirePermission } from "@libs/permissions-backend";
-import { userNameFor } from "#src/utils/user-display.js";
 
 export const SerializedEligibleAccessorSchema = object({
   id: string(),

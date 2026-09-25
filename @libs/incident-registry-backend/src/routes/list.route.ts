@@ -1,6 +1,6 @@
+import { loadUsersByIds } from "@libs/users-backend";
 import type { FastifyInstanceTypeForModule } from "#src/init.js";
 import { serializeIncidentsWithUserNames } from "#src/utils/incident-enrichment.js";
-import { loadUsersByIds } from "#src/utils/user-display.js";
 import type { EntityManager } from "@mikro-orm/postgresql";
 import { array, number, object, string } from "zod";
 import { type Route } from "@libs/backend-shared";

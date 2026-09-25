@@ -1,7 +1,7 @@
 table:
   headers:
     accessedAt: "Date d'accès"
-    dataSubjectRef: 'Personne concernée'
+    dataSubjectRef: 'Donnée concernée'
     accessType: "Type d'accès"
     purpose: 'Finalité'
     accessorRef: 'Réf. accédant'
@@ -28,7 +28,7 @@ forms:
     labels:
       accessedAt: "Date/heure d'accès (ISO UTC)"
       accessorRef: "Référence de l'accédant"
-      dataSubjectRef: 'Référence de la personne concernée'
+      dataSubjectRef: 'Référence de la donnée concernée'
       dataCategories: 'Catégories de données'
       accessType: "Type d'accès"
       purpose: "Finalité de l'accès"
@@ -52,7 +52,7 @@ forms:
     validation:
       accessedAtRequired: "La date d'accès est requise."
       accessorRefRequired: "La référence de l'accédant est requise."
-      dataSubjectRefRequired: 'La référence de la personne concernée est requise.'
+      dataSubjectRefRequired: 'La référence de la donnée concernée est requise.'
       dataCategoriesRequired: 'Au moins une catégorie de données est requise.'
       accessTypeRequired: "Le type d'accès est requis."
       accessTypeInvalid: "Type d'accès invalide."

@@ -13,7 +13,10 @@ export default class AuditEventsIndexRoute extends Route {
   @service declare intl: IntlService;
 
   beforeModel() {
-    return requireAbilityOrRedirect('read', 'AccessRecord', {
+    // Aligné sur le garde backend, qui est passé de `read AccessRecord` à son
+    // propre sujet : le journal est transverse, pas une annexe du registre
+    // d'accès. Voir [[backend/audit-log#Journal exposé par son propre module]].
+    return requireAbilityOrRedirect('read', 'AuditEvent', {
       ability: this.ability,
       router: this.router,
       flashMessages: this.flashMessages,

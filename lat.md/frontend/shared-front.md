@@ -77,3 +77,21 @@ Portée : posé uniquement sous `dashboard` (couvre users/todos/access-records/i
 `tests/app.ts` de `@libs/shared-front` n'enregistre aucune traduction réelle — `intl.exists('shared.handle-save...')` y est donc toujours `false`, quel que soit le contenu des fichiers de traduction.
 
 `intl.setOnMissingTranslation` y renvoie `t:<clé>` plutôt qu'un texte traduit, quel que soit le contenu réel de `@apps/front/translations/shared/`. Les tests unitaires de `messageForError` doivent donc mocker `intl.exists`/`intl.t` explicitement (`vi.spyOn`) pour exercer la chaîne de priorité code→status→detail→générique, plutôt que d'attendre le texte traduit réel — voir `handle-save-test.gts` (`@libs/shared-front/tests/unit/`, non lié en wiki-link : `.gts` non supporté par `lat check`).
+
+## Domaines montés : lus du serveur, jamais redéclarés
+
+[[@libs/shared-front/src/services/features.ts#FeaturesService]] lit `GET /api/v1/status` au démarrage du tableau de bord et expose `isEnabled(nom)` au menu et aux gardes de route.
+
+Le front n'a donc aucune liste de domaines à lui. Une seconde liste, alimentée par les variables de build du front, ne s'accorderait avec celle du serveur que par discipline : un déploiement coupant un domaine côté API sans rebuild du front laisserait une entrée de menu menant à des 404. Mécanisme et arbitrage côté serveur : [[backend-bootstrap#Drapeaux de fonctionnalité par domaine]].
+
+Deux règles de prudence, symétriques de celles du backend : un échec réseau laisse tous les domaines considérés **actifs** (l'accident va vers « trop visible », jamais vers « registre invisible »), et seul un `false` explicite masque quelque chose — ni l'absence de réponse, ni une clé inconnue.
+
+## Garde de route pour un domaine désactivé
+
+[[@libs/shared-front/src/utils/require-feature-or-redirect.ts#requireFeatureOrRedirect]] renvoie au tableau de bord quand le domaine d'une route n'est pas monté, et il est posé sur la route **parente** de chaque domaine — il couvre ainsi tout le sous-arbre, là où un garde par route s'oublierait sur la prochaine.
+
+Il est délibérément distinct de `requireAbilityOrRedirect`, et surtout de son message. Un domaine coupé n'est pas un refus de droit : annoncer « vous n'avez pas les droits nécessaires » affirmerait que la fonctionnalité existe et vous est refusée, là où la vérité est qu'elle n'est pas déployée — et enverrait l'utilisateur réclamer à son administrateur un droit que personne ne peut lui accorder. Le message est neutre (`shared.features.unavailable`) et passe en `info`, pas en `danger`.
+
+Le serveur reste l'autorité : un domaine non monté répond 404 quoi qu'il arrive ([[backend-bootstrap#Drapeaux de fonctionnalité par domaine]]). Ce garde évite seulement qu'une URL tapée à la main affiche une page dont chaque appel échoue.
+
+Comme tout garde de route, il **retourne** la transition : sans cela Ember n'abandonne pas la transition courante et `model()` s'exécute quand même ([[permissions#Redirection bloquante dans beforeModel]]).

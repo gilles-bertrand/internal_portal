@@ -143,6 +143,7 @@
     "main": "addon-main.cjs",
     "app-js": {
       "./components/forms/incident-form.js": "./dist/_app_/components/forms/incident-form.js",
+      "./routes/dashboard/incidents.js": "./dist/_app_/routes/dashboard/incidents.js",
       "./routes/dashboard/incidents/create.js": "./dist/_app_/routes/dashboard/incidents/create.js",
       "./routes/dashboard/incidents/edit.js": "./dist/_app_/routes/dashboard/incidents/edit.js",
       "./routes/dashboard/incidents/index.js": "./dist/_app_/routes/dashboard/incidents/index.js",

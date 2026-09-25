@@ -47,6 +47,7 @@ export class DatabaseSeeder extends Seeder {
       { action: "manage", subject: "AccessRecordRetention" },
       { action: "read", subject: "AccessRecordIntegrity" },
       { action: "read", subject: "IncidentIntegrity" },
+      { action: "read", subject: "AuditEvent" },
       { action: "read", subject: "Incident" },
       { action: "update", subject: "Incident" },
       { action: "delete", subject: "Incident" },
@@ -56,6 +57,7 @@ export class DatabaseSeeder extends Seeder {
       { action: "read", subject: "AccessRecord" },
       { action: "read", subject: "AccessRecordIntegrity" },
       { action: "read", subject: "IncidentIntegrity" },
+      { action: "read", subject: "AuditEvent" },
       { action: "read", subject: "Incident" },
     ]);
     await this.ensureRules(em, roles.tech_admin, [
@@ -63,6 +65,10 @@ export class DatabaseSeeder extends Seeder {
       { action: "manage", subject: "Role" },
       // tech_admin accède au registre d'accès en lecture (list/get/export/stats/audit-events).
       { action: "read", subject: "AccessRecord" },
+      // Le journal reste lisible, mais chaque ligne est filtrée par le domaine
+      // qu'elle concerne : tech_admin y verra les événements du registre
+      // d'accès, jamais ceux des incidents dont il est banni.
+      { action: "read", subject: "AuditEvent" },
       { action: "manage", subject: "Incident", inverted: true, order: 10 },
     ]);
 

@@ -16,3 +16,5 @@ error-page:
     '404': 'Ressource introuvable'
     generic: 'Une erreur est survenue'
   backToDashboard: 'Retour au tableau de bord'
+features:
+  unavailable: "Cette section n'est pas disponible sur cet environnement."

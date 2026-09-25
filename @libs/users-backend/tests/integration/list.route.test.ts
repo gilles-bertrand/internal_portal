@@ -21,11 +21,12 @@ aroundEach(async (runTest) => {
 });
 
 test("ListRoute returns users in JSON:API format with meta", async () => {
+  const admin = await module.createTechAdmin();
   const response = await module.fastifyInstance.inject({
     method: "GET",
     url: "/users",
     headers: {
-      authorization: module.generateBearerToken(TestModule.TEST_USER_ID),
+      authorization: module.generateBearerToken(admin.id),
     },
   });
 
@@ -35,20 +36,23 @@ test("ListRoute returns users in JSON:API format with meta", async () => {
   expect(body).toHaveProperty("meta");
   expect(Array.isArray(body.data)).toBe(true);
   expect(body.meta).toMatchObject({
-    total: 1,
+    total: 2,
   });
-  expect(body.data[0]).toMatchObject({
-    type: "users",
-    id: TestModule.TEST_USER_ID,
-    attributes: {
-      email: "a@test.com",
-      firstName: "Test",
-      lastName: "User",
-    },
-  });
+  expect(body.data).toContainEqual(
+    hardExpect.objectContaining({
+      type: "users",
+      id: TestModule.TEST_USER_ID,
+      attributes: hardExpect.objectContaining({
+        email: "a@test.com",
+        firstName: "Test",
+        lastName: "User",
+      }),
+    }),
+  );
 });
 
 test("ListRoute filters users by search query", async () => {
+  const admin = await module.createTechAdmin();
   await module.createUser({
     id: "alice-id",
     email: "alice@test.com",
@@ -69,7 +73,7 @@ test("ListRoute filters users by search query", async () => {
     method: "GET",
     url: "/users?filter[search]=Alice",
     headers: {
-      authorization: module.generateBearerToken(TestModule.TEST_USER_ID),
+      authorization: module.generateBearerToken(admin.id),
     },
   });
 
@@ -80,6 +84,7 @@ test("ListRoute filters users by search query", async () => {
 });
 
 test("ListRoute sorts users ascending", async () => {
+  const admin = await module.createTechAdmin();
   await module.createUser({
     id: "alice-id",
     email: "alice@test.com",
@@ -100,7 +105,7 @@ test("ListRoute sorts users ascending", async () => {
     method: "GET",
     url: "/users?sort=firstName",
     headers: {
-      authorization: module.generateBearerToken(TestModule.TEST_USER_ID),
+      authorization: module.generateBearerToken(admin.id),
     },
   });
 
@@ -111,6 +116,7 @@ test("ListRoute sorts users ascending", async () => {
 });
 
 test("ListRoute sorts users descending", async () => {
+  const admin = await module.createTechAdmin();
   await module.createUser({
     id: "alice-id",
     email: "alice@test.com",
@@ -131,7 +137,7 @@ test("ListRoute sorts users descending", async () => {
     method: "GET",
     url: "/users?sort=-firstName",
     headers: {
-      authorization: module.generateBearerToken(TestModule.TEST_USER_ID),
+      authorization: module.generateBearerToken(admin.id),
     },
   });
 
@@ -158,6 +164,7 @@ test("ListRoute returns JSON:API error when not authenticated", async () => {
 });
 
 test("ListRoute ignores invalid sort field", async () => {
+  const admin = await module.createTechAdmin();
   await module.createUser({
     id: "alice-id",
     email: "alice@test.com",
@@ -170,7 +177,7 @@ test("ListRoute ignores invalid sort field", async () => {
     method: "GET",
     url: "/users?sort=invalidField",
     headers: {
-      authorization: module.generateBearerToken(TestModule.TEST_USER_ID),
+      authorization: module.generateBearerToken(admin.id),
     },
   });
 

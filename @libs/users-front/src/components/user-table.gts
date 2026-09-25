@@ -61,6 +61,11 @@ class UsersTable extends Component<object> {
           headerName: this.intl.t('users.table.headers.email'),
           sortable: false,
         },
+        {
+          field: 'roleName',
+          headerName: this.intl.t('users.table.headers.role'),
+          sortable: false,
+        },
       ],
       actionMenu: [
         {

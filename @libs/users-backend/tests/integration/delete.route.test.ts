@@ -21,6 +21,7 @@ aroundEach(async (runTest) => {
 });
 
 test("DeleteRoute deletes another user and returns 204", async () => {
+  const admin = await module.createTechAdmin();
   await module.createUser({
     id: "other-user-id",
     email: "other@test.com",
@@ -33,7 +34,7 @@ test("DeleteRoute deletes another user and returns 204", async () => {
     method: "DELETE",
     url: "/users/other-user-id",
     headers: {
-      authorization: module.generateBearerToken(TestModule.TEST_USER_ID),
+      authorization: module.generateBearerToken(admin.id),
     },
   });
 
@@ -42,11 +43,12 @@ test("DeleteRoute deletes another user and returns 204", async () => {
 });
 
 test("DeleteRoute returns JSON:API error when deleting own profile", async () => {
+  const admin = await module.createTechAdmin();
   const response = await module.fastifyInstance.inject({
     method: "DELETE",
-    url: `/users/${TestModule.TEST_USER_ID}`,
+    url: `/users/${admin.id}`,
     headers: {
-      authorization: module.generateBearerToken(TestModule.TEST_USER_ID),
+      authorization: module.generateBearerToken(admin.id),
     },
   });
 

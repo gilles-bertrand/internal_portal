@@ -21,6 +21,7 @@ export default class UsersCreateRouteTemplate extends Component<UsersCreateRoute
     <UsersForm
       @changeset={{this.changeset}}
       @validationSchema={{this.validationSchema}}
+      @roles={{@model.roles}}
     />
   </template>
 }

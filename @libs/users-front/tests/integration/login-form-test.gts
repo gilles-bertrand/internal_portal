@@ -5,6 +5,7 @@ import { render } from '@ember/test-helpers';
 import LoginForm, { pageObject } from '#src/components/forms/login-form.gts';
 import { initializeTestApp, TestApp } from '../app.ts';
 import type SessionService from 'ember-simple-auth/services/session';
+import type FlashMessageService from 'ember-cli-flash/services/flash-messages';
 
 const expect = hardExpect.soft;
 
@@ -102,6 +103,78 @@ describe('login-form', function () {
       await pageObject.submit();
 
       expect(sessionService.authenticate).not.toHaveBeenCalled();
+    }
+  );
+
+  renderingTest(
+    'Shows a danger flash with the backend message when credentials are rejected',
+    async function ({ context }) {
+      await initializeTestApp(context.owner, 'en-us');
+
+      const sessionService = context.owner.lookup(
+        'service:session'
+      ) as SessionService;
+      const flashMessages = context.owner.lookup(
+        'service:flash-messages'
+      ) as FlashMessageService;
+      const dangerSpy = vi.spyOn(flashMessages, 'danger');
+
+      // Shape rejected by ember-simple-auth-token's Token#makeRequest, not a
+      // WarpDrive AggregateError — login doesn't go through the store.
+      (
+        sessionService.authenticate as ReturnType<typeof vi.fn>
+      ).mockRejectedValue({
+        status: 401,
+        json: {
+          errors: [
+            {
+              status: '401',
+              code: 'INVALID_CREDENTIALS',
+              detail: 'Invalid email or password',
+            },
+          ],
+        },
+      });
+
+      await render(<template><LoginForm /></template>);
+
+      await pageObject.email('test@example.com');
+      await pageObject.password('wrongpassword');
+      await pageObject.submit();
+
+      expect(dangerSpy).toHaveBeenCalledWith('Invalid email or password');
+    }
+  );
+
+  renderingTest(
+    'Shows a generic danger flash when the authentication failure has no JSON:API body',
+    async function ({ context }) {
+      await initializeTestApp(context.owner, 'en-us');
+
+      const sessionService = context.owner.lookup(
+        'service:session'
+      ) as SessionService;
+      const flashMessages = context.owner.lookup(
+        'service:flash-messages'
+      ) as FlashMessageService;
+      const dangerSpy = vi.spyOn(flashMessages, 'danger');
+      const intl = context.owner.lookup('service:intl');
+      const tSpy = vi.spyOn(intl, 't').mockReturnValue('Generic error');
+
+      (
+        sessionService.authenticate as ReturnType<typeof vi.fn>
+      ).mockRejectedValue(new Error('Network error'));
+
+      await render(<template><LoginForm /></template>);
+
+      await pageObject.email('test@example.com');
+      await pageObject.password('strongpassword123');
+      await pageObject.submit();
+
+      expect(tSpy).toHaveBeenCalledWith(
+        'shared.handle-save.generic-error-message'
+      );
+      expect(dangerSpy).toHaveBeenCalledWith('Generic error');
     }
   );
 });

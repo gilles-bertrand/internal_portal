@@ -1,3 +1,4 @@
+// @lat: [[tooling/repo-utils]]
 /**
  * This is a rollup plugin to move route template files from "routes" to "templates" directory.
  */

@@ -2,35 +2,75 @@
   "mcpServers": {
     "ember": {
       "command": "npx",
-      "args": ["-y", "ember-mcp"]
-    },
-    "chrome-devtools": {
-      "command": "npx",
-      "args": ["chrome-devtools-mcp@latest"]
-    },
-    "gitscrum": {
-      "command": "npx",
       "args": [
         "-y",
-        "git@github.com:AmauryD/mcp-server.git"
+        "ember-mcp"
       ]
-    },
-    "context7": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "@upstash/context7-mcp",
-        "--api-key",
-        "ctx7sk-8f03faff-b81e-4e2f-9e8b-7caea819ddff"
-      ],
-      "env": {}
     },
     "playwright": {
       "command": "npx",
       "args": [
         "@playwright/mcp@latest"
       ]
+    },
+    "codegraph": {
+      "type": "stdio",
+      "command": "codegraph",
+      "args": [
+        "serve",
+        "--mcp"
+      ]
+    },
+    "lat": {
+      "command": "lat",
+      "args": [
+        "mcp"
+      ]
+    },
+    "AgentsRoom-MCP": {
+      "command": "node",
+      "args": [
+        "/Applications/AgentsRoom.app/Contents/Resources/app-mcp-server.cjs"
+      ],
+      "env": {
+        "AR_PROJECT_ID": "proj-1787046069295-e7t8r9",
+        "AR_PROJECT_PATH": "/Users/gilles/www/internal_portal",
+        "AR_API_BASE_URL": "https://agentsroom.dev",
+        "AR_SETTINGS_FILE": "/Users/gilles/.agentsroom/settings.json",
+        "AR_BRIDGE_FILE": "/Users/gilles/.agentsroom/browser-bridge.json"
+      }
+    },
+    "AgentsRoom-Test-Runner": {
+      "command": "node",
+      "args": [
+        "/Applications/AgentsRoom.app/Contents/Resources/test-runner-mcp-server.cjs"
+      ],
+      "env": {
+        "AR_BROWSER_BRIDGE_FILE": "/Users/gilles/.agentsroom/browser-bridge.json",
+        "AR_BROWSER_PROJECT_ID": "proj-1787046069295-e7t8r9",
+        "AR_PROJECT_PATH": "/Users/gilles/www/internal_portal"
+      }
+    },
+    "AgentsRoom-QA-Tester": {
+      "command": "node",
+      "args": [
+        "/Applications/AgentsRoom.app/Contents/Resources/qa-tester-mcp-server.cjs"
+      ],
+      "env": {
+        "AR_BROWSER_BRIDGE_FILE": "/Users/gilles/.agentsroom/browser-bridge.json",
+        "AR_BROWSER_PROJECT_ID": "proj-1787046069295-e7t8r9"
+      }
+    },
+    "AgentsRoom-Chrome": {
+      "command": "node",
+      "args": [
+        "/Applications/AgentsRoom.app/Contents/Resources/browser-mcp-server.cjs"
+      ],
+      "env": {
+        "AR_BROWSER_BRIDGE_FILE": "/Users/gilles/.agentsroom/browser-bridge.json",
+        "AR_BROWSER_PROJECT_ID": "proj-1787046069295-e7t8r9",
+        "AR_BROWSER_KIND": "chrome"
+      }
     }
   }
 }

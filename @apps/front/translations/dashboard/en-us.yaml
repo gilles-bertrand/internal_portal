@@ -2,3 +2,6 @@ sidebar:
   dashboard: 'Dashboard'
   users: 'Users'
   todos: 'Todos'
+  accessRecords: 'Access registry'
+  incidents: 'Incident registry'
+  roles: 'Roles'

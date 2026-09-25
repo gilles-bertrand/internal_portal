@@ -3,11 +3,15 @@ import { verifyAccessToken } from "#src/utils/jwt.utils.js";
 import { UserEntity } from "#src/entities/user.entity.js";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { makeJsonApiError } from "@libs/backend-shared";
+import { buildAbility, PermissionRuleEntity } from "@libs/permissions-backend";
 
 /**
  * JWT authentication middleware
  * Extracts Bearer token from Authorization header and verifies it
- * Loads the user from the database and attaches to request.user
+ * Loads the user (with its role) from the database, attaches it to
+ * request.user, and builds the CASL ability for request.ability.
+ *
+ * @lat: [[backend/permissions#Attachement de request.ability au chargement de l'utilisateur]]
  */
 export function createJwtAuthMiddleware(em: EntityManager, jwtSecret: string) {
   return async function jwtAuth(request: FastifyRequest, reply: FastifyReply) {
@@ -36,7 +40,7 @@ export function createJwtAuthMiddleware(em: EntityManager, jwtSecret: string) {
 
     // Load user from database
     const userRepository = em.getRepository(UserEntity);
-    const user = await userRepository.findOne({ id: payload.userId });
+    const user = await userRepository.findOne({ id: payload.userId }, { populate: ["role"] });
 
     if (!user) {
       return reply.code(401).send(
@@ -48,5 +52,8 @@ export function createJwtAuthMiddleware(em: EntityManager, jwtSecret: string) {
     }
 
     request.user = user;
+
+    const rules = await em.getRepository(PermissionRuleEntity).find({ role: user.role.id });
+    request.ability = buildAbility(rules, user);
   };
 }

@@ -21,11 +21,13 @@ aroundEach(async (runTest) => {
 });
 
 test("UpdateRoute updates user and returns JSON:API format", async () => {
+  const admin = await module.createTechAdmin();
+
   const response = await module.fastifyInstance.inject({
     method: "PATCH",
     url: `/users/${TestModule.TEST_USER_ID}`,
     headers: {
-      authorization: module.generateBearerToken(TestModule.TEST_USER_ID),
+      authorization: module.generateBearerToken(admin.id),
     },
     payload: {
       data: {
@@ -52,6 +54,27 @@ test("UpdateRoute updates user and returns JSON:API format", async () => {
       lastName: "Name",
     },
   });
+});
+
+test("UpdateRoute rejects a caller without manage:User permission", async () => {
+  const response = await module.fastifyInstance.inject({
+    method: "PATCH",
+    url: `/users/${TestModule.TEST_USER_ID}`,
+    headers: {
+      authorization: module.generateBearerToken(TestModule.TEST_USER_ID),
+    },
+    payload: {
+      data: {
+        id: TestModule.TEST_USER_ID,
+        type: "users",
+        attributes: {
+          email: "blocked@test.com",
+        },
+      },
+    },
+  });
+
+  expect(response.statusCode).toBe(403);
 });
 
 test("UpdateRoute returns JSON:API error when user not found", async () => {

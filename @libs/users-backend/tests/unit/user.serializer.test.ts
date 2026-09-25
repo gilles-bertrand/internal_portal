@@ -6,6 +6,13 @@ import {
   jsonApiSerializeManyUsersDocument,
 } from "#src/serializers/user.serializer.js";
 import type { UserEntityType } from "#src/entities/user.entity.js";
+import type { RoleEntityType } from "@libs/permissions-backend";
+
+const mockRole: RoleEntityType = {
+  id: "role-encoder",
+  name: "encoder",
+  description: null,
+};
 
 describe("user.serializer", () => {
   const mockUser: UserEntityType = {
@@ -14,6 +21,10 @@ describe("user.serializer", () => {
     firstName: "John",
     lastName: "Doe",
     password: "hashedpassword",
+    role: mockRole,
+    failedLoginAttempts: 0,
+    lockedUntil: null,
+    passwordChangedAt: null,
   };
 
   const mockUsers: UserEntityType[] = [
@@ -24,6 +35,10 @@ describe("user.serializer", () => {
       firstName: "Jane",
       lastName: "Smith",
       password: "hashedpassword2",
+      role: mockRole,
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+      passwordChangedAt: null,
     },
   ];
 
@@ -38,6 +53,8 @@ describe("user.serializer", () => {
           email: "test@example.com",
           firstName: "John",
           lastName: "Doe",
+          roleId: "role-encoder",
+          roleName: "encoder",
         },
       });
     });

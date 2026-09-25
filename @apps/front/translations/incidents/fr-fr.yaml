@@ -1,0 +1,231 @@
+table:
+  headers:
+    reference: Référence
+    client: Client
+    application: Application
+    status: Statut
+    reportDate: Date rapport
+    art9: Art. 9
+    state: État
+  actions:
+    edit: Éditer
+    delete: Supprimer
+    restore: Restaurer
+  confirmDelete:
+    question: "Supprimer l'incident {reference} ? Il sera masqué et restaurable par le DPO."
+    confirm: Supprimer
+    cancel: Annuler
+  showDeleted: Afficher les supprimés
+  deletedBadge: Supprimé
+  notAllowed: Vous ne pouvez pas gérer cet incident.
+  deleteSuccess: Incident supprimé.
+  deleteError: Échec de la suppression. Réessayez.
+  restoreSuccess: Incident restauré.
+  restoreError: Échec de la restauration. Réessayez.
+filters:
+  status: Statut
+  art9: Données sensibles (art. 9)
+  all: Tous
+  yes: Oui
+  no: Non
+actions:
+  create: Nouvel incident
+  exportRegistry: Exporter le registre (PDF)
+  exportReport: Exporter le rapport (PDF)
+export:
+  error: Échec de l'export. Réessayez.
+  success: Registre exporté avec succès.
+  inProgress: Export en cours…
+pages:
+  list:
+    title: Registre d'incidents
+  create:
+    title: Nouveau rapport d'incident
+  edit:
+    title: Éditer l'incident
+  show:
+    title: Détail de l'incident
+form:
+  updateSuccess: Nouvelle version de l'incident enregistrée
+  steps:
+    header: En-tête (§1–§2)
+    context: Contexte & dates
+    description: Description (§3)
+    impact: Impact (§4)
+    timeline: Chronologie (§5)
+    measures: Causes & mesures (§6–§7)
+    closing: Communication & conclusion (§8–§9)
+    signatures: Annexes & signatures (§10)
+  sections:
+    timeline: Chronologie des événements
+    descriptionBlocks: Blocs de description
+    correctiveActions: Actions correctives
+    accessLogs: Journaux d'accès (annexe)
+  actions:
+    previous: Étape précédente
+    next: Étape suivante
+    addLine: Ajouter
+    remove: Retirer
+  hints:
+    communicationPlan: Le plan de communication peut être ajouté ultérieurement dans le détail de l'incident.
+  clientCode: Code client
+  clientName: Nom client
+  applicationName: Application
+  applicationDetail: Détail application
+  reportedBy: Signaleur
+  reportDate: Date du rapport
+  version: Version
+  classification: Classification
+  status: Statut
+  environment: Environnement
+  recipientName: Destinataire
+  recipientOrg: Organisation destinataire
+  serviceName: Service
+  deployedVersion: Version déployée
+  incidentStartAt: Début incident
+  incidentEndAt: Fin incident
+  detectedAt: Détection
+  resolvedAt: Résolution
+  resolutionDurationMinutes: Durée résolution (minutes)
+  technicalLeadId: Responsable technique
+  legalContext: Cadre légal (§1)
+  specialCategoryData: Données art. 9
+  personalDataImpacted: Données personnelles impactées
+  apdNotificationRequired: Notification APD requise
+  impactSummary: Résumé impact (§4)
+  severityOperational: Gravité opérationnelle
+  severityCompliance: Gravité conformité
+  severityOverall: Gravité globale
+  affectedPersonsCount: Personnes concernées
+  affectedPatientsCount: Patients concernés
+  description: Description (§3)
+  immediateCause: Cause immédiate (§6)
+  contributingFactors: Facteurs contributifs
+  preventiveMeasures: Mesures préventives
+  conclusion: Conclusion (§9)
+  communicationPlan: Plan de communication
+  issuerSignatureName: Signataire émetteur
+  issuerSignatureDate: Date signature émetteur
+  recipientSignatureName: Signataire destinataire
+  recipientSignatureDate: Date signature destinataire
+  submit: Enregistrer l'incident
+  cancel: Retour au registre
+  success: Incident enregistré avec succès
+  validation:
+    required: '{field} est obligatoire.'
+    invalidDate: '{field} doit être une date valide.'
+    art9Impact: "Données de l'article 9 impactées : un résumé d'impact est obligatoire."
+    art9SeverityOverall: "La gravité globale est obligatoire quand des données de l'article 9 sont impactées."
+    art9SeverityCompliance: "La gravité conformité est obligatoire quand des données de l'article 9 sont impactées."
+    art9AffectedCount: "Données de l'article 9 impactées : renseignez au moins un compteur de personnes concernées."
+    resolvedBeforeDetected: 'La date de résolution ne peut pas précéder la date de détection.'
+    endBeforeStart: "La date de fin de l'incident ne peut pas précéder sa date de début."
+  errors:
+    serverFieldError: "Le serveur a refusé le rapport à cause d'un champ de l'étape « {step} ». Vous y avez été ramené."
+    incompleteRow: "Renseignez toutes les cellules obligatoires de la ligne avant de l'ajouter."
+    stepValidation: Erreur de validation de l'étape. Réessayez.
+    requiredFields: 'Complétez ces champs avant de continuer : {fields}'
+    otherStepInvalid: "Des champs obligatoires manquent à l'étape « {step} ». Vous y avez été ramené."
+  stepProgress: 'Étape {current} sur {total}'
+  rowLabels:
+    sectionTitle: Titre du bloc
+    sectionDetail: Contenu du bloc
+    timelineDate: Date
+    timelineTime: Heure
+    timelineEvent: Événement
+    actionPhase: Phase
+    actionOrder: Ordre
+    actionTitle: Titre
+    actionDetail: Détail
+    actionCompletedAt: Réalisée le
+    logDate: Date
+    logUser: Utilisateur
+    logEmail: E-mail
+    logFiles: Fichiers
+    logCount: Nombre
+  placeholders:
+    select: Sélectionner…
+    clientCode: 'ex : IPBW'
+    clientName: 'ex : IPBW SA'
+    applicationName: 'ex : Portail Admin'
+    applicationDetail: 'ex : Module authentification'
+    reportedBy: 'ex : Support N1'
+    recipientName: 'ex : Direction IT'
+    recipientOrg: 'ex : IPBW'
+    serviceName: 'ex : API Auth'
+    resolutionDurationMinutes: 'ex : 255'
+    technicalLeadId: 'ID utilisateur (optionnel)'
+    legalContext: 'Objet et cadre légal (§1)'
+    impactSummary: "Nature et étendue de l'impact (§4)"
+    description: 'Description détaillée (§3)'
+    immediateCause: 'Cause immédiate (§6)'
+    conclusion: 'Conclusion et suites (§9)'
+    contributingFactor: 'Facteur contributif'
+    preventiveMeasure: 'Mesure préventive'
+    sectionTitle: 'Titre du bloc'
+    sectionDetail: 'Contenu du bloc'
+    timelineDate: 'AAAA-MM-JJ'
+    timelineTime: 'HH:MM'
+    timelineEvent: 'Événement'
+    actionPhase: 'Phase (optionnel)'
+    actionTitle: 'Titre action'
+    actionDetail: 'Détail action'
+    actionCompletedAt: 'ex : 2026-02-20'
+    logDate: 'Date'
+    logUser: 'Utilisateur'
+    logEmail: 'E-mail'
+    logFiles: 'Fichiers'
+    logCount: '#'
+    signatureDate: 'ex : 2026-02-20'
+    affectedPersonsCount: 'ex : 50'
+    affectedPatientsCount: 'ex : 12'
+detail:
+  empty: Non renseigné
+  subtitle: 'Déclaré le {date}'
+  readOnly: Lecture seule
+  sequenceBadge: 'N° {seq}'
+  revisionBadge: 'Révision {revision}'
+  deletedBadge: Supprimé
+  back: Retour au registre
+  sections:
+    identification: Identification
+    context: Contexte & dates
+    qualification: Qualification RGPD
+    impact: Impact
+    description: Description
+    measures: Causes & mesures
+    closing: Communication & conclusion
+    signatures: Signatures
+    traceability: Traçabilité
+  legal: Cadre légal
+  description: Description
+  impact: Impact
+  conclusion: Conclusion
+  encodedBy: Encodé par
+  encodedAt: Date d'encodage
+  updatedBy: Modifié par
+  updatedAt: Date de modification
+  seq: Numéro de séquence
+  integrity:
+    hash: Empreinte d'intégrité
+    prevHash: Empreinte précédente
+    genesis: Premier enregistrement de la chaîne
+options:
+  status:
+    open: Ouvert
+    in_progress: En cours
+    resolved: Résolu
+    closed: Clôturé
+  classification:
+    CONFIDENTIEL: Confidentiel
+    INTERNE: Interne
+    PUBLIC: Public
+  environment:
+    production: Production
+    staging: Pré-production
+    development: Développement
+  severity:
+    low: Faible
+    medium: Moyenne
+    high: Élevée
+    critical: Critique

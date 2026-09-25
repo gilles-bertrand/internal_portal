@@ -1,0 +1,169 @@
+import {
+  entities as accessRegistryEntities,
+  DataCategoryEntity,
+  PurposeEntity,
+  LegalBasisEntity,
+} from "#src/index.js";
+import { entities as userEntities, UserEntity } from "@libs/users-backend";
+import {
+  entities as permissionsEntities,
+  RoleEntity,
+  PermissionRuleEntity,
+} from "@libs/permissions-backend";
+import { entities as auditLogEntities } from "@libs/audit-log-backend";
+import { MikroORM } from "@mikro-orm/postgresql";
+import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
+import { APPEND_ONLY_DDL_TEST } from "#tests/utils/append-only-test.sql.js";
+// @lat: [[backend/permissions#Seed des 4 rôles avec permissions équivalentes au comportement actuel]]
+import { PERMISSION_RULE_SEED } from "#tests/utils/permission-rule-seed.js";
+
+let container: StartedPostgreSqlContainer;
+
+const HASHED_PASSWORD =
+  "$argon2id$v=19$m=65536,t=3,p=4$ETHkx8pEQN6qQwlIR+vUTQ$+QC4JBKJCQUL1dyCHzRMBNjbk+QaJi3PV+HkPY00kcc";
+
+const ROLE_NAMES = ["encoder", "dpo", "auditor", "tech_admin"] as const;
+
+function roleIdFor(name: string) {
+  return `role-${name}`;
+}
+
+async function seedPermissionRules(orm: MikroORM) {
+  await (
+    orm.em.getRepository(PermissionRuleEntity).insert as unknown as (data: unknown) => Promise<void>
+  )(
+    PERMISSION_RULE_SEED.map((rule, index) => ({
+      id: `perm-rule-${index}`,
+      role: roleIdFor(rule.role),
+      action: rule.action,
+      subject: rule.subject,
+      conditions: rule.conditions ?? null,
+      fields: null,
+      inverted: rule.inverted ?? false,
+      order: rule.order ?? 0,
+    })),
+  );
+}
+
+function userSeed(id: string, email: string, firstName: string, lastName: string, role: string) {
+  return {
+    id,
+    email,
+    firstName,
+    lastName,
+    password: HASHED_PASSWORD,
+    role: roleIdFor(role),
+    failedLoginAttempts: 0,
+    lockedUntil: null,
+    passwordChangedAt: null,
+  };
+}
+
+async function seedRoles(orm: MikroORM) {
+  await (orm.em.getRepository(RoleEntity).insert as unknown as (data: unknown) => Promise<void>)(
+    ROLE_NAMES.map((name) => ({ id: roleIdFor(name), name, description: null })),
+  );
+}
+
+async function seedUsers(orm: MikroORM) {
+  await (orm.em.getRepository(UserEntity).insert as unknown as (data: unknown) => Promise<void>)([
+    userSeed("encoder-id", "encoder@test.com", "E", "N", "encoder"),
+    userSeed("dpo-id", "dpo@test.com", "D", "P", "dpo"),
+    userSeed("auditor-id", "auditor@test.com", "A", "U", "auditor"),
+    userSeed("admin-id", "admin@test.com", "A", "D", "tech_admin"),
+  ]);
+}
+
+// Copie test des seeds bilingues de @apps/backend/src/seeders/seed-data/referentials.ts
+// (la lib ne peut pas dépendre de l'app) — garder les deux alignés.
+const DATA_CATEGORY_SEEDS = [
+  { id: "dc-identity", code: "identity", label: "Identité", labelEn: "Identity" },
+  { id: "dc-contact", code: "contact", label: "Contact", labelEn: "Contact details" },
+  { id: "dc-financial", code: "financial", label: "Financier", labelEn: "Financial" },
+  { id: "dc-health", code: "health", label: "Santé", labelEn: "Health" },
+];
+
+const PURPOSE_SEEDS = [
+  { id: "p-support", code: "support", label: "Support client", labelEn: "Customer support" },
+  { id: "p-billing", code: "billing", label: "Facturation", labelEn: "Billing" },
+  { id: "p-legal", code: "legal", label: "Obligation légale", labelEn: "Legal obligation" },
+];
+
+const LEGAL_BASIS_SEEDS = [
+  {
+    id: "lb-6-1-b",
+    code: "art6.1b",
+    label: "Exécution d'un contrat (art. 6.1.b)",
+    labelEn: "Performance of a contract (art. 6.1.b)",
+    isArticle9: false,
+  },
+  {
+    id: "lb-6-1-c",
+    code: "art6.1c",
+    label: "Obligation légale (art. 6.1.c)",
+    labelEn: "Legal obligation (art. 6.1.c)",
+    isArticle9: false,
+  },
+  {
+    id: "lb-9-2-h",
+    code: "art9.2h",
+    label: "Médecine préventive (art. 9.2.h)",
+    labelEn: "Preventive medicine (art. 9.2.h)",
+    isArticle9: true,
+  },
+  {
+    id: "lb-9-2-a",
+    code: "art9.2a",
+    label: "Consentement explicite (art. 9.2.a)",
+    labelEn: "Explicit consent (art. 9.2.a)",
+    isArticle9: true,
+  },
+];
+
+async function seedReferentials(orm: MikroORM) {
+  await (
+    orm.em.getRepository(DataCategoryEntity).insert as unknown as (data: unknown) => Promise<void>
+  )(DATA_CATEGORY_SEEDS);
+
+  await (orm.em.getRepository(PurposeEntity).insert as unknown as (data: unknown) => Promise<void>)(
+    PURPOSE_SEEDS,
+  );
+
+  await (
+    orm.em.getRepository(LegalBasisEntity).insert as unknown as (data: unknown) => Promise<void>
+  )(LEGAL_BASIS_SEEDS);
+}
+
+export async function setup() {
+  container = await new PostgreSqlContainer("postgres:16-alpine")
+    .withDatabase("test_db")
+    .withUsername("test_user")
+    .withPassword("test_password")
+    .start();
+
+  process.env.TEST_DATABASE_URL = container.getConnectionUri();
+
+  const orm = await MikroORM.init({
+    entities: [
+      ...accessRegistryEntities,
+      ...auditLogEntities,
+      ...userEntities,
+      ...permissionsEntities,
+    ],
+    clientUrl: process.env.TEST_DATABASE_URL,
+  });
+
+  await orm.schema.refresh();
+  await orm.em.execute(APPEND_ONLY_DDL_TEST);
+  await seedRoles(orm);
+  await seedPermissionRules(orm);
+  await seedUsers(orm);
+  await seedReferentials(orm);
+  await orm.close();
+}
+
+export async function teardown() {
+  if (container) {
+    await container.stop();
+  }
+}

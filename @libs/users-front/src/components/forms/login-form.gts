@@ -12,21 +12,46 @@ import AuthLayout from '../auth-layout.gts';
 import { LinkTo } from '@ember/routing';
 import { hash } from '@ember/helper';
 import type RouterService from '@ember/routing/router-service';
+import type FlashMessageService from 'ember-cli-flash/services/flash-messages';
+import {
+  genericJsonApiErrorMessage,
+  resolveJsonApiErrorMessage,
+} from '@libs/shared-front/utils/json-api-error-message';
+
+// Shape rejected by ember-simple-auth-token's Token#makeRequest: the
+// authentication endpoint's response, not a WarpDrive AggregateError (login
+// doesn't go through the store/Fetch handler) — see @lat reference below.
+interface TokenAuthenticatorError {
+  status?: number;
+  json?: { errors?: { status?: string; code?: string; detail?: string }[] };
+}
 
 export default class LoginForm extends Component {
   @service declare session: SessionService;
   @service declare currentUser: CurrentUserService;
   @service declare intl: IntlService;
   @service declare router: RouterService;
+  @service declare flashMessages: FlashMessageService;
 
   get loginValidationSchema(): ReturnType<typeof createLoginValidationSchema> {
     return createLoginValidationSchema(this.intl);
   }
 
+  // @lat: [[frontend/shared-front#Login : erreur d'authentification non affichée]]
   onSubmit = async (
     data: z.infer<ReturnType<typeof createLoginValidationSchema>>
   ) => {
-    await this.session.authenticate('authenticator:jwt', data);
+    try {
+      await this.session.authenticate('authenticator:jwt', data);
+    } catch (error) {
+      const jsonApiError = (error as TokenAuthenticatorError | undefined)?.json
+        ?.errors?.[0];
+      this.flashMessages.danger(
+        jsonApiError
+          ? resolveJsonApiErrorMessage(jsonApiError, this.intl)
+          : genericJsonApiErrorMessage(this.intl)
+      );
+    }
   };
 
   <template>

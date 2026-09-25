@@ -1,0 +1,11 @@
+table:
+  headers:
+    occurredAt: 'Date'
+    action: 'Action'
+    targetType: 'Target'
+    actor: 'User'
+    outcome: 'Outcome'
+
+pages:
+  list:
+    title: 'Audit log'

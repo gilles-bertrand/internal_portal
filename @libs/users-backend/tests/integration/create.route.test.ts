@@ -53,11 +53,14 @@ test("CreateRoute returns JSON:API error on validation failure", async () => {
 });
 
 test("CreateRoute works correctly", async () => {
+  const admin = await module.createTechAdmin();
+  const encoderRole = await module.ensureRole("encoder");
+
   const response = await module.fastifyInstance.inject({
     method: "POST",
     url: "/users",
     headers: {
-      authorization: module.generateBearerToken(TestModule.TEST_USER_ID),
+      authorization: module.generateBearerToken(admin.id),
     },
     payload: {
       data: {
@@ -67,6 +70,7 @@ test("CreateRoute works correctly", async () => {
           firstName: "New",
           lastName: "User",
           password: "testpassword",
+          roleId: encoderRole.id,
         },
       },
     },
@@ -81,7 +85,35 @@ test("CreateRoute works correctly", async () => {
         email: "new@test.com",
         firstName: "New",
         lastName: "User",
+        roleId: encoderRole.id,
+        roleName: "encoder",
       },
     },
   });
+});
+
+test("CreateRoute rejects a caller without manage:User permission", async () => {
+  const encoderRole = await module.ensureRole("encoder");
+
+  const response = await module.fastifyInstance.inject({
+    method: "POST",
+    url: "/users",
+    headers: {
+      authorization: module.generateBearerToken(TestModule.TEST_USER_ID),
+    },
+    payload: {
+      data: {
+        type: "users",
+        attributes: {
+          email: "blocked@test.com",
+          firstName: "Blocked",
+          lastName: "User",
+          password: "testpassword",
+          roleId: encoderRole.id,
+        },
+      },
+    },
+  });
+
+  expect(response.statusCode).toBe(403);
 });

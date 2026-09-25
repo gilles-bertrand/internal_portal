@@ -22,12 +22,14 @@ export default class UsersEditRouteTemplate extends Component<UsersEditRouteSign
     lastName: this.args.model.user.lastName,
     password: undefined,
     email: this.args.model.user.email,
+    roleId: this.args.model.user.roleId,
   });
 
   <template>
     <UsersForm
       @changeset={{this.changeset}}
       @validationSchema={{this.validationSchema}}
+      @roles={{@model.roles}}
     />
   </template>
 }

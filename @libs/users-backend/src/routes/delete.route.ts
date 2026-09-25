@@ -8,6 +8,7 @@ import {
   makeSingleJsonApiTopDocument,
   type Route,
 } from "@libs/backend-shared";
+import { requirePermission } from "@libs/permissions-backend";
 
 export class DeleteRoute implements Route {
   public constructor(private userRepository: EntityRepository<UserEntityType>) {}
@@ -16,6 +17,7 @@ export class DeleteRoute implements Route {
     return f.delete(
       "/:id",
       {
+        preHandler: [requirePermission("manage", "User")],
         schema: {
           params: object({
             id: string(),

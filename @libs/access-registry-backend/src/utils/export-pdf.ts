@@ -1,0 +1,198 @@
+import PDFDocument from "pdfkit";
+import type { AccessRecordEntityType } from "#src/entities/access-record.entity.js";
+import { COLORS, MARGIN, CONTENT_WIDTH, PAGE, formatDate } from "#src/utils/pdf-constants.js";
+import { drawSummaryTable } from "#src/utils/pdf-table.js";
+import { drawRecordsDetail } from "#src/utils/pdf-detail-render.js";
+import { drawSingleLine, measureHeight } from "@libs/backend-shared";
+
+export type PdfAttestation = {
+  generatedAt: string;
+  generatedBy: string;
+  count: number;
+  chainHeadHash: string;
+  integrityOk: boolean;
+  integrityBrokenAt?: number;
+  integrityReason?: string;
+};
+
+function drawPageFooter(
+  doc: InstanceType<typeof PDFDocument>,
+  pageIndex: number,
+  pageCount: number,
+  generatedAt: string,
+) {
+  const y = PAGE.height - MARGIN.bottom + 18;
+  // Le footer s'écrit SOUS la marge basse : le line-wrapper de pdfkit (activé par
+  // `width`) y voit un dépassement de maxY et déclenchait un addPage() par footer
+  // — pages fantômes ne contenant que « Page X / Y ». Marge neutralisée le temps
+  // du dessin.
+  const savedBottomMargin = doc.page.margins.bottom;
+  doc.page.margins.bottom = 0;
+  doc
+    .save()
+    .strokeColor(COLORS.border)
+    .moveTo(MARGIN.left, y - 8)
+    .lineTo(PAGE.width - MARGIN.right, y - 8)
+    .stroke()
+    .restore();
+  doc
+    .font("Helvetica")
+    .fontSize(7.5)
+    .fillColor(COLORS.muted)
+    .text(`Généré le ${formatDate(generatedAt)}`, MARGIN.left, y, { lineBreak: false })
+    .text(`Page ${pageIndex + 1} / ${pageCount}`, MARGIN.left, y, {
+      width: CONTENT_WIDTH,
+      align: "right",
+      lineBreak: false,
+    });
+  doc.page.margins.bottom = savedBottomMargin;
+}
+
+function drawHeader(doc: InstanceType<typeof PDFDocument>, attestation: PdfAttestation) {
+  const headerHeight = 88;
+  doc.save().rect(0, 0, PAGE.width, headerHeight).fill(COLORS.primary).restore();
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(20)
+    .fillColor(COLORS.white)
+    .text("Registre des accès", MARGIN.left, 28, { lineBreak: false });
+  doc
+    .font("Helvetica")
+    .fontSize(10)
+    .fillColor("#cbd5e1")
+    .text("Export conforme RGPD · traçabilité et intégrité", MARGIN.left, 54, { lineBreak: false });
+  doc
+    .font("Helvetica")
+    .fontSize(9)
+    .fillColor(COLORS.white)
+    .text(formatDate(attestation.generatedAt), MARGIN.left, 28, {
+      width: CONTENT_WIDTH,
+      align: "right",
+      lineBreak: false,
+    });
+  doc.y = headerHeight + 24;
+}
+
+function drawStatCards(
+  doc: InstanceType<typeof PDFDocument>,
+  attestation: PdfAttestation,
+  specialCount: number,
+) {
+  const cardHeight = 54;
+  const gap = 12;
+  const cardWidth = (CONTENT_WIDTH - gap * 2) / 3;
+  const y = doc.y;
+
+  const cards = [
+    { label: "Enregistrements", value: String(attestation.count), tone: COLORS.accent },
+    {
+      label: "Intégrité",
+      value: attestation.integrityOk ? "Validée" : "Compromise",
+      tone: attestation.integrityOk ? COLORS.success : COLORS.danger,
+    },
+    { label: "Données art. 9", value: String(specialCount), tone: COLORS.primary },
+  ];
+
+  cards.forEach((card, index) => {
+    const x = MARGIN.left + index * (cardWidth + gap);
+    doc.save().roundedRect(x, y, cardWidth, cardHeight, 8).fill(COLORS.surface).restore();
+    doc
+      .save()
+      .lineWidth(1)
+      .strokeColor(COLORS.border)
+      .roundedRect(x, y, cardWidth, cardHeight, 8)
+      .stroke()
+      .restore();
+    doc.font("Helvetica").fontSize(8).fillColor(COLORS.muted);
+    drawSingleLine(doc, card.label.toUpperCase(), x + 14, y + 12, cardWidth - 28);
+    doc.font("Helvetica-Bold").fontSize(18).fillColor(card.tone);
+    drawSingleLine(doc, card.value, x + 14, y + 28, cardWidth - 28);
+  });
+
+  doc.y = y + cardHeight + 20;
+}
+
+function drawIntegrityCard(doc: InstanceType<typeof PDFDocument>, attestation: PdfAttestation) {
+  const y = doc.y;
+  const accent = attestation.integrityOk ? COLORS.success : COLORS.danger;
+  const bg = attestation.integrityOk ? COLORS.successBg : COLORS.dangerBg;
+
+  const statusText = attestation.integrityOk
+    ? `Chaîne de hash vérifiée — ${attestation.count} enregistrement(s) cohérent(s).`
+    : `Chaîne compromise à l'index ${attestation.integrityBrokenAt ?? "?"} (${attestation.integrityReason ?? "inconnu"}).`;
+
+  // La hauteur du cadre suit le texte : un motif de rupture verbeux se replie sur
+  // plusieurs lignes et débordait d'un cadre à hauteur fixe.
+  const textWidth = CONTENT_WIDTH - 32;
+  doc.font("Helvetica").fontSize(9);
+  const statusHeight = measureHeight(doc, statusText, textWidth);
+  const cardHeight = 14 + 18 + statusHeight + 10 + 12 + 14;
+
+  doc.save().roundedRect(MARGIN.left, y, CONTENT_WIDTH, cardHeight, 10).fill(bg).restore();
+  doc.save().rect(MARGIN.left, y, 4, cardHeight).fill(accent).restore();
+  doc
+    .save()
+    .lineWidth(1)
+    .strokeColor(COLORS.border)
+    .roundedRect(MARGIN.left, y, CONTENT_WIDTH, cardHeight, 10)
+    .stroke()
+    .restore();
+  doc.font("Helvetica-Bold").fontSize(11).fillColor(COLORS.text);
+  drawSingleLine(doc, "Attestation d'intégrité", MARGIN.left + 16, y + 14, textWidth);
+
+  doc
+    .font("Helvetica")
+    .fontSize(9)
+    .fillColor(accent)
+    .text(statusText, MARGIN.left + 16, y + 32, { width: textWidth });
+  doc.font("Courier").fontSize(7.5).fillColor(COLORS.muted);
+  drawSingleLine(
+    doc,
+    `Tête de chaîne : ${attestation.chainHeadHash}`,
+    MARGIN.left + 16,
+    y + cardHeight - 22,
+    textWidth,
+  );
+
+  doc.y = y + cardHeight + 22;
+}
+
+function applyFooters(doc: InstanceType<typeof PDFDocument>, generatedAt: string) {
+  const range = doc.bufferedPageRange();
+  for (let i = range.start; i < range.start + range.count; i++) {
+    doc.switchToPage(i);
+    drawPageFooter(doc, i, range.count, generatedAt);
+  }
+}
+
+export function buildPdf(
+  records: AccessRecordEntityType[],
+  attestation: PdfAttestation,
+): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({
+      size: "A4",
+      margins: { top: MARGIN.top, bottom: MARGIN.bottom, left: MARGIN.left, right: MARGIN.right },
+      bufferPages: true,
+    });
+
+    const chunks: Buffer[] = [];
+    doc.on("data", (chunk: Buffer) => chunks.push(chunk));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
+
+    drawHeader(doc, attestation);
+    drawStatCards(doc, attestation, records.filter((r) => r.isSpecialCategory).length);
+    drawIntegrityCard(doc, attestation);
+    // Page 1 : liste récapitulative. Le détail complet commence sur une nouvelle
+    // page pour rester lisible (une fiche par enregistrement).
+    drawSummaryTable(doc, records);
+    if (records.length > 0) {
+      doc.addPage();
+      doc.y = MARGIN.top;
+      drawRecordsDetail(doc, records);
+    }
+    applyFooters(doc, attestation.generatedAt);
+    doc.end();
+  });
+}

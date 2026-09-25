@@ -9,7 +9,7 @@
     "test:ui": "playwright test --ui",
     "test:headed": "pnpm run setup && playwright test --headed",
     "test:debug": "pnpm run setup && playwright test --debug",
-    "setup": "tsx scripts/setup.ts && pnpm run setup:db",
+    "setup": "tsx scripts/setup.ts",
     "setup:db": "tsx scripts/setup-db.ts"
   },
   "devDependencies": {

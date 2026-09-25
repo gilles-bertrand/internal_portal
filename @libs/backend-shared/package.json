@@ -28,11 +28,14 @@
   },
   "devDependencies": {
     "@libs/repo-utils": "workspace:^",
+    "@types/pdfkit": "^0.17.6",
     "@typescript/native-preview": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
+    "pdfkit": "^0.16.0",
     "tsdown": "catalog:",
     "vite": "catalog:",
+    "vite-tsconfig-paths": "catalog:",
     "vitest": "catalog:"
   }
 }

@@ -1,0 +1,97 @@
+table:
+  headers:
+    accessedAt: "Date d'accès"
+    dataSubjectRef: 'Donnée concernée'
+    accessType: "Type d'accès"
+    purpose: 'Finalité'
+    accessorRef: 'Réf. accédant'
+    sourceSystem: 'Système source'
+    isSpecialCategory: 'Données sensibles'
+  sensitiveAria: 'Données sensibles (art. 9 RGPD)'
+  actions:
+    addRecord: 'Encoder un accès'
+    viewDetails: 'Voir les détails'
+actions:
+  exportRegistry: 'Exporter le registre (PDF)'
+export:
+  error: "Échec de l'export. Réessayez."
+  success: 'Registre exporté avec succès.'
+  inProgress: 'Export en cours…'
+  scope:
+    title: "Périmètre de l'export"
+    all: 'Tous les source systems'
+    confirm: 'Exporter'
+    cancel: 'Annuler'
+
+forms:
+  accessRecord:
+    labels:
+      accessedAt: "Date/heure d'accès (ISO UTC)"
+      accessorRef: "Référence de l'accédant"
+      dataSubjectRef: 'Référence de la donnée concernée'
+      dataCategories: 'Catégories de données'
+      accessType: "Type d'accès"
+      purpose: "Finalité de l'accès"
+      legalBasis: 'Base légale'
+      sourceSystem: 'Système source'
+      recipient: 'Destinataire (si transmission)'
+      isSpecialCategory: 'Données sensibles (art. 9 RGPD)'
+      justification: 'Justification'
+    placeholders:
+      select: 'Sélectionner…'
+      newSourceSystem: 'Nom du nouveau système'
+    actions:
+      submit: 'Enregistrer'
+      back: 'Retour au registre'
+      addSourceSystem: '+ Ajouter un système'
+      saveSourceSystem: 'Ajouter'
+      cancelSourceSystem: 'Annuler'
+    messages:
+      saveSuccess: 'Accès enregistré dans le registre.'
+      sourceSystemError: "Échec de l'ajout du système source. Réessayez."
+    validation:
+      accessedAtRequired: "La date d'accès est requise."
+      accessorRefRequired: "La référence de l'accédant est requise."
+      dataSubjectRefRequired: 'La référence de la donnée concernée est requise.'
+      dataCategoriesRequired: 'Au moins une catégorie de données est requise.'
+      accessTypeRequired: "Le type d'accès est requis."
+      accessTypeInvalid: "Type d'accès invalide."
+      purposeRequired: 'La finalité est requise.'
+      legalBasisRequired: 'La base légale est requise.'
+      sourceSystemRequired: 'Le système source est requis.'
+      justificationRequired: 'La justification est requise.'
+
+options:
+  accessType:
+    consultation: 'Consultation'
+    modification: 'Modification'
+    export: 'Export'
+    transmission: 'Transmission'
+
+detail:
+  metadata: 'Métadonnées'
+  encodedBy: 'Encodé par'
+  encodedAt: "Date d'encodage"
+  retentionUntil: "Conservation jusqu'au"
+  seq: 'Numéro de séquence'
+  empty: 'Non renseigné'
+  readOnly: 'Lecture seule — registre inaltérable'
+  sequenceBadge: 'N° {seq}'
+  subtitle: 'Accès du {date}'
+  sections:
+    access: "Contexte de l'accès"
+    qualification: 'Qualification RGPD'
+    justification: 'Justification'
+    traceability: 'Traçabilité'
+  integrity:
+    hash: "Empreinte d'intégrité"
+    prevHash: 'Empreinte précédente'
+    genesis: 'Premier enregistrement de la chaîne'
+
+pages:
+  list:
+    title: 'Registre des accès'
+  create:
+    title: 'Encoder un accès'
+  show:
+    title: "Détail de l'accès"

@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node /Users/gilles/www/internal_portal/.claude/hooks/damage-control/bash-tool-guard.mjs",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/damage-control/bash-tool-guard.mjs",
             "timeout": 10000
           }
         ]
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node /Users/gilles/www/internal_portal/.claude/hooks/damage-control/edit-tool-guard.mjs",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/damage-control/edit-tool-guard.mjs",
             "timeout": 10000
           }
         ]
@@ -47,7 +47,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node /Users/gilles/www/internal_portal/.claude/hooks/damage-control/write-tool-guard.mjs",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/damage-control/write-tool-guard.mjs",
             "timeout": 10000
           }
         ]
@@ -59,7 +59,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node /Users/gilles/www/internal_portal/.claude/hooks/damage-control/bash-output-validator.mjs",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/damage-control/bash-output-validator.mjs",
             "timeout": 10000
           }
         ]
@@ -69,21 +69,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node /Users/gilles/www/internal_portal/.claude/hooks/damage-control/bash-output-validator.mjs",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/damage-control/bash-output-validator.mjs",
             "timeout": 10000
           }
         ]
       }
     ],
     "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "codegraph prompt-hook"
-          }
-        ]
-      },
       {
         "hooks": [
           {

@@ -68,4 +68,4 @@ FEATURE_INCIDENT_REGISTRY=false
 FEATURE_ACCESS_REGISTRY=true
 ```
 
-⚠️ `FEATURE_ACCESS_REGISTRY=false` est à proscrire en l'état : `GET /audit-events`, seule route de lecture du journal d'audit de tout le produit, est implémentée dans `access-registry-backend` et interroge la table globale `audit_event` sans filtrage par domaine. La couper rendrait illisibles les événements de TOUS les domaines, y compris ceux du registre d'incidents, qui continueraient pourtant d'être écrits. Déplacer cette route hors du registre d'accès est un prérequis.
+Couper `FEATURE_ACCESS_REGISTRY` n'emporte plus le journal d'audit : `GET /audit-events` vit désormais dans `audit-log-backend`, module transverse jamais soumis à un drapeau, et filtre chaque événement par le domaine qu'il concerne — voir [[backend/audit-log]].

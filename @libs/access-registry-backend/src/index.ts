@@ -18,7 +18,6 @@ export * from "#src/routes/verify-integrity.route.js";
 export * from "#src/routes/stats.route.js";
 export * from "#src/routes/export.route.js";
 export * from "#src/routes/retention-run.route.js";
-export * from "#src/routes/audit-events.route.js";
 export * from "#src/routes/referentials.route.js";
 export * from "#src/routes/source-systems.route.js";
 export * from "#src/routes/eligible-accessors.route.js";

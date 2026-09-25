@@ -23,3 +23,11 @@ La page "mot de passe oublié" existe côté front avec formulaire et validation
 Aucune route backend de réinitialisation n'existe dans `users-backend` (`@libs/users-front/src/components/forms/forgot-password.gts`, composant `ForgotPasswordTemplate`).
 
 Divergence connexe : le mot de passe minimum est de 12 caractères à la création côté backend, mais seulement 8 dans la validation front — un mot de passe de 8 à 11 caractères peut passer la validation front puis être rejeté par l'API.
+
+## Nom d'affichage résolu à la volée
+
+[[@libs/users-backend/src/utils/user-display.ts#userNameFor]] et `loadUsersByIds` résolvent le nom affichable d'un utilisateur au moment du rendu, pour tous les domaines.
+
+Le nom n'est JAMAIS stocké sur l'enregistrement qui le référence : un registre append-only figerait alors une identité qui, elle, peut légitimement changer — un mariage, une correction d'état civil. L'enregistrement ne garde que l'identifiant.
+
+Ces deux fonctions vivaient en **deux copies identiques**, dans `access-registry-backend` et `incident-registry-backend`, et le journal d'audit en réclamait une troisième : elles ont été mutualisées ici le 2026-09-18, le nom d'un utilisateur étant une donnée du domaine `users`.

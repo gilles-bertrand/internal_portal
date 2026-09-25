@@ -14,7 +14,6 @@ import { VerifyIntegrityRoute } from "#src/routes/verify-integrity.route.js";
 import { StatsRoute } from "#src/routes/stats.route.js";
 import { ExportRoute } from "#src/routes/export.route.js";
 import { RetentionRunRoute } from "#src/routes/retention-run.route.js";
-import { AuditEventsRoute } from "#src/routes/audit-events.route.js";
 import {
   DataCategoriesRoute,
   PurposesRoute,
@@ -77,7 +76,6 @@ export class Module implements ModuleInterface<FastifyInstanceTypeForModule> {
         this.context.configuration.exportSigningKey,
         this.auditLogger,
       ),
-      new AuditEventsRoute(this.context.em),
     ];
 
     for (const route of routes) {

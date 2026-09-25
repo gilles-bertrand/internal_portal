@@ -16,3 +16,5 @@ error-page:
     '404': 'Resource not found'
     generic: 'An error occurred'
   backToDashboard: 'Back to dashboard'
+features:
+  unavailable: 'This section is not available on this environment.'

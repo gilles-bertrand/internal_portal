@@ -104,7 +104,7 @@ Toute lecture ou écriture significative du registre génère un événement dan
 
 Cohérent avec l'esprit "registre des accès" : on trace aussi qui consulte le registre lui-même, pas seulement qui le modifie.
 
-Actions tracées : `REGISTRY_CREATED`, `REGISTRY_VIEWED` (list et get), `REGISTRY_EXPORTED`, `RETENTION_PURGE`. La route [[@libs/access-registry-backend/src/routes/audit-events.route.ts#AuditEventsRoute]] trie par `seq DESC` — le méta-journal est chronologique inversé (plus récent en premier), contrairement au registre d'accès qui trie par `seq ASC`.
+Actions tracées : `REGISTRY_CREATED`, `REGISTRY_VIEWED` (list et get), `REGISTRY_EXPORTED`, `RETENTION_PURGE`. La route [[@libs/audit-log-backend/src/routes/audit-events.route.ts#AuditEventsRoute]] trie par `seq DESC` — le méta-journal est chronologique inversé (plus récent en premier), contrairement au registre d'accès qui trie par `seq ASC`.
 
 ## Référentiels RGPD (data-categories / purposes / legal-bases)
 
@@ -132,7 +132,7 @@ L'API expose les **deux** libellés plutôt qu'un seul résolu via `Accept-Langu
 
 `GET /access-records/:id` ([[@libs/access-registry-backend/src/routes/get.route.ts#GetRoute]]) enrichit la réponse d'un attribut `encodedByName` : le nom résolu de l'utilisateur encodeur, pour l'afficher dans la vue détail plutôt que l'UUID brut de `encodedBy`.
 
-La route charge l'utilisateur via `em.getRepository(UserEntity)` (obtenu depuis `this.repository.getEntityManager()`) et résout le nom avec [[@libs/access-registry-backend/src/utils/user-display.ts#userNameFor]] (fallback = l'id si l'utilisateur est introuvable). `encodedByName` est **optionnel** dans `SerializedAccessRecordSchema` — seul le GET単 le fournit ; `list`/`create` renvoient l'enregistrement brut. Côté front, le schéma WarpDrive `AccessRecord` porte `encodedByName?` et le composant détail affiche `encodedByName ?? encodedBy`.
+La route charge l'utilisateur via `em.getRepository(UserEntity)` (obtenu depuis `this.repository.getEntityManager()`) et résout le nom avec [[@libs/users-backend/src/utils/user-display.ts#userNameFor]] (fallback = l'id si l'utilisateur est introuvable). `encodedByName` est **optionnel** dans `SerializedAccessRecordSchema` — seul le GET単 le fournit ; `list`/`create` renvoient l'enregistrement brut. Côté front, le schéma WarpDrive `AccessRecord` porte `encodedByName?` et le composant détail affiche `encodedByName ?? encodedBy`.
 
 ## Liste des accédants habilités (accessorRef)
 

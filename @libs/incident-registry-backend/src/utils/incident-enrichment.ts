@@ -1,7 +1,7 @@
+import { userNameFor } from "@libs/users-backend";
 import type { IncidentEntityType } from "#src/entities/incident.entity.js";
 import { jsonApiSerializeManyIncidents } from "#src/serializers/incident.serializer.js";
 import type { UserEntityType } from "@libs/users-backend";
-import { userNameFor } from "#src/utils/user-display.js";
 
 // @lat: [[backend/incident-registry#Audit et enrichissement des noms]]
 export function serializeIncidentsWithUserNames(

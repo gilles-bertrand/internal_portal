@@ -3,6 +3,7 @@ import { service } from '@ember/service';
 import Component from '@glimmer/component';
 import type CurrentUserService from '@libs/users-front/services/current-user';
 import type AbilityService from '@libs/shared-front/services/ability';
+import type FeaturesService from '@libs/shared-front/services/features';
 import TpkDashBoard, {
   type SidebarItem,
   type Language,
@@ -16,6 +17,9 @@ import { tracked } from '@glimmer/tracking';
 export default class DashboardTemplate extends Component {
   @service declare currentUser: CurrentUserService;
   @service declare ability: AbilityService;
+  // Domaines montés, lus du serveur : le menu ne propose jamais une route dont
+  // l'API n'existe pas. Voir [[frontend/shared-front#Domaines montés]].
+  @service declare features: FeaturesService;
   @service declare session: SessionService;
   @service declare intl: IntlService;
 
@@ -90,29 +94,34 @@ export default class DashboardTemplate extends Component {
             },
           ]
         : []),
-      {
-        type: 'link',
-        label: this.intl.t('dashboard.sidebar.todos'),
-        route: 'dashboard.todos',
-        icon: <template>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="inline-block size-4 stroke-current"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
-            />
-          </svg>
-        </template> as TOC<{ Element: SVGSVGElement }>,
-      },
-      ...(this.ability.can('read', 'AccessRecord') ||
-      this.ability.can('create', 'AccessRecord')
+      ...(this.features.isEnabled('todos')
+        ? [
+            {
+              type: 'link' as const,
+              label: this.intl.t('dashboard.sidebar.todos'),
+              route: 'dashboard.todos',
+              icon: <template>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="inline-block size-4 stroke-current"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
+                  />
+                </svg>
+              </template> as TOC<{ Element: SVGSVGElement }>,
+            },
+          ]
+        : []),
+      ...(this.features.isEnabled('accessRegistry') &&
+      (this.ability.can('read', 'AccessRecord') ||
+        this.ability.can('create', 'AccessRecord'))
         ? [
             {
               type: 'link' as const,
@@ -137,8 +146,9 @@ export default class DashboardTemplate extends Component {
             },
           ]
         : []),
-      ...(this.ability.can('read', 'Incident') ||
-      this.ability.can('create', 'Incident')
+      ...(this.features.isEnabled('incidentRegistry') &&
+      (this.ability.can('read', 'Incident') ||
+        this.ability.can('create', 'Incident'))
         ? [
             {
               type: 'link' as const,

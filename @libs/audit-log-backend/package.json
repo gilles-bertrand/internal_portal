@@ -21,8 +21,12 @@
   },
   "dependencies": {
     "@libs/backend-shared": "workspace:*",
+    "@libs/permissions-backend": "workspace:*",
+    "@libs/users-backend": "workspace:*",
     "@mikro-orm/core": "7.1.4",
     "@mikro-orm/postgresql": "7.1.4",
+    "fastify": "5.8.5",
+    "fastify-type-provider-zod": "catalog:",
     "vitest": "catalog:",
     "zod": "catalog:"
   },

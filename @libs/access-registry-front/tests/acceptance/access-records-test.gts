@@ -95,8 +95,26 @@ describe('access records route guards (acceptance)', function () {
     }
   );
 
+  // Le journal d'audit est transverse depuis qu'il a quitté ce registre : son
+  // garde est `read AuditEvent`, aligné sur le backend, et non plus
+  // `read AccessRecord`. Voir [[backend/audit-log#Journal exposé par son propre module]].
   applicationTest(
-    '/dashboard/audit-events does not redirect a caller with read:AccessRecord away',
+    '/dashboard/audit-events does not redirect a caller with read:AuditEvent away',
+    async function ({ context }) {
+      initializeTestApp(context.owner, 'en-us');
+      const ability = context.owner.lookup('service:ability');
+      ability.load([{ action: 'read', subject: 'AuditEvent' }]);
+
+      await visit('/dashboard/audit-events').catch(() => undefined);
+
+      expect(currentURL()).not.toBe('/dashboard');
+    }
+  );
+
+  // Et la contrepartie : lire le registre d'accès ne donne plus le journal, qui
+  // contient les événements de TOUS les domaines.
+  applicationTest(
+    '/dashboard/audit-events redirects a caller with only read:AccessRecord',
     async function ({ context }) {
       initializeTestApp(context.owner, 'en-us');
       const ability = context.owner.lookup('service:ability');
@@ -104,7 +122,7 @@ describe('access records route guards (acceptance)', function () {
 
       await visit('/dashboard/audit-events').catch(() => undefined);
 
-      expect(currentURL()).not.toBe('/dashboard');
+      expect(currentURL()).toBe('/dashboard');
     }
   );
 

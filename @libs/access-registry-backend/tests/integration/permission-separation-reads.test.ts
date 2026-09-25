@@ -33,15 +33,14 @@ interface RoleExpectations {
   userId: string;
   export: number;
   stats: number;
-  auditEvents: number;
   verifyIntegrity: number;
   retentionRun: number;
 }
 
 // @lat: [[backend/permissions#Matrice de couverture obligatoire]]
 // Complète permission-separation.test.ts (create/list/get) avec les routes module-wide
-// export/stats/audit-events/verify-integrity/retention. tech_admin a `read AccessRecord` :
-// export/stats/audit-events (gardés par `read AccessRecord`) → 200 ; verify-integrity
+// export/stats/verify-integrity/retention. tech_admin a `read AccessRecord` :
+// export/stats (gardés par `read AccessRecord`) → 200 ; verify-integrity
 // (`read AccessRecordIntegrity`) et retention (`manage AccessRecordRetention`) → 403.
 const ROLE_EXPECTATIONS: RoleExpectations[] = [
   {
@@ -49,7 +48,6 @@ const ROLE_EXPECTATIONS: RoleExpectations[] = [
     userId: "encoder-id",
     export: 200,
     stats: 200,
-    auditEvents: 200,
     verifyIntegrity: 403,
     retentionRun: 403,
   },
@@ -58,7 +56,6 @@ const ROLE_EXPECTATIONS: RoleExpectations[] = [
     userId: "dpo-id",
     export: 200,
     stats: 200,
-    auditEvents: 200,
     verifyIntegrity: 200,
     retentionRun: 200,
   },
@@ -67,7 +64,6 @@ const ROLE_EXPECTATIONS: RoleExpectations[] = [
     userId: "auditor-id",
     export: 200,
     stats: 200,
-    auditEvents: 200,
     verifyIntegrity: 200,
     retentionRun: 403,
   },
@@ -76,7 +72,6 @@ const ROLE_EXPECTATIONS: RoleExpectations[] = [
     userId: "admin-id",
     export: 200,
     stats: 200,
-    auditEvents: 200,
     verifyIntegrity: 403,
     retentionRun: 403,
   },
@@ -106,15 +101,6 @@ describe.each(ROLE_EXPECTATIONS)("role $roleName", (expectations) => {
       headers: auth(),
     });
     expect(response.statusCode).toBe(expectations.stats);
-  });
-
-  test(`GET /access-records/audit-events -> ${expectations.auditEvents}`, async () => {
-    const response = await module.fastifyInstance.inject({
-      method: "GET",
-      url: "/access-records/audit-events",
-      headers: auth(),
-    });
-    expect(response.statusCode).toBe(expectations.auditEvents);
   });
 
   test(`GET /access-records/verify-integrity -> ${expectations.verifyIntegrity}`, async () => {

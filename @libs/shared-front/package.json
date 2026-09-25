@@ -134,6 +134,7 @@
     "app-js": {
       "./services/ability.js": "./dist/_app_/services/ability.js",
       "./services/error-reporter.js": "./dist/_app_/services/error-reporter.js",
+      "./services/features.js": "./dist/_app_/services/features.js",
       "./services/handle-save.js": "./dist/_app_/services/handle-save.js"
     }
   }

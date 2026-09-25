@@ -1,6 +1,20 @@
 import { object, string } from "zod";
 import type z from "zod";
 
+/**
+ * Drapeau de fonctionnalité : activé sauf `false` explicite.
+ *
+ * L'asymétrie est voulue. Une variable oubliée dans un environnement doit
+ * laisser le produit COMPLET plutôt que d'en amputer une partie en silence :
+ * l'accident doit aller vers « trop visible », jamais vers « registre
+ * partiellement absent sans que personne ne l'ait décidé ».
+ */
+function featureFlag() {
+  return string()
+    .transform((v) => v !== "false")
+    .default(true);
+}
+
 const schema = object({
   PORT: string().transform(Number),
   SERVER_URL: string(),
@@ -29,6 +43,26 @@ const schema = object({
   E2E: string()
     .transform((v) => v === "true")
     .default(false),
+
+  // ─── Drapeaux de fonctionnalité ────────────────────────────────────────────
+  //
+  // Un domaine désactivé n'est PAS monté : ses routes n'existent pas, l'API ne
+  // les expose pas, et le front masque son entrée de menu. Ce n'est donc pas un
+  // contrôle d'accès — une permission répond « vous n'avez pas le droit », un
+  // drapeau répond « cela n'existe pas ». Ne jamais utiliser l'un pour l'autre :
+  // dans un registre de conformité, un refus d'accès est une information que
+  // l'auditeur interprète.
+  //
+  // Les entités et le schéma de base restent enregistrés quoi qu'il arrive : on
+  // masque une surface HTTP, on ne détruit jamais de données. Réactiver un
+  // domaine ne coûte donc qu'un redémarrage, et les données écrites avant la
+  // désactivation sont intactes.
+  //
+  // Par défaut TOUT est activé : une variable absente ne change rien au
+  // comportement existant, seul un `false` explicite retire quelque chose.
+  FEATURE_TODOS: featureFlag(),
+  FEATURE_ACCESS_REGISTRY: featureFlag(),
+  FEATURE_INCIDENT_REGISTRY: featureFlag(),
 });
 
 export type AppConfiguration = z.infer<typeof schema>;
@@ -104,4 +138,26 @@ export function loadConfiguration() {
   }
 
   return result.data;
+}
+
+/**
+ * Les domaines pilotables par drapeau, et leur état effectif.
+ *
+ * SOURCE UNIQUE. Le front ne redéclare pas cette liste : il la lit sur
+ * `GET /api/v1/status`. Deux listes qui ne s'accordent que par discipline
+ * finissent toujours par diverger — c'est le défaut que le versionnage des
+ * champs canoniques a dû corriger côté hash.
+ *
+ * @lat: [[apps/backend-bootstrap#Drapeaux de fonctionnalité par domaine]]
+ */
+export const FEATURE_NAMES = ["todos", "accessRegistry", "incidentRegistry"] as const;
+
+export type FeatureName = (typeof FEATURE_NAMES)[number];
+
+export function resolveFeatures(configuration: AppConfiguration): Record<FeatureName, boolean> {
+  return {
+    todos: configuration.FEATURE_TODOS,
+    accessRegistry: configuration.FEATURE_ACCESS_REGISTRY,
+    incidentRegistry: configuration.FEATURE_INCIDENT_REGISTRY,
+  };
 }

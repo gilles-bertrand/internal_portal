@@ -144,6 +144,7 @@
     "main": "addon-main.cjs",
     "app-js": {
       "./components/forms/access-record-form.js": "./dist/_app_/components/forms/access-record-form.js",
+      "./routes/dashboard/access-records.js": "./dist/_app_/routes/dashboard/access-records.js",
       "./routes/dashboard/access-records/create.js": "./dist/_app_/routes/dashboard/access-records/create.js",
       "./routes/dashboard/access-records/index.js": "./dist/_app_/routes/dashboard/access-records/index.js",
       "./routes/dashboard/access-records/show.js": "./dist/_app_/routes/dashboard/access-records/show.js",

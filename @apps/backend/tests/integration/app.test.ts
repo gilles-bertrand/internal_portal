@@ -22,7 +22,26 @@ describe("App Integration Tests", () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({ status: "ok" });
+    expect(response.json()).toMatchObject({ status: "ok" });
+  });
+
+  // @lat: [[apps/backend-bootstrap#Drapeaux de fonctionnalité par domaine]]
+  //
+  // Le front n'a pas de liste de domaines à lui : il lit celle-ci. Si la route
+  // cessait de la porter, le menu se viderait sans que rien ne le signale.
+  it("advertises the mounted domains so the front does not keep its own list", async () => {
+    const response = await fastifyInstance.inject({
+      method: "GET",
+      url: "/api/v1/status",
+    });
+
+    const features = response.json().features as Record<string, boolean>;
+    expect(Object.keys(features).sort()).toEqual(
+      ["accessRegistry", "incidentRegistry", "todos"].sort(),
+    );
+    // Aucune variable FEATURE_* n'est posée dans l'environnement de test : tout
+    // doit être actif. Une variable absente ne retire jamais rien.
+    expect(Object.values(features).every(Boolean)).toBe(true);
   });
 
   // Ces trois tests couvrent le composition root lui-même — le seul endroit du
